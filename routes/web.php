@@ -9,6 +9,8 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Middleware\Authenticate;
 use App\Admin\Controllers\Charts\QualityAssurance\BarGraphTotalsController;
 use App\Admin\Controllers\Charts\QualityAssurance\PieChartTotalsController;
+
+
 use App\Admin\Controllers\FormSr6CropQueryController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Models\User;
@@ -75,20 +77,6 @@ Route::get('reset/password', [PasswordResetController::class, 'showResetPassword
 Route::post('resets/password', [PasswordResetController::class, 'submitResetPasswordForm']);
 
 Route::view('/error', 'errors.404')->name('404');
-//Notifications Routes
-Route::get('form/notify', function(){
-    // Notification::send(User::first(), new SR4FormAddedNotification);
-    $sql = "SELECT * FROM admin_role_users,admin_users 
-                where admin_role_users.user_id = admin_users.id
-               AND admin_role_users.role_id = 2";
-        $commissioners = DB::select($sql);
-        $collection = collect($commissioners);
-        $collection->each(function(User $user) use($formSr4){
-            dd($user);
-        $user->notify(new SR4FormAddedNotification($formSr4));
-
-});
-});
 
 //always the last.
  Route::match(['get', 'post'], '/{id}', [MainController::class, 'slugSwitcher']);

@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -39,13 +40,19 @@
       border-radius: 5px;
       color: #008140;
     }
+    .field-icon {
+      position: absolute;
+      top: 29%;
+      right: 2%;
+      cursor: pointer;
+
+    }
 
   </style>
 
 </head>
 <body class="hold-transition login-page" style="background: url({{ asset('/assets/images/bg/background2.jpg') }}) no-repeat;background-size: cover;">
 <div class="login-box">
-   
 
   <!-- /.login-logo -->
   <div class="login-box-body" style="border-radius: 25px">
@@ -57,41 +64,44 @@
   <div class="alert alert-success">
       {{ session()->get('message') }}
   </div>
-  @elseif(session()->has('error'))
-  <div class="alert alert-success">
-      {{ session()->get('error') }}
-  </div>
-    @endif
+
+   @endif
     <!-- <p class="login-box-msg">{{ trans('admin.login') }}</p> -->
 
     <form method="POST" action="{{ url('password/reset') }}">
         @csrf
+    
+      <div class="form-group">
+            <label for="email" class="control-label">{{ __('Email Address') }}</label>
 
-        <div class="row mb-3">
-            <label for="email" class="col-md-4 col-form-label text-md-end">{{ __('Email Address') }}</label>
-
-            <div class="col-md-6">
-                <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+            <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" style="border-radius: 5px;" autofocus >
 
                 @error('email')
                     <span class="invalid-feedback" role="alert">
                         <strong>{{ $message }}</strong>
                     </span>
                 @enderror
-            </div>
+        </div>
+      
+      <div class="row">
+        
+        <!-- /.col -->
+        <div class="col-xs-12">
+        <button type="submit" class="btn btn-primary btn-block btn-flat" style="border-radius: 5px;" >
+                    {{ __('Send Password Reset Link') }}
+        </button>
         </div>
 
-        <div class="row mb-0">
-            <div class="col-md-6 offset-md-4" style="text-align:center">
-                <button type="submit" class="btn btn-primary" >
-                    {{ __('Send Password Reset Link') }}
-                </button>
-            </div>
-        </div>
-    </form>
-    <div class="form-group text-end">
+        <div class="col-xs-8">
+         <div class="form-group text-end">
         <a href="{{ url('admin/auth/login') }}" class="nav-link"> Back to Login</a>
-    </div>
+         </div>
+        </div>
+        <!-- /.col -->
+      </div> 
+    
+    </form>
+    
 
   </div>
   <!-- /.login-box-body -->
@@ -105,17 +115,7 @@
 <!-- iCheck -->
 <script src="{{ admin_asset('vendor/laravel-admin/AdminLTE/plugins/iCheck/icheck.min.js')}}"></script>
 
-<script>
-     
-    
-  $(function () {
-    $('input').iCheck({
-      checkboxClass: 'icheckbox_square-blue',
-      radioClass: 'iradio_square-blue',
-      increaseArea: '20%' // optional
-    });
-  });
-</script>
+
 </body>
 </html>
 

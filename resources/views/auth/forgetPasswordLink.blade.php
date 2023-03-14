@@ -39,21 +39,20 @@
       border-radius: 5px;
       color: #008140;
     }
+    .field-icon {
+      position: absolute;
+      top: 20%;
+      right: 8.5%;
+      cursor: pointer;
+
+    }
 
   </style>
 
 </head>
 <body class="hold-transition login-page" style="background: url({{ asset('/assets/images/bg/background2.jpg') }}) no-repeat;background-size: cover;">
 <div class="login-box">
-    @if(session()->has('message'))
-    <div class="alert alert-success">
-        {{ session()->get('message') }}
-    </div>
-    @elseif(session()->has('error'))
-    <div class="alert alert-danger">
-        {{ session()->get('error') }}
-    </div>
-      @endif
+    
 
   <!-- /.login-logo -->
   <div class="login-box-body" style="border-radius: 25px">
@@ -61,6 +60,15 @@
     <a href="{{ admin_url('/') }}"><b>{{config('admin.name')}} Reset Password</b></a>
   <hr>
   </div>
+  @if(session()->has('message'))
+    <div class="alert alert-success">
+        {{ session()->get('message') }}
+    </div>
+    @elseif(session()->has('error'))
+    <div class="alert alert-danger">
+        {{ session()->get('error') }}
+    </div>
+    @endif
     <!-- <p class="login-box-msg">{{ trans('admin.login') }}</p> -->
 
     <form method="POST" action="{{ url('resets/password') }}">
@@ -68,39 +76,45 @@
 
         <input type="hidden" name="token" value="{{ $token }}">
 
-        <div class="row mb-3">
-            <label for="password" class="col-md-4 col-form-label text-md-end">{{ __('Password') }}</label>
+       
+        <div class="form-group">
+            <label for="password" class="control-label">{{ __('Password') }}</label>
 
-            <div class="col-md-6">
-                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="new-password">
-
+            <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="new-password" style="border-radius: 5px;" autofocus >
+            
                 @error('password')
                     <span class="invalid-feedback" role="alert">
                         <strong>{{ $message }}</strong>
                     </span>
                 @enderror
-            </div>
+        </div>
+        <div class="form-group">
+            <label for="password-confirm" class="control-label">{{ __('Confirm Password') }}</label>
+
+            <input id="password-confirm" type="password" class="form-control @error('password') is-invalid @enderror" name="password_confirmation" required autocomplete="new-password" style="border-radius: 5px;" autofocus >
+      
+                @error('password')
+                    <span class="invalid-feedback" role="alert">
+                        <strong>{{ $message }}</strong>
+                    </span>
+                @enderror
         </div>
 
-        <div class="row mb-3">
-            <label for="password-confirm" class="col-md-4 col-form-label text-md-end">{{ __('Confirm Password') }}</label>
-
-            <div class="col-md-6">
-                <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required autocomplete="new-password">
-            </div>
+        <div class="row">
+        <div class="col-xs-8">
+        <div class="form-group text-end">
+           <a href="{{ url('admin/auth/login') }}" class="nav-link"> Back to Login</a>
+       </div>
         </div>
 
-        <div class="row mb-0">
-            <div class="col-md-6 offset-md-4">
-                <button type="submit" class="btn btn-primary">
-                    {{ __('Reset Password') }}
-                </button>
-            </div>
+        <!-- /.col -->
+        <div class="col-xs-4">
+          <button type="submit" class="btn btn-primary btn-block btn-flat" style="border-radius: 5px;">  {{ __('Reset') }}</button>
         </div>
+        <!-- /.col -->
+      </div> 
     </form>
-    <div class="form-group text-end">
-        <a href="{{ url('admin/auth/login') }}" class="nav-link"> Back to Login</a>
-    </div>
+   
 
   </div>
   <!-- /.login-box-body -->
@@ -115,7 +129,16 @@
 <script src="{{ admin_asset('vendor/laravel-admin/AdminLTE/plugins/iCheck/icheck.min.js')}}"></script>
 
 <script>
-     
+  $(".toggle-password").click(function() {
+
+$(this).toggleClass("fa-eye fa-eye-slash");
+var input = $($(this).attr("toggle"));
+if (input.attr("type") == "password") {
+  input.attr("type", "text");
+} else {
+  input.attr("type", "password");
+}
+}); 
     
   $(function () {
     $('input').iCheck({

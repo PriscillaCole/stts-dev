@@ -52,7 +52,7 @@ public function showResetPasswordForm(Request $request) {
 
  //attach the link to the mailer
     Mail::to($email)->send(new SendCodeResetPassword($link));
-            return back()->with('message', 'We have sent a reset email to your email address!');
+     return back()->with('message', 'We have sent a reset email to your email address!');
         
 }
 
@@ -65,7 +65,11 @@ public function showResetPasswordForm(Request $request) {
         'password_confirmation' => 'required|same:password',
         'token' => 'required'
     ]);
-   
+   //send back to the form if the passwords dont match
+    if($request->password != $request->password_confirmation){
+        return back()->withInput()->with('error', 'Passwords do not match!');
+    }
+
     $updatePassword = PasswordReset::where( 'token',$request->token)->first();
 
 
@@ -89,9 +93,10 @@ public function showResetPasswordForm(Request $request) {
             'status' => 1
         ]
     );
+
     $user = Administrator::where('email', $updatePassword->email)
         ->update(['password'=> Hash::make($request->password)]);
-    return redirect('/admin/auth/login')->with('message', 'Your password has been changed successfully!');
+         return redirect('/admin/auth/login')->with('message','Your password has been changed successfully!');
    }
 
 }

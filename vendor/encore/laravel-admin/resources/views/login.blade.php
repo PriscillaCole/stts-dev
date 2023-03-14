@@ -38,6 +38,13 @@
       border-radius: 5px;
       color: #008140;
     }
+    .field-icon {
+      position: absolute;
+      top: 29%;
+      right: 2%;
+      cursor: pointer;
+
+    }
 
   </style>
 
@@ -51,6 +58,15 @@
     <a href="{{ admin_url('/') }}"><b>{{config('admin.name')}} Web Dashboard Login</b></a>
   <hr>
   </div>
+  @if(session()->has('message'))
+    <div class="alert alert-success">
+        {{ session()->get('message') }}
+    </div>
+    @elseif(session()->has('error'))
+    <div class="alert alert-danger">
+        {{ session()->get('error') }}
+    </div>
+    @endif
     <!-- <p class="login-box-msg">{{ trans('admin.login') }}</p> -->
 
     <form action="{{ admin_url('auth/login') }}" method="post">
@@ -74,9 +90,14 @@
             <label class="control-label" for="inputError"><i class="fa fa-times-circle-o"></i>{{$message}}</label><br>
           @endforeach
         @endif
-
+<!-- 
         <input type="password" class="form-control" placeholder="{{ trans('admin.password') }}" name="password" required>
-        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+         <span class="glyphicon glyphicon-lock "></span> -->
+        <!-- <span toggle="#password-field" class="fa fa-fw fa-eye form-control-feedback toggle-password"></span> -->
+    
+        <input id="password-field" type="password" class="form-control"  placeholder="{{ trans('admin.password') }}" name="password" required>
+        <span toggle="#password-field" class="fa fa-fw fa-eye field-icon toggle-password" ></span>
+        
       </div>
       <div class="row">
         <div class="col-xs-8">
@@ -124,7 +145,16 @@
 <script src="{{ admin_asset('vendor/laravel-admin/AdminLTE/plugins/iCheck/icheck.min.js')}}"></script>
 
 <script>
-     
+  $(".toggle-password").click(function() {
+
+$(this).toggleClass("fa-eye fa-eye-slash");
+var input = $($(this).attr("toggle"));
+if (input.attr("type") == "password") {
+  input.attr("type", "text");
+} else {
+  input.attr("type", "password");
+}
+}); 
     
   $(function () {
     $('input').iCheck({

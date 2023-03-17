@@ -271,6 +271,14 @@ class FormQdsController extends AdminController
             });
         }
 
+        if (Admin::user()->isRole('basic-user')) {
+            if(Utils::is_form_rejected('FormQds')){
+                $show->field('id','Action')->unescape()->as(function ($id) {
+                    return "<a href='/admin/form-qds/$id/edit' class='btn btn-primary'>Take Action</a>";
+                });
+            }
+        }
+
         return $show;
     }
 

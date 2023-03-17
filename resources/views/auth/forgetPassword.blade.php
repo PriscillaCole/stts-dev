@@ -59,13 +59,14 @@
   <div class="login-logo">
     <a href="{{ admin_url('/') }}"><b>{{config('admin.name')}} Reset Password</b></a>
   <hr>
+  @if(Session::has('success'))
+            <div style="color: green" class="alert alert-success">
+                {{Session::get('success')}}
+            </div>
+          @endif
   </div>
-  @if(session()->has('message'))
-  <div class="alert alert-success">
-      {{ session()->get('message') }}
-  </div>
+ 
 
-   @endif
     <!-- <p class="login-box-msg">{{ trans('admin.login') }}</p> -->
 
     <form method="POST" action="{{ url('password/reset') }}">

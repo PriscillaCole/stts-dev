@@ -22,16 +22,16 @@ class MyNotification extends Model
         parent::boot(); 
         self::created(function($m){
             if($m->group_type == 'Group'){
-                $receivers = Utils::get_users_by_role($m->role_id);
+                $basic_user = $m->role_id == 3;
+                $receivers = Utils::get_users_by_role($basic_user);
                 $emails = [];
-                $emails[] = 'amokolpriscilla@gmail.com';
                 foreach($receivers as $r){
                     $emails[] = $r->email;
-                } 
+                }
                   
                 Mail::send('email_view',['msg' => $m->message,'link' => $m->link], function ($m) use ($emails) {
-                    $m->from("info@8technologies.store", 'MAII..');
-                    $m->to($emails)->subject('FORM SR4 STATUS UPDATE ');
+                    $m->from("info@8technologies.store", 'STTS formS');
+                    $m->to($emails)->subject('FORM STATUS UPDATE ');
                 }); 
             } 
         });

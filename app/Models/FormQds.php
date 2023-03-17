@@ -188,6 +188,11 @@ class FormQds extends Model
     public function getJWTCustomClaims() {
         return [];
     }
+    //one to many relationship with comments
+    public function comments()
+    {
+        return $this->hasMany(Comment::class, 'model_id')->where('model', 'FormQds');
+    }
 }
 
  

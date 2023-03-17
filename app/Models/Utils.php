@@ -35,13 +35,21 @@ class Utils
         }
         return $data1; 
     }
-
+//get users by role
     public static function get_users_by_role($role_id){
         $sql = "SELECT * FROM admin_role_users,admin_users 
             where admin_role_users.user_id = admin_users.id
             AND admin_role_users.role_id = {$role_id}";
             return DB::select($sql);
 
+    }
+//random number generator
+    public static function generate_unique_id() {
+        $prefix = "SG";
+        $current_year = date("Y");
+        $random_number = mt_rand(10000000, 99999999);
+        $unique_id = $prefix . $current_year . $random_number;
+        return $unique_id;
     }
 
     public static function create_default_tables()
@@ -527,15 +535,27 @@ public static function can_renew_form($model_name){
         }
     return false; 
 }
-
+//check if form is rejected
+public static function is_form_rejected($model_name){
+    $model = "App\\Models\\" . ucfirst($model_name);
+    $recs = $model::where('administrator_id',  Admin::user()->id)->get();
+    foreach ($recs as $key => $value) {
+        //check if the status is rejected or halted
+        if($value->status == 4 || $value->status == 3){
+            return true;
+        }
+    }
+}
 
 //check is form accepted
 public static function is_form_accepted($model_name){
     $model = "App\\Models\\" . ucfirst($model_name);
     $recs = $model::where('administrator_id',  Admin::user()->id)->get();
     foreach ($recs as $key => $value) {
-        return $value->status == 5;
-    }
+        if($value->status == 5){
+            return true;
+        }
+  }
 }
 
 

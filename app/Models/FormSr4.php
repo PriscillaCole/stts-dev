@@ -133,6 +133,7 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your SR4 form #{$m->id} is now under inspection."; 
                     $not->link = admin_url("form-sr4s/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -149,7 +150,8 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
                 $farmer  = Administrator::find($m->administrator_id);
                 if($farmer != null){
                     $not = new MyNotification();
-                    $not->receiver_id = $farmer->id; 
+                    $not->receiver_id = $farmer->id;
+                    $not->role_id = 3; 
                     $not->message = "Dear {$farmer->name}, your SR4 form #{$m->id} has been halted by the inspector."; 
                     $not->link = admin_url("form-sr4s/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -167,6 +169,7 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your SR4 form #{$m->id} has been rejected by the inspector."; 
                     $not->link = admin_url("form-sr4s/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -184,6 +187,7 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your SR4 form #{$m->id}/n has been approved by the inspector."; 
                     $not->link = admin_url("form-sr4s/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -229,4 +233,10 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
     public function getJWTCustomClaims() {
         return [];
     }
+
+//one to many relationship with comments
+public function comments()
+{
+    return $this->hasMany(Comment::class, 'model_id')->where('model', 'FormSr6');
+}
 }

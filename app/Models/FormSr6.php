@@ -53,6 +53,12 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
         });
 
         self::created(function ($model) {
+                // Check if the grower_number is already taken
+                while (static::where('grower_number', $model->grower_number)->exists()) {
+                    // Generate a new unique value for the grower_number field
+                    $model->grower_number = "SG" ."/". date('Y') ."/". mt_rand(10000000, 99999999);
+                }
+
             $not = new MyNotification();
             $not->role_id = 2; 
             $not->message = 'New SR6 form has been added by '.Admin::user()->name.' '; 
@@ -211,5 +217,11 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
      */
     public function getJWTCustomClaims() {
         return [];
+    }
+
+    //one to many relationship with comments
+    public function comments()
+    {
+        return $this->hasMany(Comment::class, 'model_id')->where('model', 'FormSr6');
     }
 }

@@ -258,6 +258,14 @@ class FormSr6Controller extends AdminController
             });
         }
 
+        if (Admin::user()->isRole('basic-user')) {
+            if(Utils::is_form_rejected('FormSr6')){
+                $show->field('id','Action')->unescape()->as(function ($id) {
+                    return "<a href='/admin/form-sr6s/$id/edit' class='btn btn-primary'>Take Action</a>";
+                });
+            }
+        }
+
         return $show;
     }
 
@@ -499,13 +507,13 @@ class FormSr6Controller extends AdminController
                         ->help("Please specify with a comment");
                 })
                 ->when('in', [5, 6], function (Form $form) {
-
+               
                     $form->text('grower_number', __('Grower number'))
-                        ->help("Please Enter grower number");
-                    $form->date('valid_from', 'Valid from date');
-                    $form->date('valid_until', 'Valid until date');
-
-                    
+                    ->default("SG" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->disable();
+               
+                    $today = Carbon::now();
+                    $form->date('valid_from', 'Valid from date')->default($today)->required();
+                    $form->date('valid_until', 'Valid until date')->required();  
 
                 $form->text('registration_number', __('Enter Seed Board Registration number'))
                 ->help("Please Enter seed board registration number")

@@ -52,7 +52,7 @@ public function showResetPasswordForm(Request $request) {
 
  //attach the link to the mailer
     Mail::to($email)->send(new SendCodeResetPassword($link));
-     return back()->with('message', 'We have sent a reset email to your email address!');
+     return redirect('/admin/auth/login')->with('message', 'We have sent a reset email to your email address!');
         
 }
 

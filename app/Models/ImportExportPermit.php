@@ -186,5 +186,10 @@ class ImportExportPermit extends Model
             // ... code here
         });
     } 
+    //relationship with comments
+    public function comments()
+    {
+        return $this->hasMany(Comment::class, 'model_id')->where('model', 'FormSr6');
+    }
 
 }

@@ -312,10 +312,30 @@ class FormSr4Controller extends AdminController
             return Utils::tell_status($status);
         });
  
-    //check if status_comment is empty,if it is then dont show it
-        if ($form_sr4->status_comment != null) {
-            $show->field('status_comment', __('Status comment'));
-        }
+        $show->comments('Comments', function ($comments) {
+
+            $comments->resource('/admin/comments');
+    
+            $comments->comment();
+            //disable action buttons
+            $comments->disableActions();
+            //disable pagination
+            $comments->disablePagination();
+            //disable filtering
+            $comments->disableFilter();
+            //disable create button
+            $comments->disableCreateButton();
+            //disable row selector
+            $comments->disableRowSelector();
+            //disable export
+            $comments->disableExport();
+            //disable column selector
+            $comments->disableColumnSelector();
+
+    
+        });
+      
+
     if (!Admin::user()->isRole('basic-user')){
         //button link to the show-details form
         $show->field('id','Action')->unescape()->as(function ($id) {
@@ -706,8 +726,9 @@ class FormSr4Controller extends AdminController
                     //     ->help('Name of the Inspector');
                 })
                 ->when('in', [3, 4], function (Form $form) {
-                    $form->textarea('status_comment', 'Inspector\'s comment (Remarks)')
-                        ->help("Please specify with a comment");
+                    $form->morphMany('comments', 'Inspector\'s comment (Remarks)', function (Form\NestedForm $form) {
+                        $form->textarea('comment', __('Please specify the reason for your action'));
+                    });
                         
                 })
                 ->when('in', [5, 6], function (Form $form) {

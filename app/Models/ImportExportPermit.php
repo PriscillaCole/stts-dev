@@ -189,7 +189,7 @@ class ImportExportPermit extends Model
     //relationship with comments
     public function comments()
     {
-        return $this->hasMany(Comment::class, 'model_id')->where('model', 'FormSr6');
+        return $this->morphMany(Comment::class,'commentable');
     }
 
 }

@@ -234,9 +234,8 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
         return [];
     }
 
-//one to many relationship with comments
-public function comments()
-{
-    return $this->hasMany(Comment::class, 'model_id')->where('model', 'FormSr6');
-}
+    public function comments()
+    {
+        return $this->morphMany(Comment::class,'commentable');
+    }
 }

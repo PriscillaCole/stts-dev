@@ -43,14 +43,14 @@ class Utils
             return DB::select($sql);
 
     }
-//random number generator
-    public static function generate_unique_id() {
-        $prefix = "SG";
-        $current_year = date("Y");
-        $random_number = mt_rand(10000000, 99999999);
-        $unique_id = $prefix . $current_year . $random_number;
-        return $unique_id;
-    }
+// //random number generator
+//     public static function generate_unique_id() {
+//         $prefix = "SG";
+//         $current_year = date("Y");
+//         $random_number = mt_rand(10000000, 99999999);
+//         $unique_id = $prefix . $current_year . $random_number;
+//         return $unique_id;
+//     }
 
     public static function create_default_tables()
     {

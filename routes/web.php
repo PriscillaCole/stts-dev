@@ -7,6 +7,7 @@ use App\Http\Controllers\MainController;
 use App\Http\Controllers\PrintController2;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Middleware\Authenticate;
+use Illuminate\Support\Facades\DB;
 use App\Admin\Controllers\Charts\QualityAssurance\BarGraphTotalsController;
 use App\Admin\Controllers\Charts\QualityAssurance\PieChartTotalsController;
 
@@ -77,6 +78,7 @@ Route::get('reset/password', [PasswordResetController::class, 'showResetPassword
 Route::post('resets/password', [PasswordResetController::class, 'submitResetPasswordForm']);
 
 Route::view('/error', 'errors.404')->name('404');
+
 
 //always the last.
  Route::match(['get', 'post'], '/{id}', [MainController::class, 'slugSwitcher']);

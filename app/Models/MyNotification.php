@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 
 class MyNotification extends Model
 {
@@ -21,18 +22,22 @@ class MyNotification extends Model
     {
         parent::boot(); 
         self::created(function($m){
-            if($m->group_type == 'Group'){
-                $basic_user = $m->role_id == 3;
-                $receivers = Utils::get_users_by_role($basic_user);
+            if($m->group_type == 'Individual'){
+                $sql = "SELECT * FROM admin_role_users
+                INNER JOIN admin_users ON admin_role_users.user_id = admin_users.id
+                INNER JOIN my_notifications ON my_notifications.receiver_id = admin_users.id
+                WHERE admin_role_users.role_id = 3";
+                $users = DB::select($sql);
                 $emails = [];
-                foreach($receivers as $r){
-                    $emails[] = $r->email;
+                foreach($users as $r){
+                    array_push($emails, $r->email);
                 }
-                  
+       
                 Mail::send('email_view',['msg' => $m->message,'link' => $m->link], function ($m) use ($emails) {
                     $m->from("info@8technologies.store", 'STTS formS');
                     $m->to($emails)->subject('FORM STATUS UPDATE ');
                 }); 
+                dd('hi');
             } 
         });
 

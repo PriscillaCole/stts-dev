@@ -115,6 +115,22 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
             }
  
             //assigned status
+            if($m->status == 1){
+                $admin  = Administrator::find($m->inspector);
+                if($admin != null){
+                    $not = new MyNotification();
+                    $not->role_id = 2;
+                    $not->message = 'SR4 form has been edited by '.Admin::user()->name.' ';
+                    $not->link = admin_url("form-sr4s/{$m->id}"); 
+                    $not->status = 'Unread'; 
+                    $not->model = 'FormSr4';
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Group'; 
+                    $not->action_status_to_make_done = '[]'; 
+                    $not->save();  
+                } 
+            }
+
             if($m->status == 2){
                 $inspector  = Administrator::find($m->inspector);
                 if($inspector != null){

@@ -315,8 +315,13 @@ class FormSr4Controller extends AdminController
         $show->comments('Comments', function ($comments) {
 
             $comments->resource('/admin/comments');
-    
+          //get the status of the comments related to the form
+        
             $comments->comment();
+            $comments->created_at('Date')->display(function ($item) {
+                return Carbon::parse($item)->diffForHumans();
+            });
+          
             //disable action buttons
             $comments->disableActions();
             //disable pagination
@@ -726,11 +731,14 @@ class FormSr4Controller extends AdminController
                     //     ->help('Name of the Inspector');
                 })
                 ->when('in', [3, 4], function (Form $form) {
+                    
                     $form->morphMany('comments', 'Inspector\'s comment (Remarks)', function (Form\NestedForm $form) {
                         $form->textarea('comment', __('Please specify the reason for your action'));
-                    });
-                        
+                        //capture the status of the comment
+                        $form->hidden('status')->default('hold');
+                    });                        
                 })
+        
                 ->when('in', [5, 6], function (Form $form) {
 
                     $today = Carbon::now();

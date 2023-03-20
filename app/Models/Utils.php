@@ -109,6 +109,13 @@ class Utils
         }
     }
 
+    public static function alert($msg,$type)
+    {
+        Utils::start_session();
+        $_SESSION['message'] = $msg;
+        $_SESSION['type'] = $type;
+    }
+
 
     public static function has_valid_sr6()
     {
@@ -556,6 +563,20 @@ public static function is_form_accepted($model_name){
             return true;
         }
   }
+}
+
+//check if comments exist in the table for a particular model
+public static function check_comments($model_name){
+    $model = "App\\Models\\" . ucfirst($model_name);
+    //get the id of the current  model 
+
+    $recs = Comment::where('commentable_type', $model)
+    ->get();
+    foreach ($recs as $key => $value){ 
+        if ($value->comment != null) {
+            return true;
+        }
+    }
 }
 
 

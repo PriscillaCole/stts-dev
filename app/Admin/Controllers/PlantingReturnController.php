@@ -146,6 +146,13 @@ class PlantingReturnController extends AdminController
 
         $grid->column('name', __('Company Name'));
         $grid->column('address', __('Address'));
+        // $grid->column('sub_growers_file', __('Sub growers file'))
+        //     ->display(function ($item) {
+        //         if (!$item) {
+        //             return "-";
+        //         }
+        //         return "<a href='/uploads/$item' target='_blank'>Download</a>";
+        //     });
         $grid->column('amount_enclosed', __('Amount enclosed'));
         $grid->column('registerd_dealer', __('Registered dealer'));
     
@@ -220,7 +227,7 @@ class PlantingReturnController extends AdminController
                 // return redirect(admin_url('planting-returns'));
             }
         }
-
+        
         $form->saving(function (Form $form) {
             $is_active_made = false;
             if (Admin::user()->isRole('admin')) {
@@ -338,9 +345,10 @@ class PlantingReturnController extends AdminController
             style="border: solid green 2px;"
             target="_blank"
             >DOWNLOAD TEMPLATE</a></h3>');
-            $form->file('sub_growers_file','Sub-growers excel file')
+            $form->file('sub_growers_file', __('Sub-growers excel file'))
             ->help("To upload many subgrowers, attach an Excel file of multiple Sub-growers here.")
             ->required();
+            
  
         }
 

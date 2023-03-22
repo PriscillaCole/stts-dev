@@ -43,6 +43,18 @@ class Utils
             return DB::select($sql);
 
     }
+
+//get users by role notify
+    public static function get_users_by_role_notify($role_id){
+        $sql = "SELECT * FROM admin_role_users
+        INNER JOIN admin_users ON admin_role_users.user_id = admin_users.id
+        INNER JOIN my_notifications ON my_notifications.receiver_id = admin_users.id
+        WHERE admin_role_users.role_id = {$role_id}";
+        return DB::select($sql);
+
+    }
+
+
 // //random number generator
 //     public static function generate_unique_id() {
 //         $prefix = "SG";

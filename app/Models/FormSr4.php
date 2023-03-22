@@ -15,10 +15,10 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use App\Observers\NotificationObserver;
-use Illuminate\Support\Facades\Notification;
 use App\Notifications\SR4FormAddedNotification;
 use DB;
 use Encore\Admin\Auth\Database\Administrator;
+use App\Mail\Notification;
 
 class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
 // class FormSr4 extends  Model
@@ -53,6 +53,22 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
         'receipt',
         'accept_declaration'
     ];
+
+    //function to send mail
+    public static function sendMail($not)
+    {
+        if($not->group_type == 'Individual'){
+            $receivers = Utils::get_users_by_role_notify($not->role_id);
+            $emails = [];
+            //$emails[] = 'amokolpriscilla@gmail.com';
+            foreach($receivers as $r){
+                $emails[] = $r->email;
+            } 
+            Mail::to($emails)
+                    ->queue(new Notification($not->message, $not->link));
+               
+        } 
+    }
 
 
     public static function boot()
@@ -101,8 +117,22 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
             $not->model_id = $model->id; 
             $not->group_type = 'Group'; 
             $not->action_status_to_make_done = '[]'; 
-            $not->save();  
+            $not->save();
+
+
+            // if($not->group_type == 'Individual'){
+            //     $receivers = Utils::get_users_by_role_notify($not->role_id);
+            //     $emails = [];
+            //     //$emails[] = 'amokolpriscilla@gmail.com';
+            //     foreach($receivers as $r){
+            //         $emails[] = $r->email;
+            //     } 
+            //     Mail::to($emails)
+            //             ->queue(new Notification($not->message, $not->link));
+                   
+            // }
         });
+        
 
         self::updated(function ($m) {
 
@@ -141,7 +171,7 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
                     $not->status = 'Unread'; 
                     $not->model = 'FormSr4';
                     $not->model_id = $m->id; 
-                    $not->group_type = 'Individual'; 
+                    $not->group_type = 'Individual_i'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
                 } 
@@ -158,6 +188,8 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
+
+                    self::sendMail($not);
                 }
             }
 
@@ -167,7 +199,7 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id;
-                    $not->role_id = 3; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your SR4 form #{$m->id} has been halted by the inspector."; 
                     $not->link = admin_url("form-sr4s/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -175,7 +207,11 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
                     $not->model_id = $m->id; 
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
-                    $not->save();  
+                    $not->save(); 
+                    
+                    self::sendMail($not);
+
+
                 }
             }
 
@@ -194,6 +230,8 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
+
+                    self::sendMail($not);
                 }
             }
 
@@ -212,6 +250,8 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
+
+                    self::sendMail($not);
                 }
             }
 

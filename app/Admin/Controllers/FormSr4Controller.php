@@ -738,6 +738,10 @@ class FormSr4Controller extends AdminController
                         $form->hidden('status')->default('hold');
                     });                        
                 })
+                // ->when('in', [3, 4], function (Form $form) {
+                //     $form->textarea('status_comment', 'Enter status comment (Remarks)')
+                //         ->help("Please specify with a comment");
+                // })
         
                 ->when('in', [5, 6], function (Form $form) {
 

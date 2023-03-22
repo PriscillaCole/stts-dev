@@ -37,6 +37,7 @@
               <h1 class="m-0">404</h1>
               <h6>Page not found - STTS</h6>
               <p>The Page you are looking for was not found please check the address</p>
+              <a href="{{ url('admin') }}" class="nav-link"> Back</a>
             </div>
           </div>
         </div>

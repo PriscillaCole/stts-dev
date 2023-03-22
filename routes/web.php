@@ -79,16 +79,6 @@ Route::post('resets/password', [PasswordResetController::class, 'submitResetPass
 
 Route::view('/error', 'errors.404')->name('404');
 
-//route function to retrieve users
-Route::get('/users', function () {
-    $sql = "SELECT * FROM admin_role_users
-    INNER JOIN admin_users ON admin_role_users.user_id = admin_users.id
-    INNER JOIN my_notifications ON my_notifications.receiver_id = admin_users.id
-    WHERE admin_role_users.role_id = 3 ";
-    return DB::select($sql);
-});
-
-
 //always the last.
  Route::match(['get', 'post'], '/{id}', [MainController::class, 'slugSwitcher']);
 

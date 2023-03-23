@@ -7,6 +7,8 @@ use Encore\Admin\Facades\Admin;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Encore\Admin\Auth\Database\Administrator;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\Notification;
 
 
 class SubGrower extends Model
@@ -31,6 +33,22 @@ class SubGrower extends Model
         'gps_longitude',
         'detail',
     ];
+
+      //function to send mail
+      public static function sendMail($not)
+      {
+          if($not->group_type == 'Individual'){
+              $receivers = Utils::get_users_by_role_notify($not->role_id);
+              $emails = [];
+              foreach($receivers as $r){
+                  $emails[] = $r->email;
+              } 
+              Mail::to($emails)
+                      ->queue(new Notification($not->message, $not->link));
+                 
+          } 
+      }
+  
 
     public function get_crop_name()
     {
@@ -67,17 +85,7 @@ class SubGrower extends Model
         parent::boot();
 
         self::creating(function ($m) {
-            $not = new MyNotification();
-            $not->role_id = 2; 
-            $not->message = 'New Sub-grower form has been added by '.Admin::user()->name.' '; 
-            $not->link = admin_url("sub-growers/{$m->id}"); 
-            $not->status = 'Unread'; 
-            $not->model = 'SubGrower';
-            $not->model_id = $m->id; 
-            $not->group_type = 'Group'; 
-            $not->action_status_to_make_done = '[]'; 
-            $not->save();
-
+           
             $sub = SubGrower::where('field_name', $m->field_name)
                 ->where('name', $m->name)->first();
 
@@ -92,6 +100,17 @@ class SubGrower extends Model
         });
 
         self::created(function ($model) {
+            $not = new MyNotification();
+            $not->role_id = 2; 
+            $not->message = 'New Sub-grower form has been added by '.Admin::user()->name.' '; 
+            $not->link = admin_url("sub-growers/{$model->id}"); 
+            $not->status = 'Unread'; 
+            $not->model = 'SubGrower';
+            $not->model_id = $model->id; 
+            $not->group_type = 'Group'; 
+            $not->action_status_to_make_done = '[]'; 
+            $not->save();
+
             //created
         });
 
@@ -174,19 +193,21 @@ class SubGrower extends Model
             }
 
             //approved status for farmer
-            if($sr10->status == 5){
+            if($sr10->status == 16){
                 $farmer  = Administrator::find($sr10->administrator_id);
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
-                    $not->message = "Dear {$farmer->name}, your Sub-grower form #{$sr10->id}/n has been approved by the inspector."; 
+                    $not->message = "Dear {$farmer->name}, your Sub-grower form #{$sr10->id}/n has been initailized by the inspector."; 
                     $not->link = admin_url("sub-growers/{$sr10->id}"); 
                     $not->status = 'Unread'; 
                     $not->model = 'SubGrower';
                     $not->model_id = $sr10->id; 
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
-                    $not->save();  
+                    $not->save(); 
+                    
+                    self::sendMail($not);
                 }
             }
 

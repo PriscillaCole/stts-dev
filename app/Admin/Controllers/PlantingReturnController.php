@@ -83,6 +83,16 @@ class PlantingReturnController extends AdminController
         }
 
         die($file);*/
+  //check if the role is an inspector and has been assigned that form
+  if (Admin::user()->isRole('inspector')) {
+    $grid->model()->where('inspector', '=', Admin::user()->id);
+    //return an empty table if the inspector has not been assigned any forms
+    if (PlantingReturn::where('inspector', '=', Admin::user()->id)->count() == 0) { 
+        //return an empty table if the inspector has not been assigned an
+        $grid->model(0);
+           
+}
+}
 
 
         // $grid->disableExport();
@@ -106,7 +116,9 @@ class PlantingReturnController extends AdminController
                     $actions->disableEdit();
                 }
             });
-        } else if (Admin::user()->isRole('inspector')) {
+        } else if (Admin::user()->isRole('inspector')|| Admin::user()->isRole('admin') ) {
+            $grid->disableCreateButton();
+
             $grid->actions(function ($actions) {
 
                 $status = ((int)(($actions->row['status'])));
@@ -118,7 +130,7 @@ class PlantingReturnController extends AdminController
                     $status != 1
                 ) {
                     $actions->disableDelete();
-                    //$actions->disableEdit();
+                    $actions->disableEdit();
                 }
             });
         } else if (Admin::user()->isRole('basic-user'))  {
@@ -204,7 +216,12 @@ class PlantingReturnController extends AdminController
         // $show->field('latitude', __('Latitude'));
 
         $show->field('Location of the land')->latlong('latitude', 'longitude', $height = 400, $zoom = 16);
-
+        if (!Admin::user()->isRole('basic-user')){
+            //button link to the show-details form
+            $show->field('id','Action')->unescape()->as(function ($id) {
+                return "<a href='/admin/planting-returns/$id/edit' class='btn btn-primary'>Take Action</a>";
+            });
+        }
 
 
         return $show;

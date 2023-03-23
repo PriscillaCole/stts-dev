@@ -176,19 +176,21 @@ class PlantingReturn extends Model
 
 
         self::creating(function ($model) {
-            $not = new MyNotification();
-            $not->role_id = 2; 
-            $not->message = 'New Planting Return form has been added by '.Admin::user()->name.' '; 
-            $not->link = admin_url("planting-returns/{$model->id}"); 
-            $not->status = 'Unread'; 
-            $not->model = 'PlantingReturn';
-            $not->model_id = $model->id; 
-            $not->group_type = 'Group'; 
-            $not->action_status_to_make_done = '[]'; 
-            $not->save();  
+              
         });
 
         self::created(function ($m) {
+
+            $not = new MyNotification();
+            $not->role_id = 2; 
+            $not->message = 'New Planting Return form has been added by '.Admin::user()->name.' '; 
+            $not->link = admin_url("planting-returns/{$m->id}"); 
+            $not->status = 'Unread'; 
+            $not->model = 'PlantingReturn';
+            $not->model_id = $m->id; 
+            $not->group_type = 'Group'; 
+            $not->action_status_to_make_done = '[]'; 
+            $not->save();
             // $file = null;
 
             // if ($m != null) {

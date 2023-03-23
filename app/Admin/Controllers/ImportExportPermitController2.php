@@ -59,9 +59,9 @@ class ImportExportPermitController2 extends AdminController
                 Admin::user()->id
             );
 
-            // if (!Utils::can_create_export_form()) {
-            //     $grid->disableCreateButton();
-            // }
+            if (!Utils::can_create_export_form()) {
+                $grid->disableCreateButton();
+            }
 
             $grid->actions(function ($actions) {
                 $status = ((int)(($actions->row['status'])));
@@ -81,8 +81,8 @@ class ImportExportPermitController2 extends AdminController
                 
             };
             });
-        } else if (Admin::user()->isRole('inspector')) {
-            $grid->model()->where('inspector', '=', Admin::user()->id);
+        } else if (Admin::user()->isRole('inspector')|| Admin::user()->isRole('admin')) {
+            //$grid->model()->where('inspector', '=', Admin::user()->id);
             $grid->disableCreateButton();
 
             $grid->actions(function ($actions) {
@@ -285,17 +285,17 @@ class ImportExportPermitController2 extends AdminController
         $form = new Form(new ImportExportPermit());
         
         if ($form->isCreating()) {
-            if (!Utils::can_create_export_form()) {
+            if (Utils::can_create_export_form()) {
                 admin_error("Alert", "You must apply for SR4 and be 'Accepted' or have an 'Accepted' SR4 to apply for a new Export permit.");
-                return redirect(admin_url('form-sr4s/create'));
+                //return redirect(admin_url('form-sr4s/create'));
             }  
             
-        }
+        
 
-        // if (!Utils::can_create_import_export()) {
-        //     return admin_warning("Warning", "You cannot create a new export permit request form  while still having another PENDING one.");
+        if (!Utils::can_create_import_export()) {
+            return admin_warning("Warning", "You cannot create a new export permit request form  while still having another PENDING one.");
             
-        // }
+        }
             
         // if ($form->isCreating()) {
         //     if (!Utils::previous_export_form_not_accepted()) {
@@ -308,6 +308,7 @@ class ImportExportPermitController2 extends AdminController
         //     return admin_warning("Warning", "You cannot create a new export permit request form  while still having a valid one.");
         
         // }
+        }
  
 
         $form->setWidth(8, 4);

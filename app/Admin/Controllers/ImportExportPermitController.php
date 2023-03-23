@@ -62,9 +62,9 @@ class ImportExportPermitController extends AdminController
         if (Admin::user()->isRole('basic-user')) {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
 
-            // if (!Utils::can_create_import_form()) {
-            //     $grid->disableCreateButton();
-            // }
+            if (Utils::can_create_import_form()) {
+                $grid->disableCreateButton();
+            }
 
             $grid->actions(function ($actions) {
                 $status = ((int)(($actions->row['status'])));
@@ -316,14 +316,20 @@ class ImportExportPermitController extends AdminController
             //    session(['no_import_permit' => "You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit"]);
             //    return redirect(admin_url('form-sr4s/create'));
             }
+
+            
+        if (!Utils::can_create_import_export()) {
+            return admin_warning("Warning", "You cannot create a new import permit request form  while still having another PENDING one.");
+            
+        }
         }
 
-        if ($form->isCreating()) {
-            if (!Utils::previous_import_form_not_accepted()) {
-                return admin_error("Alert", "You can not apply for a new Import Permit while your last application hasn't been accepted yet! <br>If status isn't 'Pending', please check the Inspector's comment(s) to correct your application and submit again.");
-                // return redirect(admin_url('import-export-permits'));
-            }
-        }
+        // if ($form->isCreating()) {
+        //     if (!Utils::previous_import_form_not_accepted()) {
+        //         return admin_error("Alert", "You can not apply for a new Import Permit while your last application hasn't been accepted yet! <br>If status isn't 'Pending', please check the Inspector's comment(s) to correct your application and submit again.");
+        //         // return redirect(admin_url('import-export-permits'));
+        //     }
+        // }
 
         // dd(Utils::previous_import_form_not_accepted());
 

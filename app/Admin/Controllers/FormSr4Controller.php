@@ -169,7 +169,7 @@ class FormSr4Controller extends AdminController
         $form_sr4 = FormSr4::findOrFail($id);
        
         if(Admin::user()->isRole('basic-user') ){
-            if($form_sr4->status == 3 || $form_sr4->status == 4 || $form_sr4->status == 5){
+            if($form_sr4->status == 2 || $form_sr4->status == 3 || $form_sr4->status == 4 || $form_sr4->status == 5){
                 \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'FormSr4'])->delete();
             }
         }
@@ -311,6 +311,8 @@ class FormSr4Controller extends AdminController
         $show->field('status', __('Status'))->unescape()->as(function ($status) {
             return Utils::tell_status($status);
         });
+
+        // $show->field('status_comment', __('Status comment'));
  
         $show->comments('Comments', function ($comments) {
 

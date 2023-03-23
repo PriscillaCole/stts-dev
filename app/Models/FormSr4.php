@@ -60,7 +60,6 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
         if($not->group_type == 'Individual'){
             $receivers = Utils::get_users_by_role_notify($not->role_id);
             $emails = [];
-            //$emails[] = 'amokolpriscilla@gmail.com';
             foreach($receivers as $r){
                 $emails[] = $r->email;
             } 
@@ -146,8 +145,6 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
  
             //assigned status
             if($m->status == 1){
-                $admin  = Administrator::find($m->inspector);
-                if($admin != null){
                     $not = new MyNotification();
                     $not->role_id = 2;
                     $not->message = 'SR4 form has been edited by '.Admin::user()->name.' ';
@@ -157,8 +154,7 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
                     $not->model_id = $m->id; 
                     $not->group_type = 'Group'; 
                     $not->action_status_to_make_done = '[]'; 
-                    $not->save();  
-                } 
+                    $not->save();     
             }
 
             if($m->status == 2){
@@ -177,6 +173,16 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
                 } 
                 $farmer  = Administrator::find($m->administrator_id);
                 if($farmer != null){
+                    //check if the notification has been sent before 
+                    $check = MyNotification::where('model', 'FormSr4')
+                    ->where('model_id', $m->id)
+                    ->where('receiver_id', $farmer->id)
+                    ->where('role_id', 3)
+                    ->where('message', "Dear {$farmer->name}, your SR4 form #{$m->id} is now under inspection.")
+                    ->first();
+                    if($check != null){
+                        return;
+                    }
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
                     $not->role_id = 3;

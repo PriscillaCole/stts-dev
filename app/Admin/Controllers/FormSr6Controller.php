@@ -68,20 +68,25 @@ class FormSr6Controller extends AdminController
             });
         }
 
-        else if (Admin::user()->isRole('inspector')) {
-            $grid->model()->where('inspector', '=', Admin::user()->id);
-            // $grid->disableCreateButton();
-
-            $grid->actions(function ($actions) {
-                $status = ((int)(($actions->row['status'])));
-                $actions->disableDelete();
-                //$actions->disableEdit();
-            });
-        } 
+        else if (Admin::user()->isRole('inspector')|| Admin::user()->isRole('admin') ) { 
+            // $grid->model()->where('inspector', '=', Admin::user()->id);
+             $grid->disableCreateButton();
+ 
+             $grid->actions(function ($actions) {
+                 $status = ((int)(($actions->row['status'])));
+                 $actions->disableDelete();
+                 $actions->disableEdit();
+                 // if (
+                 //     $status != 2
+                 // ) {
+                 //     $actions->disableEdit();
+                 // }
+             });
+         } 
         
-        // else {
-        //    // $grid->disableCreateButton();
-        // }
+        else {
+            $grid->disableCreateButton();
+        }
 
         $grid->column('id', __('Id'))->sortable();
 
@@ -145,7 +150,7 @@ class FormSr6Controller extends AdminController
     {
         $form_sr6 = FormSr6::findOrFail($id);
         if(Admin::user()->isRole('basic-user') ){
-            if($form_sr6->status == 3 || $form_sr6->status == 4 || $form_sr6->status == 5){
+            if($form_sr6->status == 2 || $form_sr6->status == 3 || $form_sr6->status == 4 || $form_sr6->status == 5){
                 \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'FormSr6'])->delete();
             }
         }
@@ -249,7 +254,36 @@ class FormSr6Controller extends AdminController
             ->as(function ($status) {
                 return Utils::tell_status($status);
             });
-        $show->field('status_comment', __('Status comment'));
+       // $show->field('status_comment', __('Status comment'));
+
+        $show->comments('Comments', function ($comments) {
+
+            $comments->resource('/admin/comments');
+          //get the status of the comments related to the form
+        
+            $comments->comment();
+            $comments->created_at('Date')->display(function ($item) {
+                return Carbon::parse($item)->diffForHumans();
+            });
+          
+            //disable action buttons
+            $comments->disableActions();
+            //disable pagination
+            $comments->disablePagination();
+            //disable filtering
+            $comments->disableFilter();
+            //disable create button
+            $comments->disableCreateButton();
+            //disable row selector
+            $comments->disableRowSelector();
+            //disable export
+            $comments->disableExport();
+            //disable column selector
+            $comments->disableColumnSelector();
+
+    
+        });
+
 
         if (!Admin::user()->isRole('basic-user')){
             //button link to the show-details form
@@ -456,10 +490,9 @@ class FormSr6Controller extends AdminController
             $form->text('premises_location', __('Premises location'))->readonly();
 
             $form->divider();
-            $form->radio('status', __('Status'))
+            $form->radio('status', __('Action'))
                 ->options([
-                    '1' => 'Pending',
-                    '2' => 'Under inspection',
+                    '2' => 'Assign Inspector',
                 ])
                 ->required()
                 ->when('2', function (Form $form) {
@@ -480,6 +513,7 @@ class FormSr6Controller extends AdminController
                     $form->textarea('status_comment', 'Enter status comment (Remarks)')
                         ->help("Please specify with a comment");
                 })
+                
                 ->when('in', [5, 6], function (Form $form) {
                     $form->date('valid_from', 'Valid from date?');
                     $form->date('valid_until', 'Valid until date?');
@@ -502,9 +536,17 @@ class FormSr6Controller extends AdminController
                 ])
                 ->required()
                 
+                // ->when('in', [3, 4], function (Form $form) {
+                //     $form->textarea('status_comment', 'Enter status comment (Remarks)')
+                //         ->help("Please specify with a comment");
+                // })
                 ->when('in', [3, 4], function (Form $form) {
-                    $form->textarea('status_comment', 'Enter status comment (Remarks)')
-                        ->help("Please specify with a comment");
+                    
+                    $form->morphMany('comments', 'Inspector\'s comment (Remarks)', function (Form\NestedForm $form) {
+                        $form->textarea('comment', __('Please specify the reason for your action'));
+                        //capture the status of the comment
+                        $form->hidden('status')->default('hold');
+                    });                        
                 })
                 ->when('in', [5, 6], function (Form $form) {
                

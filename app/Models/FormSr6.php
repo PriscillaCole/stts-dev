@@ -15,6 +15,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use Encore\Admin\Auth\Database\Administrator;
+use App\Mail\Notification;
 
 
 class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
@@ -41,6 +42,21 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
         'aware_of_minimum_standards',
         'signature_of_applicant',
     ];
+
+        //function to send mail
+        public static function sendMail($not)
+        {
+            if($not->group_type == 'Individual'){
+                $receivers = Utils::get_users_by_role_notify($not->role_id);
+                $emails = [];
+                foreach($receivers as $r){
+                    $emails[] = $r->email;
+                } 
+                Mail::to($emails)
+                        ->queue(new Notification($not->message, $not->link));
+                   
+            } 
+        }
 
     public static function boot()
     {
@@ -92,6 +108,18 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
             }
  
             //assigned status
+            if($m->status == 1){
+                $not = new MyNotification();
+                $not->role_id = 2;
+                $not->message = 'SR6 form has been edited by '.Admin::user()->name.' ';
+                $not->link = admin_url("form-sr6s/{$m->id}"); 
+                $not->status = 'Unread'; 
+                $not->model = 'FormSr6';
+                $not->model_id = $m->id; 
+                $not->group_type = 'Group'; 
+                $not->action_status_to_make_done = '[]'; 
+                $not->save();     
+        }
             if($m->status == 2){
                 $inspector  = Administrator::find($m->inspector);
                 if($inspector != null){
@@ -102,7 +130,7 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
                     $not->status = 'Unread'; 
                     $not->model = 'FormSr6';
                     $not->model_id = $m->id; 
-                    $not->group_type = 'Individual'; 
+                    $not->group_type = 'Individual_i'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
                 } 
@@ -110,6 +138,7 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your SR6 form #{$m->id} is now under inspection."; 
                     $not->link = admin_url("form-sr6s/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -118,6 +147,8 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
+
+                    self::sendMail($not);
                 }
             }
 
@@ -127,6 +158,7 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your SR6 form #{$m->id} has been halted by the inspector."; 
                     $not->link = admin_url("form-sr6s/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -135,15 +167,18 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
+
+                    self::sendMail($not);
                 }
             }
 
             //rejected status for farmer
-            if($m->status == 6){
+            if($m->status == 4){
                 $farmer  = Administrator::find($m->administrator_id);
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your SR6 form #{$m->id} has been rejected by the inspector."; 
                     $not->link = admin_url("form-sr6s/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -152,6 +187,8 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
+
+                    self::sendMail($not);
                 }
             }
 
@@ -161,6 +198,7 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your SR6 form #{$m->id}/n has been approved by the inspector."; 
                     $not->link = admin_url("form-sr6s/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -169,6 +207,8 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
+
+                    self::sendMail($not);
                 }
             }
 
@@ -218,8 +258,7 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
     public function getJWTCustomClaims() {
         return [];
     }
-
-    //one to many relationship with comments
+    //morph many relationship for comments
     public function comments()
     {
         return $this->morphMany(Comment::class,'commentable');

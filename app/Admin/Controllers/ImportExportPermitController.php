@@ -173,7 +173,7 @@ class ImportExportPermitController extends AdminController
     {
         $import_permit = ImportExportPermit::findOrFail($id);
         if(Admin::user()->isRole('basic-user') ){
-            if($import_permit->status == 3 || $import_permit->status == 4 || $import_permit->status == 5){
+            if($import_permit->status == 2 || $import_permit->status == 3 || $import_permit->status == 4 || $import_permit->status == 5){
                 \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'ImportExportPermit'])->delete();
             }
         }

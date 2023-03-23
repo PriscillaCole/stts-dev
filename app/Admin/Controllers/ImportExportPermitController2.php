@@ -4,6 +4,7 @@ namespace App\Admin\Controllers;
 
 use App\Models\CropVariety;
 use App\Models\ImportExportPermit;
+use App\Models\ImportExportPermitsHasCrops;
 use App\Models\Utils;
 use Carbon\Carbon;
 use Encore\Admin\Auth\Database\Administrator;
@@ -159,13 +160,14 @@ class ImportExportPermitController2 extends AdminController
      */
     protected function detail($id)
     {
+       
+        $show = new Show(ImportExportPermit::findOrFail($id));
         $export_permit = ImportExportPermit::findOrFail($id);
         if(Admin::user()->isRole('basic-user') ){
-            if($export_permit->status == 3 || $export_permit->status == 4 || $export_permit->status == 5){
+            if( $export_permit->status == 2 || $export_permit->status == 3 || $export_permit->status == 4 || $export_permit->status == 5){
                 \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'ImportExportPermit'])->delete();
             }
         }
-        $show = new Show(ImportExportPermit::findOrFail($id));
         $show->panel()
             ->tools(function ($tools) {
                 $tools->disableEdit();
@@ -289,14 +291,23 @@ class ImportExportPermitController2 extends AdminController
             }  
             
         }
+
+        // if (!Utils::can_create_import_export()) {
+        //     return admin_warning("Warning", "You cannot create a new export permit request form  while still having another PENDING one.");
             
-        if ($form->isCreating()) {
-            if (!Utils::previous_export_form_not_accepted()) {
-                return admin_error("Alert", "You can not apply for a new Export Permit while your last application hasn't been accepted yet! <br>If status isn't 'Pending', please check the Inspector's comment(s) to correct your application.");
-                // return redirect(admin_url('import-export-permits-2'));
-            }
-        }
- 
+        // }
+            
+        // if ($form->isCreating()) {
+        //     if (!Utils::previous_export_form_not_accepted()) {
+        //         return admin_error("Alert", "You can not apply for a new Export Permit while your last application hasn't been accepted yet! <br>If status isn't 'Pending', please check the Inspector's comment(s) to correct your application.");
+        //         // return redirect(admin_url('import-export-permits-2'));
+        //     }
+        // }
+
+        // if (Utils::can_renew_form('ImportExportPermit')) {
+        //     return admin_warning("Warning", "You cannot create a new export permit request form  while still having a valid one.");
+        
+        // }
  
 
         $form->setWidth(8, 4);
@@ -520,20 +531,19 @@ class ImportExportPermitController2 extends AdminController
                 ])->stacked()
                 ->required();
 
-            $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
-            '), function (NestedForm $form) {
-                $_items = [];
-
-                foreach (CropVariety::all() as $key => $item) {
-                    $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
-                }
-                $form->select('crop_variety_id', 'Select Crop Variety')->options($_items)->required();
-
-                
-                // $form->hidden('category', __('Category'))->default("")->value("");
-                $form->hidden('category', __('Category'))->default("")->value($item->name);
-                $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
-            });
+                $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
+                '), function (NestedForm $form) {
+                    $_items = [];
+    
+                    foreach (CropVariety::all() as $key => $item) {
+                        $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
+                    }
+    
+                    $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
+                        ->required();
+                    $form->hidden('category', __('Category'))->default("")->value($item->name);
+                    $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
+                });
         }
 
         if (Admin::user()->isRole('admin')) {
@@ -543,10 +553,10 @@ class ImportExportPermitController2 extends AdminController
             $form->text('address', __('Address'))->readonly();
             $form->text('store_location', __('Store location'))->readonly();
             $form->divider();
-            $form->radio('status', __('Status'))
+            $form->radio('status', __('Action'))
                 ->options([
-                    '1' => 'Pending',
-                    '2' => 'Under inspection',
+                    
+                    '2' => 'Assign Inspector',
                 ])
                 ->required()
                 ->when('2', function (Form $form) {

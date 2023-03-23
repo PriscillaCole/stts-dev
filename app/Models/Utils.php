@@ -492,10 +492,35 @@ class Utils
     {
         $recs = FormSr4::where('administrator_id',  Admin::user()->id)->get();
 
-        // if (count($recs) == 0) {    // if no sr4 belongs to current user
-        //     return false;
-        // }
-        // // dd(count($recs));
+        foreach ($recs as $key => $value) {
+
+            // if (!$value->status == 1) {
+            //     return false;
+            // }
+
+            if (!$value->valid_from) {
+                return false;
+            }
+
+            if (!$value->valid_until) {
+                return false;
+            }
+
+            $now = time();
+            $then = strtotime($value->valid_until);
+
+            if ($now < $then) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    public static function can_create_import_export()
+    {
+        $recs = ImportExportPermit::where('administrator_id',  Admin::user()->id)->get();
 
         foreach ($recs as $key => $value) {
 
@@ -523,6 +548,7 @@ class Utils
 
         return true;
     }
+
 
 
 //renew or create a new form after its expired

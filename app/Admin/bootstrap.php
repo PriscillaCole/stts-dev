@@ -19,6 +19,7 @@
  */
 
 use App\Models\Utils;
+ use App\Models\MyNotification;
 use Encore\Admin\Facades\Admin;
 use Illuminate\Support\Facades\Auth;
 
@@ -32,7 +33,7 @@ Admin::navbar(function (\Encore\Admin\Widgets\Navbar $navbar) {
     $notifications = [];
     $u =  Auth::user();
     if($u!=null){
-        $notifications = Utils::get_notifications($u);
+       $notifications = Utils::get_notifications($u);
     } 
  
 

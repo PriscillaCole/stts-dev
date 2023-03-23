@@ -18,22 +18,36 @@ class Utils
 {
 
     public static function get_notifications($u){
-        if($u == null){
+            if($u == null){
             return [];
         }
-        $data1 = MyNotification::where('receiver_id',$u->id)->where('status','Unread')
+        $data1 = [];
+        $done_ids = [];
+        foreach (MyNotification::where('receiver_id',$u->id)->where('status','Unread')
         ->orderBy('id','desc')
-        ->get();
+        ->get() as $key => $value) { 
+            if(in_array($value->id,$done_ids)){
+                continue;
+            }
+            $done_ids[] = $value->id;
+            $data1[] = $value;
+            # code...
+        }
+        
         foreach($u->roles as $r){
             $data2 = MyNotification::where('role_id',$r->id)->where('status','Unread')
             ->orderBy('id','desc')
             ->get();
-            foreach($data2 as $d){
-                $data1[] = $d;
+            foreach($data2 as $value){
+                if(in_array($value->id,$done_ids)){
+                    continue;
+                }
+                $done_ids[] = $value->id;
+                $data1[] = $value;
             } 
 
         }
-        return $data1; 
+        return $data1;
     }
 //get users by role
     public static function get_users_by_role($role_id){

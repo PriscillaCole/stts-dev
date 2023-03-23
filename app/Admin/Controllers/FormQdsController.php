@@ -38,6 +38,18 @@ class FormQdsController extends AdminController
         $grid->disableFilter();
         $grid->disableColumnSelector();
 
+        //check if the role is an inspector and has been assigned that form
+        if (Admin::user()->isRole('inspector')) {
+            $grid->model()->where('inspector', '=', Admin::user()->id);
+            //return an empty table if the inspector has not been assigned any forms
+            if (FormQds::where('inspector', '=', Admin::user()->id)->count() == 0) { 
+                //return an empty table if the inspector has not been assigned an
+                $grid->model(0);
+                   
+        }
+    }
+       
+
 
         if (Admin::user()->isRole('basic-user')) {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);

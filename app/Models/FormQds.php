@@ -63,6 +63,7 @@ class FormQds extends Model
                 Admin::user()->isRole('basic-user')
             ){
                 $model->status = 1;
+                $model->inspector = null;
                 return $model;
             } 
         });

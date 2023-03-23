@@ -19,6 +19,7 @@ use Encore\Admin\Show;
 use Encore\Admin\Widgets\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use App\Admin\Actions\Post\Renew;
 
 
 class ImportExportPermitController extends AdminController
@@ -39,6 +40,17 @@ class ImportExportPermitController extends AdminController
     protected function grid()
     {
         $grid = new Grid(new ImportExportPermit());
+
+        //check if the role is an inspector and has been assigned that form
+        if (Admin::user()->isRole('inspector')) {
+            $grid->model()->where('inspector', '=', Admin::user()->id);
+            //return an empty table if the inspector has not been assigned any forms
+            if (ImportExportPermit::where('inspector', '=', Admin::user()->id)->count() == 0) { 
+                //return an empty table if the inspector has not been assigned an
+                $grid->model(0);
+                   
+        }
+    }
 
         $grid->disableFilter();
         $grid->disableExport();
@@ -64,26 +76,32 @@ class ImportExportPermitController extends AdminController
                     $actions->disableEdit();
                     $actions->disableDelete();
                 }
+                if(Utils::check_expiration_date('ImportExportPermit',$this->getKey())){
+                        
+                    $actions->add(new Renew(request()->segment(count(request()->segments()))));
+                
+            };
             });
-        } else if (Admin::user()->isRole('inspector')) {
-            $grid->model()->where('inspector', '=', Admin::user()->id);
+        } else if (Admin::user()->isRole('inspector')|| Admin::user()->isRole('admin')) {
+           // $grid->model()->where('inspector', '=', Admin::user()->id);
             $grid->disableCreateButton();
 
             $grid->actions(function ($actions) {
                 $status = ((int)(($actions->row['status'])));
                 $actions->disableDelete();
-                if (
-                    $status != 2
-                ) {
-                    //$actions->disableEdit();
-                }
+                $actions->disableEdit();
+                // if (
+                //     $status != 2
+                // ) {
+                //     //$actions->disableEdit();
+                // }
 
-                if (
-                    $status == 5
-                ) {
-                    $actions->disableEdit();
-                    $actions->disableDelete();
-                }
+                // if (
+                //     $status == 5
+                // ) {
+                //     $actions->disableEdit();
+                //     $actions->disableDelete();
+                // }
             });
         } elseif (Admin::user()->isRole('admin')) {
             $grid->disableCreateButton();
@@ -115,21 +133,30 @@ class ImportExportPermitController extends AdminController
         //         return "-";
         //     return $u->name;
         // })->sortable();
-
+    if(!Admin::user()->isRole('basic-user')){
         $grid->column('inspector', __('Inspector'))->display(function ($userId) {
-            if (Admin::user()->isRole('basic-user')) {
-                return "-";
-            }
+            // if (Admin::user()->isRole('basic-user')) {
+            //     return "-";
+            // }
             $u = Administrator::find($userId);
             if (!$u)
                 return "Not assigned";
             return $u->name;
         })->sortable();
+    }
 
+        // $grid->column('status', __('Status'))->display(function ($status) {
+        //     return Utils::tell_status($status);
+        // })->sortable();
 
         $grid->column('status', __('Status'))->display(function ($status) {
-            return Utils::tell_status($status);
-        })->sortable();
+            // check expiration date
+             if (Utils::check_expiration_date('ImportExportPermit',$this->getKey())) {
+                 return Utils::tell_status(6);
+             } else{
+                 return Utils::tell_status($status);
+             }
+         })->sortable();
 
 
         return $grid;
@@ -214,6 +241,18 @@ class ImportExportPermitController extends AdminController
             return "<a href='/admin/import-export-permits/$id/edit' class='btn btn-primary'>Take Action</a>";
         });
         }
+        //show the status
+        $show->field('status', __('Status'))->unescape()->as(function ($status) {
+            return Utils::tell_status($status);
+        });
+
+         //check if valid_from , valid_until are empty,if they are then dont show them
+         if ($import_permit->valid_from != null) {
+            $show->field('valid_from', __('Valid from'));
+        }
+        if ($import_permit->valid_until != null) {
+            $show->field('valid_until', __('Valid until'));
+        }
 
         $show->comments('Comments', function ($comments) {
 
@@ -242,6 +281,21 @@ class ImportExportPermitController extends AdminController
 
     
         });
+
+        if (!Admin::user()->isRole('basic-user')){
+            //button link to the show-details form
+            $show->field('id','Action')->unescape()->as(function ($id) {
+                return "<a href='/admin/import-export-permits/$id/edit' class='btn btn-primary'>Take Action</a>";
+            });
+        }
+    
+        if (Admin::user()->isRole('basic-user')) {
+            if(Utils::is_form_rejected('ImportExportPermit')){
+                $show->field('id','Action')->unescape()->as(function ($id) {
+                    return "<a href='/admin/import-export-permits/$id/edit' class='btn btn-primary'>Take Action</a>";
+                });
+            }
+        }
 
         return $show;
     }
@@ -675,10 +729,9 @@ class ImportExportPermitController extends AdminController
             $form->text('address', __('Address'))->readonly();
             $form->text('store_location', __('Store location'))->readonly();
             $form->divider();
-            $form->radio('status', __('Status'))
+            $form->radio('status', __('Action'))
                 ->options([
-                    '1' => 'Pending',
-                    '2' => 'Under inspection',
+                    '2' => 'Assign inspector',
                 ])
                 ->required()
                 ->when('2', function (Form $form) {
@@ -751,13 +804,14 @@ class ImportExportPermitController extends AdminController
                 })
 
                 ->when('in', [5, 6], function (Form $form) {
+                    $today = Carbon::now();
                     $form->text('permit_number', __('Permit number'))
                         ->help("Please Enter Permit number")
                         ->default(rand(10000, 1000000));
                     // $form->date('valid_from', 'Valid from date?')->readonly();
                     // $form->date('valid_until', 'Valid until date?')->readonly();
-                    $form->date('valid_from', 'Valid from date?');
-                    $form->date('valid_until', 'Valid until date?');
+                    $form->date('valid_from', 'Valid from date?')->default(date($today))->required();
+                    $form->date('valid_until', 'Valid until date?')->required();
                 });
 
 

@@ -64,6 +64,7 @@ class ImportExportPermit extends Model
                 Admin::user()->isRole('basic-user')
             ){
                 $model->status = 1;
+                $model->inspector = null;
                 return $model;
             }
             if(Admin::user()->isRole('inspector')){
@@ -87,7 +88,7 @@ class ImportExportPermit extends Model
             $model_url = request()->segment(count(request()->segments()));
             $not = new MyNotification($model_url);
             $not->role_id = 2; 
-            $not->message = 'New import form has been added by '.Admin::user()->name.' '; 
+            $not->message = 'New import/export form has been added by '.Admin::user()->name.' '; 
             $not->link = admin_url("{$model_url}/{$model->id}"); 
             $not->status = 'Unread'; 
             $not->model = 'ImportExportPermit';

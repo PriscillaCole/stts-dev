@@ -186,6 +186,14 @@ class PlantingReturnController extends AdminController
     protected function detail($id)
     {
         $show = new Show(PlantingReturn::findOrFail($id));
+
+        //deleting notifications once they are viewed
+        $planting_return = PlantingReturn::findOrFail($id);
+        if(Admin::user()->isRole('basic-user') ){
+            if($planting_return->status == 2 || $planting_return->status == 3 || $planting_return->status == 4 || $planting_return->status == 16){
+                \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'PlantingReturn'])->delete();
+            }
+        }
         $show->panel()
             ->tools(function ($tools) {
                 $tools->disableEdit();
@@ -363,7 +371,7 @@ class PlantingReturnController extends AdminController
             target="_blank"
             >DOWNLOAD TEMPLATE</a></h3>');
             $form->file('sub_growers_file', __('Sub-growers excel file'))
-            ->help("To upload many subgrowers, attach an Excel file of multiple Sub-growers here.")
+            ->help("To upload many planting_returns, attach an Excel file of multiple Sub-growers here.")
             ->required();
             
  

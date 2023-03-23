@@ -147,6 +147,7 @@ class SubGrower extends Model
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your Sub-grower form #{$sr10->id} is now under inspection."; 
                     $not->link = admin_url("sub-growers/{$sr10->id}"); 
                     $not->status = 'Unread'; 
@@ -164,6 +165,7 @@ class SubGrower extends Model
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3; 
                     $not->message = "Dear {$farmer->name}, your Sub-grower form #{$sr10->id} has been halted by the inspector."; 
                     $not->link = admin_url("sub-growers/{$sr10->id}"); 
                     $not->status = 'Unread'; 
@@ -181,6 +183,7 @@ class SubGrower extends Model
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your Sub-grower form #{$sr10->id} has been rejected by the inspector."; 
                     $not->link = admin_url("sub-growers/{$sr10->id}"); 
                     $not->status = 'Unread'; 
@@ -197,13 +200,14 @@ class SubGrower extends Model
                 $farmer  = Administrator::find($sr10->administrator_id);
                 if($farmer != null){
                     $not = new MyNotification();
-                    $not->receiver_id = $farmer->id; 
+                    $not->receiver_id = $farmer->id;
+                    $not->role_id = 3; 
                     $not->message = "Dear {$farmer->name}, your Sub-grower form #{$sr10->id}/n has been initailized by the inspector."; 
                     $not->link = admin_url("sub-growers/{$sr10->id}"); 
                     $not->status = 'Unread'; 
                     $not->model = 'SubGrower';
                     $not->model_id = $sr10->id; 
-                    $not->group_type = 'Individual'; 
+                    $not->group_type = 'Individual_i'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save(); 
                     

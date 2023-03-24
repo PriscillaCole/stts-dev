@@ -75,7 +75,7 @@ class ImportExportPermitController2 extends AdminController
                 }
             });
         } else {
-            $grid->disableCreateButton();
+           $grid->disableCreateButton();
         }
 
 
@@ -190,22 +190,36 @@ class ImportExportPermitController2 extends AdminController
     {
         $form = new Form(new ImportExportPermit());
 
-        if ($form->isCreating()) {
+        // if ($form->isCreating()) {
 
-            if (!Utils::can_create_sr4()) {
-                return admin_warning("Warning", "You must apply for SR4 and be 'accepted' or have an 'accepted' SR4 to apply for an Export permit");
+        //     if (!Utils::can_create_sr4()) {
+        //         return admin_warning("Warning", "You must apply for SR4 and be 'accepted' or have an 'accepted' SR4 to apply for an Export permit");
             
+        //     }
+
+        //     // elseif (!Utils::can_create_sr4()) {
+        //     //     return admin_warning("Warning", "You must apply for SR4 and be 'accepted' or have an 'accepted' SR4 to apply for an Export permit");
+        //     //     return redirect(admin_url('form-sr4s'));
+        //     // }
+
+        //     elseif (!Utils::can_create_qds()) {
+        //         return admin_warning("Warning", "You're not an approved QDS Producer");
+        //         return redirect(admin_url('form-qds'));
+        //     }
+        // }
+
+        if ($form->isCreating()) {
+            if (!Utils::can_create_import_form()) {
+                return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Export Permit");
+            //    session(['no_import_permit' => "You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit"]);
+            //    return redirect(admin_url('form-sr4s/create'));
             }
 
-            // elseif (!Utils::can_create_sr4()) {
-            //     return admin_warning("Warning", "You must apply for SR4 and be 'accepted' or have an 'accepted' SR4 to apply for an Export permit");
-            //     return redirect(admin_url('form-sr4s'));
-            // }
-
-            elseif (!Utils::can_create_qds()) {
-                return admin_warning("Warning", "You're not an approved QDS Producer");
-                return redirect(admin_url('form-qds'));
-            }
+            
+        if (!Utils::can_create_import_export()) {
+            return admin_warning("Warning", "You cannot create a new export permit request form  while still having another PENDING one.");
+            
+        }
         }
  
         $form->setWidth(8, 4);

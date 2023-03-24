@@ -59,7 +59,7 @@ class ImportExportPermitController2 extends AdminController
                 Admin::user()->id
             );
 
-            if (!Utils::can_create_export_form()) {
+            if (Utils::can_create_export_form()) {
                 $grid->disableCreateButton();
             }
 
@@ -328,13 +328,13 @@ class ImportExportPermitController2 extends AdminController
         $user = Auth::user();
         $form->hidden('is_import', __('is_import'))->default(0)->value(0)->required();
 
-        if ($form->isCreating()) {
-            $form->hidden('administrator_id', __('Administrator id'))->value($user->id);
-        } 
+        // if ($form->isCreating()) {
+        //     $form->hidden('administrator_id', __('Administrator id'))->value($user->id);
+        // } 
         
-        else {
-            $form->hidden('administrator_id', __('Administrator id'));
-        }
+        // else {
+        //     $form->hidden('administrator_id', __('Administrator id'));
+        // }
 
         if (Admin::user()->isRole('basic-user')) {
             // $form->submitted(function (Form $form) {

@@ -28,12 +28,14 @@ class PlantingReturn extends Model
     public static function import_sub_growers($m)
     {
 
-
+//dd(public_path( $m->sub_growers_file));
         $file = null;
         if ($m != null) {
             if (strlen($m->sub_growers_file) > 3) {
-                if (file_exists('../public/uploads/' . $m->sub_growers_file)) {
-                    $file = '../public/uploads/' . $m->sub_growers_file;
+                if (file_exists('/home/technolo/stts-dev2/storage/app/public/'.$m->sub_growers_file)) {
+                    $file = '/home/technolo/stts-dev2/storage/app/public/'.$m->sub_growers_file;
+                }else{
+    
                 }
             }
         }
@@ -41,7 +43,7 @@ class PlantingReturn extends Model
         if ($file == null) {
             return;
         }
-
+ 
 
         if ($file != null) {
             $array = Excel::toArray([], $file);
@@ -163,10 +165,10 @@ class PlantingReturn extends Model
                 }
             }
 
-
-            $m->sub_growers_file = null;
-            $m->save();
-            unlink($file);
+            //dd('done ');
+            //$m->sub_growers_file = null;
+            //$m->save();
+            //unlink($file);
         }
     }
 

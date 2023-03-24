@@ -531,7 +531,7 @@ class Utils
         $recs = $model::where('administrator_id',  Admin::user()->id)->get();
         foreach ($recs as $key => $value) {
 
-            if ($value->status == 1 || $value->status == 2 || $value->status == 3 || $value->status == 4 || $value->status == 5) {
+            if ($value->status == null || $value->status == 1 || $value->status == 2 || $value->status == 3 || $value->status == 4 || $value->status == 5) {
                 return false;
             }        
         }

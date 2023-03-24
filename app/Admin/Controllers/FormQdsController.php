@@ -55,11 +55,11 @@ class FormQdsController extends AdminController
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
 
 
-            if (Utils::can_create_form('FormQds')) {
+            if (!Utils::can_create_form('FormQds')) {
                 $grid->disableCreateButton();
             }
             $grid->actions(function ($actions) {
-                $actions->disableDelete();
+                //$actions->disableDelete();
                 $status = ((int)(($actions->row['status'])));
                 if (
                     $status == 2 ||
@@ -67,6 +67,12 @@ class FormQdsController extends AdminController
                     $status == 6
                 ) {
                     $actions->disableEdit();
+                    $actions->disableDelete();
+                }
+                if (
+                    $status == 3 ||
+                    $status == 4
+                ) {
                     $actions->disableDelete();
                 }
               

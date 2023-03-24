@@ -528,14 +528,19 @@ class Utils
 //disable new button
     public static function can_create_form($model_name){
         $model = "App\\Models\\" . ucfirst($model_name);
-        $recs = $model::where('administrator_id',  Admin::user()->id)->get();
-        foreach ($recs as $key => $value) {
-
-            if ($value->status == null || $value->status == 1 || $value->status == 2 || $value->status == 3 || $value->status == 4 || $value->status == 5) {
-                return false;
-            }        
+        $form = $model::where('administrator_id',  Admin::user()->id)->get();
+        //check if the form for that user exists
+        if (count($form) == 0) {
+            return true;
+        } else {
+                    
+            return false;
+                
+                }
         }
-    }
+
+    
+      
 
 
 

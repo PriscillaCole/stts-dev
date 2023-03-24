@@ -59,7 +59,7 @@ class FormSr6Controller extends AdminController
 
         if (Admin::user()->isRole('basic-user')) {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
-            if (Utils::can_create_form('FormSr6')) {
+            if (!Utils::can_create_form('FormSr6')) {
                 $grid->disableCreateButton();
             }
             $grid->actions(function ($actions) {
@@ -70,6 +70,12 @@ class FormSr6Controller extends AdminController
                     $status == 6     // Expired
                 ) {
                     $actions->disableEdit();
+                    $actions->disableDelete();
+                }
+                if (
+                    $status == 3 ||
+                    $status == 4
+                ) {
                     $actions->disableDelete();
                 }
                 if(Utils::check_expiration_date('FormSr6',$this->getKey())){

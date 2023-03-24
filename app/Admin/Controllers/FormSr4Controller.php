@@ -63,7 +63,7 @@ class FormSr4Controller extends AdminController
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
 
 
-            if (Utils::can_create_form('FormSr4')) {
+            if (!Utils::can_create_form('FormSr4')) {
                 $grid->disableCreateButton();
             }
             
@@ -78,6 +78,12 @@ class FormSr4Controller extends AdminController
                     $status == 6
                 ) {
                     $actions->disableEdit();
+                    $actions->disableDelete();
+                }
+                if (
+                    $status == 3 ||
+                    $status == 4
+                ) {
                     $actions->disableDelete();
                 }
                 //get last parameter from url

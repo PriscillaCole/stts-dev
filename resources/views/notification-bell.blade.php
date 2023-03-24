@@ -12,7 +12,7 @@
     <ul class="menu">
        
       @foreach ($notifications as $n) 
-      <li>
+      <li >
         <a id="notify" href="{{ $n->link }}" title="{{ $n->message }}">
           @if ($n->receiver_id == null)
           <i class="fa fa-users text-success"></i> 
@@ -27,3 +27,11 @@
   </li>
 </ul>
 </li>
+<!-- script to change the color of the link once it has been clicked -->
+<script>
+  $(document).ready(function(){
+    $('#notify').click(function(){
+      $(this).css('color', '#8B837E');
+    });
+  });
+</script>

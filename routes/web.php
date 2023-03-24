@@ -7,6 +7,7 @@ use App\Http\Controllers\MainController;
 use App\Http\Controllers\PrintController2;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Middleware\Authenticate;
+use Illuminate\Support\Facades\DB;
 use App\Admin\Controllers\Charts\QualityAssurance\BarGraphTotalsController;
 use App\Admin\Controllers\Charts\QualityAssurance\PieChartTotalsController;
 

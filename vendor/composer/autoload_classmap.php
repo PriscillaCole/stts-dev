@@ -151,6 +151,7 @@ return array(
     'App\\Models\\Attribute' => $baseDir . '/app/Models/Attribute.php',
     'App\\Models\\Chat' => $baseDir . '/app/Models/Chat.php',
     'App\\Models\\City' => $baseDir . '/app/Models/City.php',
+    'App\\Models\\Comment' => $baseDir . '/app/Models/Comment.php',
     'App\\Models\\Country' => $baseDir . '/app/Models/Country.php',
     'App\\Models\\Crop' => $baseDir . '/app/Models/Crop.php',
     'App\\Models\\CropInspectionType' => $baseDir . '/app/Models/CropInspectionType.php',

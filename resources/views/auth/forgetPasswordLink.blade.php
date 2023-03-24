@@ -1,4 +1,9 @@
-
+<?php
+use App\Models\Utils; 
+Utils::start_session();
+//session_start();
+//$_SESSION['message'] = 'Romina';
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -60,15 +65,15 @@
     <a href="{{ admin_url('/') }}"><b>{{config('admin.name')}} Reset Password</b></a>
   <hr>
   </div>
-  @if(session()->has('message'))
-    <div class="alert alert-success">
-        {{ session()->get('message') }}
-    </div>
-    @elseif(session()->has('error'))
-    <div class="alert alert-danger">
-        {{ session()->get('error') }}
-    </div>
-    @endif
+  
+  @isset($_SESSION['message'])
+  <div class="alert alert-{{ $_SESSION['type'] }}">{{ $_SESSION['message'] }}</div> 
+  @php
+  unset($_SESSION['message']);
+  unset($_SESSION['type']);
+  @endphp     
+  @endisset
+ 
     <!-- <p class="login-box-msg">{{ trans('admin.login') }}</p> -->
 
     <form method="POST" action="{{ url('resets/password') }}">

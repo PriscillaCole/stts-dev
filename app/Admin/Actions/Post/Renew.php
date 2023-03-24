@@ -13,7 +13,7 @@ class Renew extends RowAction
     {
         $this->entity = $entity;
     }
-    public $name = 'renew';
+    public $name = 'Renew';
 
      public function handle(Model $model)
      {

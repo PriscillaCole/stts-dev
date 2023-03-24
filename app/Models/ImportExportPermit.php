@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use Encore\Admin\Auth\Database\Administrator;
+use App\Mail\Notification;
 
 
 class ImportExportPermit extends Model
@@ -31,6 +32,20 @@ class ImportExportPermit extends Model
         'national_seed_board_reg_num',
         'is_import',
     ];
+        //function to send mail
+        public static function sendMail($not)
+        {
+            if($not->group_type == 'Individual'){
+                $receivers = Utils::get_users_by_role_notify($not->role_id);
+                $emails = [];
+                foreach($receivers as $r){
+                    $emails[] = $r->email;
+                } 
+                Mail::to($emails)
+                        ->queue(new Notification($not->message, $not->link));
+                   
+            } 
+        }
 
     public function import_export_permits_has_crops()
     {
@@ -49,6 +64,7 @@ class ImportExportPermit extends Model
                 Admin::user()->isRole('basic-user')
             ){
                 $model->status = 1;
+                $model->inspector = null;
                 return $model;
             }
             if(Admin::user()->isRole('inspector')){
@@ -72,7 +88,7 @@ class ImportExportPermit extends Model
             $model_url = request()->segment(count(request()->segments()));
             $not = new MyNotification($model_url);
             $not->role_id = 2; 
-            $not->message = 'New import form has been added by '.Admin::user()->name.' '; 
+            $not->message = 'New import/export form has been added by '.Admin::user()->name.' '; 
             $not->link = admin_url("{$model_url}/{$model->id}"); 
             $not->status = 'Unread'; 
             $not->model = 'ImportExportPermit';
@@ -94,6 +110,18 @@ class ImportExportPermit extends Model
             }
  
             //assigned status
+            if($m->status == 1){
+                $not = new MyNotification($model_url);
+                $not->role_id = 2;
+                $not->message = 'Import/export form has been edited by '.Admin::user()->name.' ';
+                $not->link = admin_url("{$model_url}/{$m->id}"); 
+                $not->status = 'Unread'; 
+                $not->model = 'ImportExportPermit';
+                $not->model_id = $m->id; 
+                $not->group_type = 'Group'; 
+                $not->action_status_to_make_done = '[]'; 
+                $not->save();     
+        }
             if($m->status == 2){
                 $inspector  = Administrator::find($m->inspector);
                 if($inspector != null){
@@ -104,14 +132,15 @@ class ImportExportPermit extends Model
                     $not->status = 'Unread'; 
                     $not->model = 'ImportExportPermit';
                     $not->model_id = $m->id; 
-                    $not->group_type = 'Individual'; 
+                    $not->group_type = 'Individual_i'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
                 } 
                 $farmer  = Administrator::find($m->administrator_id);
                 if($farmer != null){
                     $not = new MyNotification($model_url);
-                    $not->receiver_id = $farmer->id; 
+                    $not->receiver_id = $farmer->id;
+                    $not->role_id = 3; 
                     $not->message = "Dear {$farmer->name}, your import/export form #{$m->id} is now under inspection."; 
                     $not->link = admin_url("{$model_url}/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -119,7 +148,9 @@ class ImportExportPermit extends Model
                     $not->model_id = $m->id; 
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
-                    $not->save();  
+                    $not->save(); 
+                    
+                    self::sendMail($not);
                 }
             }
 
@@ -129,6 +160,7 @@ class ImportExportPermit extends Model
                 if($farmer != null){
                     $not = new MyNotification($model_url);
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your import/export form #{$m->id} has been halted by the inspector."; 
                     $not->link = admin_url("{$model_url}/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -136,7 +168,9 @@ class ImportExportPermit extends Model
                     $not->model_id = $m->id; 
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
-                    $not->save();  
+                    $not->save(); 
+                    
+                    self::sendMail($not);
                 }
             }
 
@@ -145,7 +179,8 @@ class ImportExportPermit extends Model
                 $farmer  = Administrator::find($m->administrator_id);
                 if($farmer != null){
                     $not = new MyNotification($model_url);
-                    $not->receiver_id = $farmer->id; 
+                    $not->receiver_id = $farmer->id;
+                    $not->role_id = 3; 
                     $not->message = "Dear {$farmer->name}, your import/export form #{$m->id} has been rejected by the inspector."; 
                     $not->link = admin_url("{$model_url}/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -154,6 +189,8 @@ class ImportExportPermit extends Model
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
+
+                    self::sendMail($not);
                 }
             }
 
@@ -162,7 +199,8 @@ class ImportExportPermit extends Model
                 $farmer  = Administrator::find($m->administrator_id);
                 if($farmer != null){
                     $not = new MyNotification($model_url);
-                    $not->receiver_id = $farmer->id; 
+                    $not->receiver_id = $farmer->id;
+                    $not->role_id = 3; 
                     $not->message = "Dear {$farmer->name}, your import/export form #{$m->id}/n has been approved by the inspector."; 
                     $not->link = admin_url("{$model_url}/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -171,6 +209,8 @@ class ImportExportPermit extends Model
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
+
+                    self::sendMail($not);
                 }
             }
 
@@ -186,5 +226,10 @@ class ImportExportPermit extends Model
             // ... code here
         });
     } 
+    //relationship with comments
+    public function comments()
+    {
+        return $this->morphMany(Comment::class,'commentable');
+    }
 
 }

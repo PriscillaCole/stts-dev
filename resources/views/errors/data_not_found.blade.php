@@ -34,9 +34,10 @@
         <div class="col-lg-6 offset-lg-3 col-sm-6 offset-sm-3 col-12 p-3 error-main">
           <div class="row">
             <div class="col-lg-8 col-12 col-sm-10 offset-lg-2 offset-sm-1">
-              <h1 class="m-0">500</h1>
-              <h6>Internal Server Error - STTS</h6>
-              <p>Please check your internet and reload the page.</p>
+              <h2 class="m-0">OOPS!!</h2>
+              <h6>Data not found - STTS</h6>
+              <p>The Data you are looking for doesnt seem to exist, check the address and reload the page again</p>
+              <!-- a link to go back to the dashboard -->
               <a href="{{ url('admin') }}" class="nav-link"> Back</a>
             </div>
           </div>

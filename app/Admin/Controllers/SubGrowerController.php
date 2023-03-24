@@ -37,7 +37,7 @@ class SubGrowerController extends AdminController
     protected function grid()
     {
  
-        die("Sd");
+        
         // $s = SubGrower::find(3);
         // $s->crop = 9;
         // $s->size = rand(10000,1000000000);

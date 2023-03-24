@@ -191,7 +191,7 @@ class PlantingReturnController extends AdminController
         $planting_return = PlantingReturn::findOrFail($id);
         if(Admin::user()->isRole('basic-user') ){
             if($planting_return->status == 2 || $planting_return->status == 3 || $planting_return->status == 4 || $planting_return->status == 16){
-                \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'PlantingReturn'])->delete();
+                \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => ''])->delete();
             }
         }
         $show->panel()

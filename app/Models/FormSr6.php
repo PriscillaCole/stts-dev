@@ -53,7 +53,7 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
                     $emails[] = $r->email;
                 } 
                 Mail::to($emails)
-                        ->queue(new Notification($not->message, $not->link));
+                        ->send(new Notification($not->message, $not->link));
                    
             } 
         }

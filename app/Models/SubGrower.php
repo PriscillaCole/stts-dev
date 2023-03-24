@@ -44,7 +44,7 @@ class SubGrower extends Model
                   $emails[] = $r->email;
               } 
               Mail::to($emails)
-                      ->queue(new Notification($not->message, $not->link));
+                      ->send(new Notification($not->message, $not->link));
                  
           } 
       }

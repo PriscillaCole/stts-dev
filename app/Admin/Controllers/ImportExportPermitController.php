@@ -62,7 +62,11 @@ class ImportExportPermitController extends AdminController
         if (Admin::user()->isRole('basic-user')) {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
 
-            if (Utils::can_create_import_form()) {
+            // if (!Utils::can_create_import_form()) {
+            //     $grid->disableCreateButton();
+            // }
+
+            if (!Utils::can_create_import_export()) {
                 $grid->disableCreateButton();
             }
 
@@ -318,7 +322,7 @@ class ImportExportPermitController extends AdminController
             }
 
             
-        if (!Utils::can_create_import_export()) {
+        if (Utils::can_create_import_export()) {
             return admin_warning("Warning", "You cannot create a new import permit request form  while still having another PENDING one.");
             
         }

@@ -303,14 +303,10 @@ class Utils
 
     public static function can_create_import_form()
     {
-
-
         $sr4 =  FormSr4::where([
             'administrator_id' => Admin::user()->id,
             'status' => 5
         ])->first();
-
-
 
         if ($sr4 == null) {
             return false;
@@ -524,14 +520,10 @@ class Utils
 
         foreach ($recs as $key => $value) {
 
-            if ($value->status == 1) {
+            if ($value->status == 1 || $value->status == 2 || $value->status == 3 || $value->status == 4 || $value->status == 5) {
                 return false;
-            }
-
-            
+            }        
         }
-
-        return true;
     }
 
 

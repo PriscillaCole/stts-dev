@@ -999,6 +999,7 @@ class ComposerStaticInitd3fad8ea048b06fe5a0bdeeb2c192750
         'App\\Models\\Attribute' => __DIR__ . '/../..' . '/app/Models/Attribute.php',
         'App\\Models\\Chat' => __DIR__ . '/../..' . '/app/Models/Chat.php',
         'App\\Models\\City' => __DIR__ . '/../..' . '/app/Models/City.php',
+        'App\\Models\\Comment' => __DIR__ . '/../..' . '/app/Models/Comment.php',
         'App\\Models\\Country' => __DIR__ . '/../..' . '/app/Models/Country.php',
         'App\\Models\\Crop' => __DIR__ . '/../..' . '/app/Models/Crop.php',
         'App\\Models\\CropInspectionType' => __DIR__ . '/../..' . '/app/Models/CropInspectionType.php',

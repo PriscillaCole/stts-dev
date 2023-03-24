@@ -6,6 +6,8 @@ use Encore\Admin\Facades\Admin;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Encore\Admin\Auth\Database\Administrator;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\Notification;
 
 class FormQds extends Model
 { 
@@ -33,6 +35,21 @@ class FormQds extends Model
         'signature_of_applicant',
     ];
 
+        //function to send mail
+        public static function sendMail($not)
+        {
+            if($not->group_type == 'Individual'){
+                $receivers = Utils::get_users_by_role_notify($not->role_id);
+                $emails = [];
+                foreach($receivers as $r){
+                    $emails[] = $r->email;
+                } 
+                Mail::to($emails)
+                        ->queue(new Notification($not->message, $not->link));
+                   
+            } 
+        }
+
 
     public static function boot()
     {
@@ -46,6 +63,7 @@ class FormQds extends Model
                 Admin::user()->isRole('basic-user')
             ){
                 $model->status = 1;
+                $model->inspector = null;
                 return $model;
             } 
         });
@@ -54,7 +72,7 @@ class FormQds extends Model
             $not = new MyNotification();
             $not->role_id = 2; 
             $not->message = 'New Qds form has been added by '.Admin::user()->name.' '; 
-            $not->link = admin_url("form-sr6s/{$model->id}"); 
+            $not->link = admin_url("form-qds/{$model->id}"); 
             $not->status = 'Unread'; 
             $not->model = 'FormQds';
             $not->model_id = $model->id; 
@@ -74,6 +92,18 @@ class FormQds extends Model
             }
  
             //assigned status
+            if($m->status == 1){
+                $not = new MyNotification();
+                $not->role_id = 2;
+                $not->message = 'Qds form has been edited by '.Admin::user()->name.' ';
+                $not->link = admin_url("form-qds/{$m->id}"); 
+                $not->status = 'Unread'; 
+                $not->model = 'FormQds';
+                $not->model_id = $m->id; 
+                $not->group_type = 'Group'; 
+                $not->action_status_to_make_done = '[]'; 
+                $not->save();     
+        }
             if($m->status == 2){
                 $inspector  = Administrator::find($m->inspector);
                 if($inspector != null){
@@ -84,7 +114,7 @@ class FormQds extends Model
                     $not->status = 'Unread'; 
                     $not->model = 'FormQds';
                     $not->model_id = $m->id; 
-                    $not->group_type = 'Individual'; 
+                    $not->group_type = 'Individual_i'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
                 } 
@@ -92,6 +122,7 @@ class FormQds extends Model
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your Qds form #{$m->id} is now under inspection."; 
                     $not->link = admin_url("form-qds/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -99,7 +130,9 @@ class FormQds extends Model
                     $not->model_id = $m->id; 
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
-                    $not->save();  
+                    $not->save(); 
+                    
+                    self::sendMail($not);
                 }
             }
 
@@ -109,6 +142,7 @@ class FormQds extends Model
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your Qds form #{$m->id} has been halted by the inspector."; 
                     $not->link = admin_url("form-qds/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -117,6 +151,8 @@ class FormQds extends Model
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
+
+                    self::sendMail($not);
                 }
             }
 
@@ -126,6 +162,7 @@ class FormQds extends Model
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your Qds form #{$m->id} has been rejected by the inspector."; 
                     $not->link = admin_url("form-qds/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -134,6 +171,8 @@ class FormQds extends Model
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
+
+                    self::sendMail($not);
                 }
             }
 
@@ -143,6 +182,7 @@ class FormQds extends Model
                 if($farmer != null){
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
                     $not->message = "Dear {$farmer->name}, your Qds form #{$m->id}/n has been approved by the inspector."; 
                     $not->link = admin_url("form-qds/{$m->id}"); 
                     $not->status = 'Unread'; 
@@ -151,6 +191,8 @@ class FormQds extends Model
                     $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
+
+                    self::sendMail($not);
                 }
             }
 
@@ -187,6 +229,11 @@ class FormQds extends Model
      */
     public function getJWTCustomClaims() {
         return [];
+    }
+    
+    public function comments()
+    {
+        return $this->morphMany(Comment::class,'commentable');
     }
 }
 

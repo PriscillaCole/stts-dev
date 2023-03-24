@@ -18,24 +18,38 @@ class Utils
 {
 
     public static function get_notifications($u){
-        if($u == null){
+            if($u == null){
             return [];
         }
-        $data1 = MyNotification::where('receiver_id',$u->id)->where('status','Unread')
+        $data1 = [];
+        $done_ids = [];
+        foreach (MyNotification::where('receiver_id',$u->id)->where('status','Unread')
         ->orderBy('id','desc')
-        ->get();
+        ->get() as $key => $value) { 
+            if(in_array($value->id,$done_ids)){
+                continue;
+            }
+            $done_ids[] = $value->id;
+            $data1[] = $value;
+            # code...
+        }
+        
         foreach($u->roles as $r){
             $data2 = MyNotification::where('role_id',$r->id)->where('status','Unread')
             ->orderBy('id','desc')
             ->get();
-            foreach($data2 as $d){
-                $data1[] = $d;
+            foreach($data2 as $value){
+                if(in_array($value->id,$done_ids)){
+                    continue;
+                }
+                $done_ids[] = $value->id;
+                $data1[] = $value;
             } 
 
         }
-        return $data1; 
+        return $data1;
     }
-
+//get users by role
     public static function get_users_by_role($role_id){
         $sql = "SELECT * FROM admin_role_users,admin_users 
             where admin_role_users.user_id = admin_users.id
@@ -43,6 +57,26 @@ class Utils
             return DB::select($sql);
 
     }
+
+//get users by role notify
+    public static function get_users_by_role_notify($role_id){
+        $sql = "SELECT * FROM admin_role_users
+        INNER JOIN admin_users ON admin_role_users.user_id = admin_users.id
+        INNER JOIN my_notifications ON my_notifications.receiver_id = admin_users.id
+        WHERE admin_role_users.role_id = {$role_id}";
+        return DB::select($sql);
+
+    }
+
+
+// //random number generator
+//     public static function generate_unique_id() {
+//         $prefix = "SG";
+//         $current_year = date("Y");
+//         $random_number = mt_rand(10000000, 99999999);
+//         $unique_id = $prefix . $current_year . $random_number;
+//         return $unique_id;
+//     }
 
     public static function create_default_tables()
     {
@@ -99,6 +133,13 @@ class Utils
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+    }
+
+    public static function alert($msg,$type)
+    {
+        Utils::start_session();
+        $_SESSION['message'] = $msg;
+        $_SESSION['type'] = $type;
     }
 
 
@@ -451,11 +492,6 @@ class Utils
     {
         $recs = FormSr4::where('administrator_id',  Admin::user()->id)->get();
 
-        // if (count($recs) == 0) {    // if no sr4 belongs to current user
-        //     return false;
-        // }
-        // // dd(count($recs));
-
         foreach ($recs as $key => $value) {
 
             // if (!$value->status == 1) {
@@ -482,6 +518,22 @@ class Utils
 
         return true;
     }
+    public static function can_create_import_export()
+    {
+        $recs = ImportExportPermit::where('administrator_id',  Admin::user()->id)->get();
+
+        foreach ($recs as $key => $value) {
+
+            if ($value->status == 1) {
+                return false;
+            }
+
+            
+        }
+
+        return true;
+    }
+
 
 
 //renew or create a new form after its expired
@@ -527,14 +579,40 @@ public static function can_renew_form($model_name){
         }
     return false; 
 }
-
+//check if form is rejected
+public static function is_form_rejected($model_name){
+    $model = "App\\Models\\" . ucfirst($model_name);
+    $recs = $model::where('administrator_id',  Admin::user()->id)->get();
+    foreach ($recs as $key => $value) {
+        //check if the status is rejected or halted
+        if($value->status == 4 || $value->status == 3){
+            return true;
+        }
+    }
+}
 
 //check is form accepted
 public static function is_form_accepted($model_name){
     $model = "App\\Models\\" . ucfirst($model_name);
     $recs = $model::where('administrator_id',  Admin::user()->id)->get();
     foreach ($recs as $key => $value) {
-        return $value->status == 5;
+        if($value->status == 5){
+            return true;
+        }
+  }
+}
+
+//check if comments exist in the table for a particular model
+public static function check_comments($model_name){
+    $model = "App\\Models\\" . ucfirst($model_name);
+    //get the id of the current  model 
+
+    $recs = Comment::where('commentable_type', $model)
+    ->get();
+    foreach ($recs as $key => $value){ 
+        if ($value->comment != null) {
+            return true;
+        }
     }
 }
 

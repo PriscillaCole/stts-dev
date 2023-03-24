@@ -47,6 +47,18 @@ class FormSr4Controller extends AdminController
         $s->status_comment .= rand(100,1000000);
         $s->save();*/
 
+        //check if the role is an inspector and has been assigned that form
+        if (Admin::user()->isRole('inspector')) {
+            $grid->model()->where('inspector', '=', Admin::user()->id);
+            //return an empty table if the inspector has not been assigned any forms
+            if (FormSr4::where('inspector', '=', Admin::user()->id)->count() == 0) { 
+                //return an empty table if the inspector has not been assigned an
+                $grid->model(0);
+                   
+        }
+    }
+       
+
         if (Admin::user()->isRole('basic-user')) {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
 
@@ -78,8 +90,8 @@ class FormSr4Controller extends AdminController
              });
         } 
         
-        else if (Admin::user()->isRole('inspector')) { 
-            $grid->model()->where('inspector', '=', Admin::user()->id);
+        else if (Admin::user()->isRole('inspector')|| Admin::user()->isRole('admin') ) { 
+           // $grid->model()->where('inspector', '=', Admin::user()->id);
             $grid->disableCreateButton();
 
             $grid->actions(function ($actions) {
@@ -93,7 +105,7 @@ class FormSr4Controller extends AdminController
                 // }
             });
         } 
-        
+       
         else {
             $grid->disableCreateButton();
         }
@@ -167,10 +179,9 @@ class FormSr4Controller extends AdminController
     {
         $form = new Form(new FormSr4());
         $form_sr4 = FormSr4::findOrFail($id);
-
        
         if(Admin::user()->isRole('basic-user') ){
-            if($form_sr4->status == 3 || $form_sr4->status == 4 || $form_sr4->status == 5){
+            if($form_sr4->status == 2 || $form_sr4->status == 3 || $form_sr4->status == 4 || $form_sr4->status == 5){
                 \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'FormSr4'])->delete();
             }
         }
@@ -182,30 +193,35 @@ class FormSr4Controller extends AdminController
                 // $tools->append('<a href="/admin/form-sr4s-details/' . $id . '/edit" class="btn btn-primary">Show Details</a>');
             });;
 
-            
-
         $show->field('type', __('Application Category'));
-        $show->field('created_at', __('Created on'));
-        $show->field('seed_board_registration_number', __('Seed board registration number'));
-        $show->field('administrator_id', __('Created by'))->as(function ($userId) {
-            $u = Administrator::find($userId);
-            if (!$u)
-                return "-";
-            return $u->name;
-        });
+        //check if seed board registration number is empty,if it is then dont show it
+        if ($form_sr4->seed_board_registration_number != null) {
+            $show->field('seed_board_registration_number', __('Seed board registration number'));
+        }
         $show->field('name_of_applicant', __('Name of applicant'));
         $show->field('address', __('Address'));
         $show->field('company_initials', __('Company initials'));
         $show->field('premises_location', __('Premises location'));
-        $show->field('years_of_expirience', __('Experience in'));
-        $show->field('expirience_in', __('Years of experience'))->as(function ($item) {
+        $show->field('expirience_in', __('Experience in'));
+        $show->field('years_of_expirience', __('Years of experience'))->as(function ($item) {
             return $item . " Years";
         });
-        $show->field('dealers_in', __('Dealers in'));
-        $show->field('processing_of', __('Processing of'));
+        $show->field('dealers_in', __('Dealers in'))->as (function($item){
+            if($item == "Other"){
+                return $this->dealers_in_other ;
+            }
+            return $item;
+        });
+    
+        // $show->field('processing_of', __('Processing of'))->as (function ($item) {
+        //     if ($item == "Other") {
+        //         return $this->processing_of_other ;
+        //     }
+        //     return $item;
+        // });
         $show->field('marketing_of', __('Marketing of'))->as(function ($item) {
             if ($item == "Other") {
-                return $this->marketing_of_other . " (Other)";
+                return $this->marketing_of_other ;
             }
             return $item;
         });
@@ -217,8 +233,23 @@ class FormSr4Controller extends AdminController
             }
             return $item;
         });
-        $show->field('land_size', __('Land size (In Acres)'));
-        $show->field('eqipment', __('Equipment'));
+        $show->field('have_adequate_storage', __('Have adequate storage'))->as(function ($item) {
+            if ($item) {
+                return "Yes";
+            } else {
+                return "No";
+            }
+            return $item;
+        });
+        //check if land_size has a value and if it has a value then show it and if not then dont show it
+        if ($form_sr4->land_size) {
+            $show->field('land_size', __('Land size (In Acres)'));
+        }
+        //check if eqipment has a value and if it has a value then show it and if not then dont show it
+        if ($form_sr4->eqipment) {
+            $show->field('eqipment', __('Equipment'));
+        } 
+        
         $show->field('have_adequate_equipment', __('Have adequate equipment'))->as(function ($item) {
             if ($item) {
                 return "Yes";
@@ -282,19 +313,61 @@ class FormSr4Controller extends AdminController
                 return "No";
             }
         });
-        if (!Admin::user()->isRole('inspector')) {
-        $show->field('valid_from', __('Valid from'));
-        $show->field('valid_until', __('Valid until'));
+    //check if valid_from , valid_until are empty,if they are then dont show them
+        if ($form_sr4->valid_from != null) {
+            $show->field('valid_from', __('Valid from'));
+        }
+        if ($form_sr4->valid_until != null) {
+            $show->field('valid_until', __('Valid until'));
+        }
         $show->field('status', __('Status'))->unescape()->as(function ($status) {
             return Utils::tell_status($status);
         });
-        $show->field('status_comment', __('Status comment'));
-    }
+
+        // $show->field('status_comment', __('Status comment'));
+ 
+        $show->comments('Comments', function ($comments) {
+
+            $comments->resource('/admin/comments');
+          //get the status of the comments related to the form
+        
+            $comments->comment();
+            $comments->created_at('Date')->display(function ($item) {
+                return Carbon::parse($item)->diffForHumans();
+            });
+          
+            //disable action buttons
+            $comments->disableActions();
+            //disable pagination
+            $comments->disablePagination();
+            //disable filtering
+            $comments->disableFilter();
+            //disable create button
+            $comments->disableCreateButton();
+            //disable row selector
+            $comments->disableRowSelector();
+            //disable export
+            $comments->disableExport();
+            //disable column selector
+            $comments->disableColumnSelector();
+
+    
+        });
+      
+
     if (!Admin::user()->isRole('basic-user')){
         //button link to the show-details form
         $show->field('id','Action')->unescape()->as(function ($id) {
             return "<a href='/admin/form-sr4s/$id/edit' class='btn btn-primary'>Take Action</a>";
         });
+    }
+
+    if (Admin::user()->isRole('basic-user')) {
+        if(Utils::is_form_rejected('FormSr4')){
+            $show->field('id','Action')->unescape()->as(function ($id) {
+                return "<a href='/admin/form-sr4s/$id/edit' class='btn btn-primary'>Take Action</a>";
+            });
+        }
     }
         return $show;
     }
@@ -307,7 +380,7 @@ class FormSr4Controller extends AdminController
     protected function form()
     {
         $form = new Form(new FormSr4());
-
+       
         //check the id of the user before editing the form
         if ($form->isEditing()) {
             if (Admin::user()->isRole('basic-user')){
@@ -433,7 +506,6 @@ class FormSr4Controller extends AdminController
             $form->text('premises_location', __('Premises location'));
 
             $form->text('years_of_expirience', __('Years of experience'))
-                ->rules('min:1')
                 ->attribute('type', 'number')
                 ->required();
             $form->select('expirience_in', __('Experience in?'))
@@ -620,10 +692,9 @@ class FormSr4Controller extends AdminController
 
 
             $form->divider();
-            $form->radio('status', __('Status'))
+            $form->radio('status', __('Action'))
                 ->options([
-                    '1' => 'Pending',
-                    '2' => 'Under inspection',
+                    '2' => 'Assign Inspector',
                 ])
                 ->required()
                 ->when('2', function (Form $form) {
@@ -674,9 +745,18 @@ class FormSr4Controller extends AdminController
                     //     ->help('Name of the Inspector');
                 })
                 ->when('in', [3, 4], function (Form $form) {
-                    $form->textarea('status_comment', 'Inspector\'s comment (Remarks)')
-                        ->help("Please specify with a comment");
+                    
+                    $form->morphMany('comments', 'Inspector\'s comment (Remarks)', function (Form\NestedForm $form) {
+                        $form->textarea('comment', __('Please specify the reason for your action'));
+                        //capture the status of the comment
+                        $form->hidden('status')->default('hold');
+                    });                        
                 })
+                // ->when('in', [3, 4], function (Form $form) {
+                //     $form->textarea('status_comment', 'Enter status comment (Remarks)')
+                //         ->help("Please specify with a comment");
+                // })
+        
                 ->when('in', [5, 6], function (Form $form) {
 
                     $today = Carbon::now();
@@ -698,8 +778,9 @@ class FormSr4Controller extends AdminController
                     $form->text('seed_board_registration_number', __('Enter Seed Board Registration number'))
                         ->help("Please Enter seed board registration number")
                         ->default(rand(1000000, 9999999));
-                    $form->date('valid_from', 'Valid from date?');
-                    $form->date('valid_until', 'Valid until date?');
+                    //make date a required field
+                    $form->date('valid_from', 'Valid from date?')->default($today)->required();
+                    $form->date('valid_until', 'Valid until date?')->required();
                 });
         }
 

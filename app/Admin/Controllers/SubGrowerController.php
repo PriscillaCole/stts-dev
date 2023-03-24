@@ -239,7 +239,12 @@ class SubGrowerController extends AdminController
     protected function detail($id)
     {
         $show = new Show(SubGrower::findOrFail($id));
-
+        $subgrower = SubGrower::findOrFail($id);
+        if(Admin::user()->isRole('basic-user') ){
+            if($subgrower->status == 2 || $subgrower->status == 3 || $subgrower->status == 4 || $subgrower->status == 16){
+                \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'SubGrower'])->delete();
+            }
+        }
         $show->field('id', __('Id'));
         $show->field('created_at', __('Created at'));
         $show->field('updated_at', __('Updated at'));
@@ -260,7 +265,13 @@ class SubGrowerController extends AdminController
         $show->field('status', __('Status'));
         $show->field('inspector', __('Inspector'));
         $show->field('status_comment', __('Status comment'));
-
+ 
+        if (!Admin::user()->isRole('basic-user')){
+            //button link to the show-details form
+            $show->field('id','Action')->unescape()->as(function ($id) {
+                return "<a href='/admin/sub-growers/$id/edit' class='btn btn-primary'>Take Action</a>";
+            });
+        }
         return $show;
     }
 

@@ -32,8 +32,8 @@ class PlantingReturn extends Model
         $file = null;
         if ($m != null) {
             if (strlen($m->sub_growers_file) > 3) {
-                if (file_exists('./public/storage/uploads/' . $m->sub_growers_file)) {
-                    $file = './public/storage/uploads/' . $m->sub_growers_file;
+                if (file_exists('../public/uploads/' . $m->sub_growers_file)) {
+                    $file = '../public/uploads/' . $m->sub_growers_file;
                 }
             }
         }
@@ -176,39 +176,43 @@ class PlantingReturn extends Model
 
 
         self::creating(function ($model) {
-            $not = new MyNotification();
-            $not->role_id = 2; 
-            $not->message = 'New Planting Return form has been added by '.Admin::user()->name.' '; 
-            $not->link = admin_url("planting-returns/{$model->id}"); 
-            $not->status = 'Unread'; 
-            $not->model = 'PlantingReturn';
-            $not->model_id = $model->id; 
-            $not->group_type = 'Group'; 
-            $not->action_status_to_make_done = '[]'; 
-            $not->save();  
+              
         });
 
         self::created(function ($m) {
-            $file = null;
-            if ($m != null) {
-                if (strlen($m->sub_growers_file) > 3) {
-                    if (file_exists('./public/storage/uploads/' . $m->sub_growers_file)) {
-                        $file = './public/storage/uploads/' . $m->sub_growers_file;
-                    } else {
-                        $m->sub_growers_file = null;
-                        $m->save();
-                        return;
-                    }
-                } else {
-                    return $m;
-                }
-            } else {
-                return $m;
-            }
 
-            if ($file == null) {
-                return $m;
-            }
+            $not = new MyNotification();
+            $not->role_id = 2; 
+            $not->message = 'New Planting Return form has been added by '.Admin::user()->name.' '; 
+            $not->link = admin_url("planting-returns/{$m->id}"); 
+            $not->status = 'Unread'; 
+            $not->model = 'PlantingReturn';
+            $not->model_id = $m->id; 
+            $not->group_type = 'Group'; 
+            $not->action_status_to_make_done = '[]'; 
+            $not->save();
+            // $file = null;
+
+            // if ($m != null) {
+            //     if (strlen($m->sub_growers_file) > 3) {
+            //         if (file_exists('../public/uploads/files/' . $m->sub_growers_file)) {
+            //             $file = '../public/uploads/files/' . $m->sub_growers_file;
+            //         } else {
+            //             $m->sub_growers_file = null;
+            //             $m->save();
+            //             return;
+            //         }
+            //     } else {
+            //         return $m;
+            //     }
+            // } else {
+            //     return $m;
+            // }
+
+            // if ($file == null) {
+            //     return $m;
+            // }
+        
             self::import_sub_growers($m);
             return $m;
             //created
@@ -309,8 +313,8 @@ class PlantingReturn extends Model
             $file = null;
             if ($m != null) {
                 if (strlen($m->sub_growers_file) > 3) {
-                    if (file_exists('./public/storage/uploads/' . $m->sub_growers_file)) {
-                        $file = './public/storage/uploads/' . $m->sub_growers_file;
+                    if (file_exists('./public/uploads/files/' . $m->sub_growers_file)) {
+                        $file = './public/uploads/files/' . $m->sub_growers_file;
                     } else {
                         $m->sub_growers_file = null;
                         $m->save();

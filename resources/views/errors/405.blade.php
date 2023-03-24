@@ -37,6 +37,7 @@
               <h1 class="m-0">405</h1>
               <h6>Method not allowed - STTS</h6>
               <p>This method is not allowed</p>
+              <a href="{{ url('admin') }}" class="nav-link"> Back</a>
             </div>
           </div>
         </div>

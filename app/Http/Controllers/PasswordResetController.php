@@ -52,7 +52,8 @@ public function showResetPasswordForm(Request $request) {
 
  //attach the link to the mailer
     Mail::to($email)->send(new SendCodeResetPassword($link));
-     return back()->with('message', 'We have sent a reset email to your email address!');
+    Utils::alert('We have sent a reset email to your email address!','success'); 
+     return redirect('/admin/auth/login');//->with('message', 'We have sent a reset email to your email address!');
         
 }
 
@@ -62,26 +63,29 @@ public function showResetPasswordForm(Request $request) {
     
     $request->validate([
         'password' => 'required|min:6',
-        'password_confirmation' => 'required|same:password',
         'token' => 'required'
     ]);
    //send back to the form if the passwords dont match
     if($request->password != $request->password_confirmation){
-        return back()->withInput()->with('error', 'Passwords do not match!');
+        Utils::alert('Passwords do not match','danger'); 
+        return back()->withInput();
     }
 
     $updatePassword = PasswordReset::where( 'token',$request->token)->first();
 
 
     if(!$updatePassword){
-        return back()->withInput()->with('error', 'Invalid token!');
+        Utils::alert('Invalid token','danger');
+        return back()->withInput();
     }
     elseif($updatePassword->status == 1){
-        return back()->withInput()->with('error', 'Token has already been used!');
+        Utils::alert('Token has already been used!','danger');
+        return back()->withInput();
     }
     elseif($updatePassword->created_at > now()->addHour(1)) {
         $updatePassword->delete();
-        return back()->withInput()->with('error', 'Sorry, the token has expired!');;
+        Utils::alert('Sorry, the token has expired!','danger');
+        return back()->withInput();
     }
    
    else{
@@ -96,7 +100,8 @@ public function showResetPasswordForm(Request $request) {
 
     $user = Administrator::where('email', $updatePassword->email)
         ->update(['password'=> Hash::make($request->password)]);
-         return redirect('/admin/auth/login')->with('message','Your password has been changed successfully!');
+        Utils::alert('Your password has been changed successfully!','success');
+        return redirect('/admin/auth/login');
    }
 
 }

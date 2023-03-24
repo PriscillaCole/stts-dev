@@ -55,7 +55,7 @@ class FormQdsController extends AdminController
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
 
 
-            if (!Utils::can_create_form('FormQds')) {
+            if (Utils::can_create_form('FormQds')) {
                 $grid->disableCreateButton();
             }
             $grid->actions(function ($actions) {

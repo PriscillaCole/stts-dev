@@ -63,7 +63,7 @@ class FormSr4Controller extends AdminController
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
 
 
-            if (!Utils::can_create_form('FormSr4')) {
+            if (Utils::can_create_form('FormSr4')) {
                 $grid->disableCreateButton();
             }
             

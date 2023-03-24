@@ -59,7 +59,7 @@ class FormSr6Controller extends AdminController
 
         if (Admin::user()->isRole('basic-user')) {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
-            if (!Utils::can_create_form('FormSr6')) {
+            if (Utils::can_create_form('FormSr6')) {
                 $grid->disableCreateButton();
             }
             $grid->actions(function ($actions) {

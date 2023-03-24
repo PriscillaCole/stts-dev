@@ -44,6 +44,7 @@ class SubGrowerController extends AdminController
         // $s->save();
         // dd("done");
         $grid = new Grid(new SubGrower());
+      
 
         if (Admin::user()->isRole('admin')) {
             $grid->batchActions(function ($batch) {
@@ -56,6 +57,8 @@ class SubGrowerController extends AdminController
             $grid->disableCreateButton();
             $grid->disableBatchActions();
         }
+        
+        /*
 
  
         $grid->filter(function ($filter) {
@@ -73,7 +76,7 @@ class SubGrowerController extends AdminController
         });
 
 
-
+  return $grid;*/
 
         /*
         
@@ -193,6 +196,8 @@ class SubGrowerController extends AdminController
             }
             return $_user->name;
         });
+        
+        
 
         $grid->column('filed_name', __('Field Name'))->sortable();
         $grid->column('name', __('Person responisble'))->sortable();

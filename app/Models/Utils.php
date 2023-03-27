@@ -514,16 +514,68 @@ class Utils
 
         return true;
     }
-    public static function can_create_import_export()
+    public static function can_create_import()
     {
         $recs = ImportExportPermit::where('administrator_id',  Admin::user()->id)->get();
 
         foreach ($recs as $key => $value) {
 
-            if ($value->status == 1 || $value->status == 2 || $value->status == 3 || $value->status == 4 || $value->status == 5) {
+            // if (!$value->status == 1) {
+            //     return false;
+            // }
+    if ($value->is_import == 1) {
+            if (!$value->valid_from) {
                 return false;
-            }        
+            }
+
+            if (!$value->valid_until) {
+                return false;
+            }
+
+            $now = time();
+            $then = strtotime($value->valid_until);
+
+            if ($now < $then) {
+                return true;
+            } else {
+                return false;
+            }
         }
+    }
+
+        return true;
+    }
+
+    public static function can_create_export()
+    {
+        $recs = ImportExportPermit::where('administrator_id',  Admin::user()->id)->get();
+
+        foreach ($recs as $key => $value) {
+
+            // if (!$value->status == 1) {
+            //     return false;
+            // }
+    if ($value->is_import == 0) {
+            if (!$value->valid_from) {
+                return false;
+            }
+
+            if (!$value->valid_until) {
+                return false;
+            }
+
+            $now = time();
+            $then = strtotime($value->valid_until);
+
+            if ($now < $then) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+        return true;
     }
 //disable new button
     public static function can_create_form($model_name){
@@ -538,9 +590,6 @@ class Utils
                 
                 }
         }
-
-    
-      
 
 
 
@@ -563,6 +612,54 @@ public static function can_renew_form($model_name){
             }
         }
     return true;
+}
+}
+
+public static function can_renew_eform($model_name){
+    $model = "App\\Models\\" . ucfirst($model_name);
+    $recs = $model::where('administrator_id',  Admin::user()->id)->get();
+
+    foreach ($recs as $key => $value) {
+
+      if ($value->is_import == 0) {
+        if ($value->status == 5) {
+    
+        $now = time();
+        $then = strtotime($value->valid_until);
+
+            if ($now < $then) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+     }else{
+      return false;
+   }
+}
+}
+
+public static function can_renew_iform($model_name){
+    $model = "App\\Models\\" . ucfirst($model_name);
+    $recs = $model::where('administrator_id',  Admin::user()->id)->get();
+
+    foreach ($recs as $key => $value) {
+
+      if ($value->is_import == 1) {
+        if ($value->status == 5) {
+    
+        $now = time();
+        $then = strtotime($value->valid_until);
+
+            if ($now < $then) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+     }else{
+      return false;
+   }
 }
 }
 

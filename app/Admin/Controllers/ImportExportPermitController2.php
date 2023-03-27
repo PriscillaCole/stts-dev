@@ -59,12 +59,10 @@ class ImportExportPermitController2 extends AdminController
                 Admin::user()->id
             );
 
-            // if (!Utils::can_create_export_form()) {
-            //     $grid->disableCreateButton();
-            // }
-            if (!Utils::can_create_import_export()) {
+            if (!Utils::can_create_export_form()) {
                 $grid->disableCreateButton();
             }
+            
 
             $grid->actions(function ($actions) {
                 $status = ((int)(($actions->row['status'])));
@@ -294,29 +292,20 @@ class ImportExportPermitController2 extends AdminController
             //    return redirect(admin_url('form-sr4s/create'));
             }
 
+            if (!Utils::can_create_export()) {
+                return admin_warning("Warning", "You cannot create a new import permit request form  while still having a PENDING one.");
+                
+            }
+    
+            if (Utils::can_renew_eform('ImportExportPermit')) {
+                return admin_warning("Warning", "You cannot create a new SR6 form  while still having a valid one.");
+                
+            }
+
          
         }
 
-        // if (Utils::can_renew_form('FormSr4')) {
-        //     return admin_warning("Warning", "You cannot create a new SR4 form  while still having a valid one.");
-        
-        // }    
-        // if (!Utils::can_create_import_export()) {
-        //     return admin_warning("Warning", "You cannot create a new export permit request form  while still having another PENDING one.");
-           
-        // }
-            
-        // if ($form->isCreating()) {
-        //     if (!Utils::previous_export_form_not_accepted()) {
-        //         return admin_error("Alert", "You can not apply for a new Export Permit while your last application hasn't been accepted yet! <br>If status isn't 'Pending', please check the Inspector's comment(s) to correct your application.");
-        //         // return redirect(admin_url('import-export-permits-2'));
-        //     }
-        // }
-
-        // if (Utils::can_renew_form('ImportExportPermit')) {
-        //     return admin_warning("Warning", "You cannot create a new export permit request form  while still having a valid one.");
-        
-        // }
+       
         
  
 

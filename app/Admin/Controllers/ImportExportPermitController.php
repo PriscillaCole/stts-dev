@@ -62,13 +62,15 @@ class ImportExportPermitController extends AdminController
         if (Admin::user()->isRole('basic-user')) {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
 
-            // if (!Utils::can_create_import_form()) {
-            //     $grid->disableCreateButton();
-            // }
-
-            if (!Utils::can_create_import_export()) {
+            if (!Utils::can_create_import_form()) {
                 $grid->disableCreateButton();
             }
+            // if (!Utils::can_create_import_export()) {
+            //     $grid->disableCreateButton();
+                
+            // }
+           
+
 
             $grid->actions(function ($actions) {
                 $status = ((int)(($actions->row['status'])));
@@ -322,9 +324,14 @@ class ImportExportPermitController extends AdminController
             }
 
             
-        if (Utils::can_create_import_export()) {
-            return admin_warning("Warning", "You cannot create a new import permit request form  while still having another PENDING one.");
+        if (!Utils::can_create_import()) {
+            return admin_warning("Warning", "You cannot create a new import permit request form  while still having a PENDING one.");
             
+        }
+
+        if (Utils::can_renew_iform('ImportExportPermit')) {
+            return admin_warning("Warning", "You cannot create a new SR6 form  while still having a valid one.");
+
         }
         }
 

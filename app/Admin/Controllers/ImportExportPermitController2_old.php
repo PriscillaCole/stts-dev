@@ -45,10 +45,9 @@ class ImportExportPermitController2 extends AdminController
                 Admin::user()->id
             );
 
-            // if (!Utils::can_create_export_form()) {
-            //     $grid->disableCreateButton();
-            // }
-
+            if (!Utils::can_create_form('ImportExportPermit')) {
+                $grid->disableCreateButton();
+            }
             $grid->actions(function ($actions) {
                 $status = ((int)(($actions->row['status'])));
 
@@ -61,6 +60,7 @@ class ImportExportPermitController2 extends AdminController
                     $actions->disableDelete();
                 }
             });
+
         } else if (Admin::user()->isRole('inspector')) {
             $grid->model()->where('inspector', '=', Admin::user()->id);
             $grid->disableCreateButton();

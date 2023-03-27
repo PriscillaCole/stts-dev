@@ -251,10 +251,16 @@ class SubGrowerController extends AdminController
                 \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'SubGrower'])->delete();
             }
         }
-        $show->field('id', __('Id'));
-        $show->field('created_at', __('Created at'));
-        $show->field('updated_at', __('Updated at'));
-        $show->field('administrator_id', __('Administrator id'));
+        $show->field('created_at', __('Created at'))->as(function ($item) {
+            return Carbon::parse($item)->diffForHumans();
+        })->sortable();
+        $show->field('administrator_id', __('Created by'))->as(function ($user) {
+            $_user = Administrator::find($user);
+            if (!$_user) {
+                return "-";
+            }
+            return $_user->name;
+        });
         $show->field('name', __('Name'));
         $show->field('size', __('Size'));
         $show->field('crop', __('Crop'));
@@ -268,8 +274,19 @@ class SubGrowerController extends AdminController
         $show->field('gps_latitude', __('Gps latitude'));
         $show->field('gps_longitude', __('Gps longitude'));
         $show->field('detail', __('Detail'));
-        $show->field('status', __('Status'));
-        $show->field('inspector', __('Inspector'));
+        $show->field('status', __('Status'))->unescape()->as(function ($status) {
+            return Utils::tell_status($status);
+        });
+        $show->field('inspector', __('Inspector'))->as(function ($userId) {
+            if (Admin::user()->isRole('basic-user')) {
+                return "-";
+            }
+            $u = Administrator::find($userId);
+            if (!$u)
+                return "Not assigned";
+            return $u->name;
+        });
+        
         $show->field('status_comment', __('Status comment'));
  
         if (!Admin::user()->isRole('basic-user')){

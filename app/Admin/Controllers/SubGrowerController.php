@@ -290,6 +290,13 @@ class SubGrowerController extends AdminController
     {
         $form = new Form(new SubGrower());
         $user = Admin::user();
+        $sr4 = Utils::has_valid_sr6();
+        if ($form->isCreating()) {
+            if (!$sr4) {
+                return admin_error("Alert", "You need to be a registered and approved seed grower to apply for field inspection.");
+                // return redirect(admin_url('planting-returns'));
+            }
+        }
 
         if ($form->isCreating()) {
             $form->hidden('administrator_id')->default($user->id);

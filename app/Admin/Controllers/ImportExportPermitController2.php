@@ -59,9 +59,9 @@ class ImportExportPermitController2 extends AdminController
                 Admin::user()->id
             );
 
-            if (!Utils::can_create_export_form()) {
-                $grid->disableCreateButton();
-            }
+            // if (!Utils::can_create_export_form()) {
+            //     $grid->disableCreateButton();
+            // }
             
 
             $grid->actions(function ($actions) {

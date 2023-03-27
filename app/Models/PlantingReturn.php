@@ -27,13 +27,14 @@ class PlantingReturn extends Model
 
     public static function import_sub_growers($m)
     {
+        ///home/technolo/stts-dev2/public
 
-//dd(public_path( $m->sub_growers_file));
+        //dd(public_path($m->sub_growers_file));
         $file = null;
         if ($m != null) {
             if (strlen($m->sub_growers_file) > 3) {
-                if (file_exists('../public/uploads/'.$m->sub_growers_file)) {
-                    $file = '../public/uploads/'.$m->sub_growers_file;
+                if (file_exists('/home/technolo/stts-dev2/storage/app/public/'.$m->sub_growers_file)) {
+                    $file = '/home/technolo/stts-dev2/storage/app/public/'.$m->sub_growers_file;
                 }else{
     
                 }

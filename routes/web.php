@@ -79,11 +79,19 @@ Route::post('resets/password', [PasswordResetController::class, 'submitResetPass
 
 Route::view('/error', 'errors.404')->name('404');
 
-//always the last.
- Route::match(['get', 'post'], '/{id}', [MainController::class, 'slugSwitcher']);
-
  // Clear cache
  Route::get('/clear-cache', function() {
     \Artisan::call('optimize:clear');
     return 'Cache cleared';
 });
+
+Route::get('/public-path', function() {
+    return public_path();
+});
+
+//always the last.
+ Route::match(['get', 'post'], '/{id}', [MainController::class, 'slugSwitcher']);
+
+
+
+

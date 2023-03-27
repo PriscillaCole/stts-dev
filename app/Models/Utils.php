@@ -617,11 +617,12 @@ public static function can_renew_form($model_name){
 
 public static function can_renew_eform($model_name){
     $model = "App\\Models\\" . ucfirst($model_name);
-    $recs = $model::where('administrator_id',  Admin::user()->id)->get();
+    $recs = ImportExportPermit::where('administrator_id', '=',  Admin::user()->id)
+    ->where('is_import', '!=', 1)
+    ->get();
 
     foreach ($recs as $key => $value) {
 
-      if ($value->is_import == 0) {
         if ($value->status == 5) {
     
         $now = time();
@@ -633,19 +634,20 @@ public static function can_renew_eform($model_name){
                 return false;
             }
         }
-     }else{
+     }
       return false;
    }
-}
-}
+
+
 
 public static function can_renew_iform($model_name){
     $model = "App\\Models\\" . ucfirst($model_name);
-    $recs = $model::where('administrator_id',  Admin::user()->id)->get();
+    $recs = ImportExportPermit::where('administrator_id', '=',  Admin::user()->id)
+    ->where('is_import', '!=', 0)
+    ->get();
 
     foreach ($recs as $key => $value) {
 
-      if ($value->is_import == 1) {
         if ($value->status == 5) {
     
         $now = time();
@@ -657,11 +659,11 @@ public static function can_renew_iform($model_name){
                 return false;
             }
         }
-     }else{
+     }
       return false;
    }
-}
-}
+
+
 
  //check expiration date for all Forms
     public static function check_expiration_date($model_name,$id){

@@ -152,14 +152,11 @@ class SubGrowerController extends AdminController
             
 
             $grid->actions(function ($actions) {
-
-        
-
                 $status = ((int)(($actions->row['status'])));
-                if ($status == 16) {
+            
                     $actions->disableDelete();
                     $actions->disableEdit();
-                }
+                
 
             }); 
         } else if (Admin::user()->isRole('basic-user')) {
@@ -177,7 +174,7 @@ class SubGrowerController extends AdminController
                     $actions->disableEdit();
                 }
             });
-        }
+        }  
 
 
 
@@ -286,7 +283,7 @@ class SubGrowerController extends AdminController
                 return "Not assigned";
             return $u->name;
         });
-        
+
         $show->field('status_comment', __('Status comment'));
  
         if (!Admin::user()->isRole('basic-user')){

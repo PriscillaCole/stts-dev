@@ -330,7 +330,7 @@ class ImportExportPermitController extends AdminController
         }
 
         if (Utils::can_renew_iform('ImportExportPermit')) {
-            return admin_warning("Warning", "You cannot create a new SR6 form  while still having a valid one.");
+            return admin_warning("Warning", "You cannot create a new import form  while still having a valid one.");
 
         }
         }

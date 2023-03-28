@@ -3,6 +3,8 @@
 namespace App\Admin\Controllers\Dashboard;
 
 use App\Models\FormQds;
+use App\Models\FormSr4;
+use App\Models\FormSr6;
 use App\Models\FormSr10;
 use App\Models\FormStockExaminationRequest;
 // use Encore\Admin\Admin;
@@ -74,6 +76,8 @@ class HomeDashboardController2 extends AdminController
             ['name' => 'Import Permits:', 'value' =>  ImportExportPermit::get()->count()],
             ['name' => 'Export Permits:', 'value' =>  ImportExportPermit::get()->count()],
             ['name' => 'Planting returns:', 'value' => PlantingReturn::get()->count()],
+            ['name' => 'SR4 Forms:', 'value' => FormSr4::get()->count()],
+            ['name' => 'SR6 Forms:', 'value' => FormSr6::get()->count()],
             ['name' => 'SR10 Forms:', 'value' => FormSr10::get()->count()],
             ['name' => 'QDS Forms:', 'value' => FormQds::get()->count()],
             ['name' => 'Seed Labs:', 'value' => SeedLab::get()->count()],
@@ -107,6 +111,8 @@ class HomeDashboardController2 extends AdminController
             ['name' => 'Import Permits:', 'value' =>  ImportExportPermit::where(['administrator_id' => $user->id, 'is_import' => 1])->count()],
             ['name' => 'Export Permits:', 'value' =>  ImportExportPermit::where(['administrator_id' => $user->id, 'is_import' => 0])->count()],
             ['name' => 'Planting returns:', 'value' => PlantingReturn::where('administrator_id', $user->id)->count()],
+            ['name' => 'SR4 Forms:', 'value' => FormSr4::where('administrator_id', $user->id)->count()],
+            ['name' => 'SR6 Forms:', 'value' => FormSr6::where('administrator_id', $user->id)->count()],
             ['name' => 'SR10 Forms:', 'value' => FormSr10::where('administrator_id', $user->id)->count()],
             ['name' => 'QDS Forms:', 'value' => FormQds::where('administrator_id', $user->id)->count()],
             ['name' => 'Seed Labs:', 'value' => SeedLab::where('administrator_id', $user->id)->count()],

@@ -12,5 +12,5 @@ composer.phar
 /storage/framework/cache
 /storage/framework/views
 /storage/framework/sessions
-/App/Models/PlantingReturn.php
+/app/Models/PlantingReturn.php
 .gitignore

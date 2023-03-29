@@ -753,18 +753,18 @@ class FormSr4Controller extends AdminController
                     //     ->readonly()
                     //     ->help('Name of the Inspector');
                 })
-                 // ->when('in', [3, 4], function (Form $form) {
-                //     $form->textarea('status_comment', 'Enter status comment (Remarks)')
-                //         ->help("Please specify with a comment");
-                // })
-                ->when('in', [3, 4], function (Form $form) {
-                    
-                    $form->morphMany('comments', 'Inspector\'s comment (Remarks)', function (Form\NestedForm $form) {
-                        $form->textarea('comment', __('Please specify the reason for your action'));
-                        //capture the status of the comment
-                        $form->hidden('status')->default('hold');
-                    });                        
+                 ->when('in', [3, 4], function (Form $form) {
+                    $form->textarea('status_comment', 'Enter status comment (Remarks)')
+                        ->help("Please specify with a comment");
                 })
+                // ->when('in', [3, 4], function (Form $form) {
+                    
+                //     $form->morphMany('comments', 'Inspector\'s comment (Remarks)', function (Form\NestedForm $form) {
+                //         $form->textarea('comment', __('Please specify the reason for your action'));
+                //         //capture the status of the comment
+                //         $form->hidden('status')->default('hold');
+                //     });                        
+                // })
                
         
                 ->when('in', [5, 6], function (Form $form) {

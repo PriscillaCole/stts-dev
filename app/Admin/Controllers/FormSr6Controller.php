@@ -553,7 +553,7 @@ class FormSr6Controller extends AdminController
                 ])
                 ->required()
 
-                ->when('2', function (Form $form) {
+                ->when('3', function (Form $form) {
                     $items = Administrator::all();
                     $_items = [];
                     foreach ($items as $key => $item) {
@@ -568,7 +568,7 @@ class FormSr6Controller extends AdminController
                     //     ->readonly()
                     //     ->help('Name of the Inspector');
                 })
-                 ->when('in', [3, 4], function (Form $form) {
+                 ->when('4', function (Form $form) {
                     $form->textarea('status_comment', 'Enter status comment (Remarks)')
                         ->help("Please specify with a comment");
                 })
@@ -583,7 +583,7 @@ class FormSr6Controller extends AdminController
                 //     });                        
                 // })
 
-                ->when('in', [5, 6], function (Form $form) {
+                ->when('5', function (Form $form) {
                
                     $form->text('grower_number', __('Grower number'))
                     ->default("SG" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->disable();

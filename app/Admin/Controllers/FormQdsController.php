@@ -282,7 +282,7 @@ class FormQdsController extends AdminController
             });
        // $show->field('status_comment', __('Status comment'));
 
-        
+       if(!Utils::form_status('FormQds')){
         $show->comments('Comments', function ($comments) {
 
             $comments->resource('/admin/comments');
@@ -310,6 +310,7 @@ class FormQdsController extends AdminController
 
     
         });
+    }
 
         if (!Admin::user()->isRole('basic-user')){
             //button link to the show-details form

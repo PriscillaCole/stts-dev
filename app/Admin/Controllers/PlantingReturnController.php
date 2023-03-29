@@ -116,24 +116,22 @@ class PlantingReturnController extends AdminController
                     $actions->disableEdit();
                 }
             });
-        } else if (Admin::user()->isRole('inspector')|| Admin::user()->isRole('admin') ) {
-            $grid->disableCreateButton();
-
-            $grid->actions(function ($actions) {
-
-                $status = ((int)(($actions->row['status'])));
-                if($status == 4){
-                    $actions->disableDelete();
-                    $actions->disableEdit();
-                }
-                if (
-                    $status != 1
-                ) {
-                    $actions->disableDelete();
-                    $actions->disableEdit();
-                }
-            });
-        } else if (Admin::user()->isRole('basic-user'))  {
+        }  else if (Admin::user()->isRole('inspector')|| Admin::user()->isRole('admin') ) { 
+            // $grid->model()->where('inspector', '=', Admin::user()->id);
+             $grid->disableCreateButton();
+ 
+             $grid->actions(function ($actions) {
+                 $status = ((int)(($actions->row['status'])));
+                 $actions->disableDelete();
+                 $actions->disableEdit();
+                 // if (
+                 //     $status != 2
+                 // ) {
+                 //     $actions->disableEdit();
+                 // }
+             });
+         } 
+         else if (Admin::user()->isRole('basic-user'))  {
             $grid->actions(function ($actions) {
 
                 $status = ((int)(($actions->row['status'])));

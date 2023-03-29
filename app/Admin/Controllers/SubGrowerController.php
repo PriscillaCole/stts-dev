@@ -144,13 +144,8 @@ class SubGrowerController extends AdminController
                     $actions->disableEdit();
                 }
             });
-        } else if (Admin::user()->isRole('inspector')) {
-            $grid->model()->where('inspector', '=', Admin::user()->id);
-
-
-            
-            
-
+        } else if (Admin::user()->isRole('inspector') || Admin::user()->isRole('admin')) {
+           // $grid->model()->where('inspector', '=', Admin::user()->id);
             $grid->actions(function ($actions) {
                 $status = ((int)(($actions->row['status'])));
             
@@ -286,12 +281,12 @@ class SubGrowerController extends AdminController
 
         $show->field('status_comment', __('Status comment'));
  
-        if (!Admin::user()->isRole('basic-user')){
-            //button link to the show-details form
-            $show->field('id','Action')->unescape()->as(function ($id) {
-                return "<a href='/admin/sub-growers/$id/edit' class='btn btn-primary'>Take Action</a>";
-            });
-        }
+        // if (!Admin::user()->isRole('basic-user')){
+        //     //button link to the show-details form
+        //     $show->field('id','Action')->unescape()->as(function ($id) {
+        //         return "<a href='/admin/sub-growers/$id/edit' class='btn btn-primary'>Take Action</a>";
+        //     });
+        // }
         return $show;
     }
 

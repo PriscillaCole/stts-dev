@@ -259,6 +259,8 @@ class ImportExportPermitController extends AdminController
         if ($import_permit->valid_until != null) {
             $show->field('valid_until', __('Valid until'));
         }
+        if(!Utils::form_status('ImportExportPermit',$id)){
+
 
         $show->comments('Comments', function ($comments) {
 
@@ -287,6 +289,7 @@ class ImportExportPermitController extends AdminController
 
     
         });
+    }
 
         if (!Admin::user()->isRole('basic-user')){
             //button link to the show-details form

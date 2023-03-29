@@ -552,19 +552,37 @@ class FormSr6Controller extends AdminController
                     '5' => 'Accepted', 
                 ])
                 ->required()
-                
-                // ->when('in', [3, 4], function (Form $form) {
-                //     $form->textarea('status_comment', 'Enter status comment (Remarks)')
-                //         ->help("Please specify with a comment");
-                // })
-                ->when('in', [3, 4], function (Form $form) {
-                    
-                    $form->morphMany('comments', 'Inspector\'s comment (Remarks)', function (Form\NestedForm $form) {
-                        $form->textarea('comment', __('Please specify the reason for your action'));
-                        //capture the status of the comment
-                        $form->hidden('status')->default('hold');
-                    });                        
+
+                ->when('2', function (Form $form) {
+                    $items = Administrator::all();
+                    $_items = [];
+                    foreach ($items as $key => $item) {
+                        if (!Utils::has_role($item, "inspector")) {
+                            continue;
+                        }
+                        $_items[$item->id] = $item->name . " - " . $item->id;
+                    }
+
+                    // $form->text('inspector', __('Inspector'))
+                    //     ->options($_items)
+                    //     ->readonly()
+                    //     ->help('Name of the Inspector');
                 })
+                 ->when('in', [3, 4], function (Form $form) {
+                    $form->textarea('status_comment', 'Enter status comment (Remarks)')
+                        ->help("Please specify with a comment");
+                })
+                
+        
+                // ->when('in', [3, 4], function (Form $form) {
+                    
+                //     $form->morphMany('comments', 'Inspector\'s comment (Remarks)', function (Form\NestedForm $form) {
+                //         $form->textarea('comment', __('Please specify the reason for your action'));
+                //         //capture the status of the comment
+                //         $form->hidden('status')->default('hold');
+                //     });                        
+                // })
+
                 ->when('in', [5, 6], function (Form $form) {
                
                     $form->text('grower_number', __('Grower number'))

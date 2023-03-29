@@ -333,7 +333,7 @@ class FormSr4Controller extends AdminController
         // $show->field('status_comment', __('Status comment'));
 
         //check the status of the form_status
-        if(!Utils::form_status('FormSr4')){
+        if(Utils::form_status('FormSr4')){
         
  
         $show->comments('Comments', function ($comments) {

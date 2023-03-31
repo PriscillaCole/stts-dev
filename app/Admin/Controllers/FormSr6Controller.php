@@ -222,7 +222,7 @@ class FormSr6Controller extends AdminController
                 $table = new Table($headers, $rows);
                 return $table;
             });
-        $show->field('previous_grower_number', __('Previous grower number'));
+        //$show->field('previous_grower_number', __('Previous grower number'));
         $show->field('cropping_histroy', __('Land histroy'));
         $show->field('have_adequate_isolation', __('Have adequate isolation'))
             ->as(function ($item) {
@@ -271,35 +271,9 @@ class FormSr6Controller extends AdminController
             ->as(function ($status) {
                 return Utils::tell_status($status);
             });
-       // $show->field('status_comment', __('Status comment'));
-
-        $show->comments('Comments', function ($comments) {
-
-            $comments->resource('/admin/comments');
-          //get the status of the comments related to the form
-        
-            $comments->comment();
-            $comments->created_at('Date')->display(function ($item) {
-                return Carbon::parse($item)->diffForHumans();
-            });
-          
-            //disable action buttons
-            $comments->disableActions();
-            //disable pagination
-            $comments->disablePagination();
-            //disable filtering
-            $comments->disableFilter();
-            //disable create button
-            $comments->disableCreateButton();
-            //disable row selector
-            $comments->disableRowSelector();
-            //disable export
-            $comments->disableExport();
-            //disable column selector
-            $comments->disableColumnSelector();
+       $show->field('status_comment', __('Status comment'));
 
     
-        });
 
 
         if (!Admin::user()->isRole('basic-user')){
@@ -553,7 +527,7 @@ class FormSr6Controller extends AdminController
                 ])
                 ->required()
 
-                ->when('3', function (Form $form) {
+                ->when('2', function (Form $form) {
                     $items = Administrator::all();
                     $_items = [];
                     foreach ($items as $key => $item) {
@@ -568,25 +542,18 @@ class FormSr6Controller extends AdminController
                     //     ->readonly()
                     //     ->help('Name of the Inspector');
                 })
-                 ->when('4', function (Form $form) {
+                 ->when('in', [3, 4], function (Form $form) {
                     $form->textarea('status_comment', 'Enter status comment (Remarks)')
                         ->help("Please specify with a comment");
                 })
                 
         
-                // ->when('in', [3, 4], function (Form $form) {
-                    
-                //     $form->morphMany('comments', 'Inspector\'s comment (Remarks)', function (Form\NestedForm $form) {
-                //         $form->textarea('comment', __('Please specify the reason for your action'));
-                //         //capture the status of the comment
-                //         $form->hidden('status')->default('hold');
-                //     });                        
-                // })
+               
 
-                ->when('5', function (Form $form) {
+                ->when('in', [5, 6], function (Form $form) {
                
                     $form->text('grower_number', __('Grower number'))
-                    ->default("SG" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->disable();
+                    ->default("Grower" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->readonly();
                
                     $today = Carbon::now();
                     $form->date('valid_from', 'Valid from date')->default($today)->required();

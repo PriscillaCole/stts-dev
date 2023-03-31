@@ -36,6 +36,7 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
         'years_of_expirience',
         'form_sr6_has_crops',
         'seed_grower_in_past',
+        'grower_number',
         'cropping_histroy',
         'have_adequate_isolation',
         'have_adequate_labor',

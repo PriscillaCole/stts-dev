@@ -323,6 +323,7 @@ class FormStockExaminationRequestController extends AdminController
                     '2' => 'Grower seed',
                     '3' => 'QDs',
                 ])
+                
                 ->when('1', function (Form $form) {
                     $all_import_permits =  ImportExportPermit::where([
                         'administrator_id' => Admin::user()->id,

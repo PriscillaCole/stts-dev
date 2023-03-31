@@ -230,7 +230,7 @@ class FormQdsController extends AdminController
                 $table = new Table($headers, $rows);
                 return $table;
             });
-        $show->field('previous_grower_number', __('Previous grower number'));
+        //$show->field('previous_grower_number', __('Previous grower number'));
         $show->field('cropping_histroy', __('Cropping histroy'));
         $show->field('have_adequate_isolation', __('Have adequate isolation'))
             ->as(function ($item) {
@@ -280,37 +280,8 @@ class FormQdsController extends AdminController
             ->as(function ($status) {
                 return Utils::tell_status($status);
             });
-       // $show->field('status_comment', __('Status comment'));
+       $show->field('status_comment', __('Status comment'));
 
-       if(!Utils::form_status('FormQds')){
-        $show->comments('Comments', function ($comments) {
-
-            $comments->resource('/admin/comments');
-          //get the status of the comments related to the form
-        
-            $comments->comment();
-            $comments->created_at('Date')->display(function ($item) {
-                return Carbon::parse($item)->diffForHumans();
-            });
-          
-            //disable action buttons
-            $comments->disableActions();
-            //disable pagination
-            $comments->disablePagination();
-            //disable filtering
-            $comments->disableFilter();
-            //disable create button
-            $comments->disableCreateButton();
-            //disable row selector
-            $comments->disableRowSelector();
-            //disable export
-            $comments->disableExport();
-            //disable column selector
-            $comments->disableColumnSelector();
-
-    
-        });
-    }
 
         if (!Admin::user()->isRole('basic-user')){
             //button link to the show-details form
@@ -693,14 +664,7 @@ class FormQdsController extends AdminController
                     $form->textarea('status_comment', 'Enter status comment (Remarks)')
                         ->help("Please specify with a comment");
                 })
-                // ->when('in', [3, 4], function (Form $form) {
-                    
-                //     $form->morphMany('comments', 'Inspector\'s comment (Remarks)', function (Form\NestedForm $form) {
-                //         $form->textarea('comment', __('Please specify the reason for your action'));
-                //         //capture the status of the comment
-                //         $form->hidden('status')->default('hold');
-                //     });                        
-                // })
+            
                 ->when('in', [5, 6], function (Form $form) {
                     $today = Carbon::now();
                     $form->hidden('grower_number', __('Grower number'))
@@ -708,6 +672,8 @@ class FormQdsController extends AdminController
                         ->default("0000");
                     $form->text('registration_number', __('Registration number'))
                         ->help("Please Enter Registration number");
+                        $form->text('grower_number', __('Grower number'))
+                        ->default("Qds" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->readonly();
                         $form->date('valid_from', 'Valid from date?')->default($today)->required();
                         $form->date('valid_until', 'Valid until date?')->required();
                 });

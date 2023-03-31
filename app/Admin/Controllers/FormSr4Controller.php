@@ -330,38 +330,10 @@ class FormSr4Controller extends AdminController
             return Utils::tell_status($status);
         });
 
-        // $show->field('status_comment', __('Status comment'));
+    $show->field('status_comment', __('Status comment'));
 
-        //check the status of the form_status
-        if(Utils::form_status('FormSr4')){
-        
- 
-        $show->comments('Comments', function ($comments) {
 
-            $comments->resource('/admin/comments');
-          //get the status of the comments related to the form
-        
-            $comments->comment();
-            $comments->created_at('Date')->display(function ($item) {
-                return Carbon::parse($item)->diffForHumans();
-            });
-          
-            //disable action buttons
-            $comments->disableActions();
-            //disable pagination
-            $comments->disablePagination();
-            //disable filtering
-            $comments->disableFilter();
-            //disable create button
-            $comments->disableCreateButton();
-            //disable row selector
-            $comments->disableRowSelector();
-            //disable export
-            $comments->disableExport();
-            //disable column selector
-            $comments->disableColumnSelector();
-        });
-    }
+   
       
 
     if (!Admin::user()->isRole('basic-user')){
@@ -757,14 +729,7 @@ class FormSr4Controller extends AdminController
                     $form->textarea('status_comment', 'Enter status comment (Remarks)')
                         ->help("Please specify with a comment");
                 })
-                // ->when('in', [3, 4], function (Form $form) {
-                    
-                //     $form->morphMany('comments', 'Inspector\'s comment (Remarks)', function (Form\NestedForm $form) {
-                //         $form->textarea('comment', __('Please specify the reason for your action'));
-                //         //capture the status of the comment
-                //         $form->hidden('status')->default('hold');
-                //     });                        
-                // })
+             
                
         
                 ->when('in', [5, 6], function (Form $form) {

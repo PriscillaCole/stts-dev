@@ -745,6 +745,20 @@ public static function check_inspector_remarks(){
     }
 }
 
+//check the selected  formSr4 application category selected by a user
+public static function check_application_category(){
+
+    $recs = FormSr4::where('administrator_id',  Admin::user()->id)->get();
+    foreach ($recs as $key => $value) {
+        if($value->type != null){
+            $application_category = $value->type;
+            return $application_category;
+        
+    }
+}
+}
+
+
     public static function tell_order_status($status)
     {
         if (!$status)

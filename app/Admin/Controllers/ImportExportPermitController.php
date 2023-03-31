@@ -241,12 +241,7 @@ class ImportExportPermitController extends AdminController
         $show->field('ista_certificate', __('Ista certificate'));
         $show->field('permit_number', __('Permit number'));
 
-        if (!Admin::user()->isRole('basic-user')){
-        //button link to the show-details form
-        $show->field('id','Action')->unescape()->as(function ($id) {
-            return "<a href='/admin/import-export-permits/$id/edit' class='btn btn-primary'>Take Action</a>";
-        });
-        }
+       
         //show the status
         $show->field('status', __('Status'))->unescape()->as(function ($status) {
             return Utils::tell_status($status);
@@ -262,9 +257,12 @@ class ImportExportPermitController extends AdminController
 
         if (!Admin::user()->isRole('basic-user')){
             //button link to the show-details form
+            //check the status of the form being shown
+            if($import_permit->status == 1 || $import_permit == null){
             $show->field('id','Action')->unescape()->as(function ($id) {
                 return "<a href='/admin/import-export-permits/$id/edit' class='btn btn-primary'>Take Action</a>";
             });
+        }
         }
     
         if (Admin::user()->isRole('basic-user')) {
@@ -585,7 +583,7 @@ class ImportExportPermitController extends AdminController
                     $form->text('telephone', __('Phone Number'))->required();
                     if ($sr4->seed_board_registration_number != null) {
                     $seed_board_registration_number = $sr4->seed_board_registration_number;
-                    $form->text("", __('National Seed Board Registration Number'))
+                    $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
                         ->default($seed_board_registration_number)
                         ->readonly();
                 }
@@ -666,7 +664,7 @@ class ImportExportPermitController extends AdminController
                                 $form->text('telephone', __('Phone Number'))->required();
                                 if ($sr4->seed_board_registration_number != null) {
                                 $seed_board_registration_number = $sr4->seed_board_registration_number;
-                                $form->text("", __('National Seed Board Registration Number'))
+                                $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
                                     ->default($seed_board_registration_number)
                                     ->readonly();
                             }
@@ -748,7 +746,7 @@ class ImportExportPermitController extends AdminController
                                             $form->text('telephone', __('Phone Number'))->required();
                                             if ($sr4->seed_board_registration_number != null) {
                                             $seed_board_registration_number = $sr4->seed_board_registration_number;
-                                            $form->text("", __('National Seed Board Registration Number'))
+                                            $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
                                                 ->default($seed_board_registration_number)
                                                 ->readonly();
                                         }
@@ -829,7 +827,7 @@ class ImportExportPermitController extends AdminController
                     $form->text('telephone', __('Phone Number'))->required();
                     if ($sr4->seed_board_registration_number != null) {
                     $seed_board_registration_number = $sr4->seed_board_registration_number;
-                    $form->text("", __('National Seed Board Registration Number'))
+                    $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
                         ->default($seed_board_registration_number)
                         ->readonly();
                 }
@@ -911,7 +909,7 @@ class ImportExportPermitController extends AdminController
                     $form->text('telephone', __('Phone Number'))->required();
                     if ($sr4->seed_board_registration_number != null) {
                     $seed_board_registration_number = $sr4->seed_board_registration_number;
-                    $form->text("", __('National Seed Board Registration Number'))
+                    $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
                         ->default($seed_board_registration_number)
                         ->readonly();
                 }
@@ -983,7 +981,7 @@ class ImportExportPermitController extends AdminController
             $sr4 = Utils::has_valid_sr4();
             $application_category = Utils::check_application_category();
             $user = Auth::user();
-                               
+                 if ($sr4 = null) {                     //compare the selected input with $application_category              
                     $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
                     // $form->text($address_of_current_user, __('Postal Address'))->required();
                     $form->text('address', __('Postal Address'))->required();
@@ -1039,6 +1037,7 @@ class ImportExportPermitController extends AdminController
                     $form->hidden('category', __('Category'))->default("")->value($item->name);
                     $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
                 });
+            }
 
                    
                     })
@@ -1058,7 +1057,7 @@ class ImportExportPermitController extends AdminController
                     $form->text('telephone', __('Phone Number'))->required();
                     if ($sr4->seed_board_registration_number != null) {
                     $seed_board_registration_number = $sr4->seed_board_registration_number;
-                    $form->text("", __('National Seed Board Registration Number'))
+                    $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
                         ->default($seed_board_registration_number)
                         ->readonly();
                 }
@@ -1233,50 +1232,45 @@ class ImportExportPermitController extends AdminController
             $form->divider();
 
             $form->radio('status', __('Status'))
-                ->options([
-                    '3' => 'Halted',
-                    '4' => 'Rejected',
-                    '5' => 'Accepted',
-                ])
-                ->required()
-                ->when('2', function (Form $form) {
-                    $items = Administrator::all();
-                    $_items = [];
-                    foreach ($items as $key => $item) {
-                        if (!Utils::has_role($item, "inspector")) {
-                            continue;
-                        }
-                        $_items[$item->id] = $item->name . " - " . $item->id;
+            ->options([ 
+                '3' => 'Halted',
+                '4' => 'Rejected',
+                '5' => 'Accepted',
+            ])
+            ->required()
+            ->when('2', function (Form $form) {
+                $items = Administrator::all();
+                $_items = [];
+                foreach ($items as $key => $item) {
+                    if (!Utils::has_role($item, "inspector")) {
+                        continue;
                     }
-                    $form->select('inspector', __('Inspector'))
-                        ->options($_items)
-                        ->readonly()
-                        ->help('Please select inspector')
-                        ->rules('required');
-                })
-                // ->when('in', [3, 4], function (Form $form) {
-                //     $form->textarea('status_comment', 'Enter status comment (Remarks)')
-                //         ->help("Please specify with a comment");
-                // })
-                ->when('in', [3, 4], function (Form $form) {
-                    
-                    $form->morphMany('comments', 'Inspector\'s comment (Remarks)', function (Form\NestedForm $form) {
-                        $form->textarea('comment', __('Please specify the reason for your action'));
-                        //capture the status of the comment
-                        $form->hidden('status')->default('hold');
-                    });                        
-                })
+                    $_items[$item->id] = $item->name . " - " . $item->id;
+                }
 
-                ->when('in', [5, 6], function (Form $form) {
-                    $today = Carbon::now();
-                    $form->text('permit_number', __('Permit number'))
-                        ->help("Please Enter Permit number")
-                        ->default(rand(10000, 1000000));
-                    // $form->date('valid_from', 'Valid from date?')->readonly();
-                    // $form->date('valid_until', 'Valid until date?')->readonly();
-                    $form->date('valid_from', 'Valid from date?')->default(date($today))->required();
-                    $form->date('valid_until', 'Valid until date?')->required();
-                });
+                // $form->text('inspector', __('Inspector'))
+                //     ->options($_items)
+                //     ->readonly()
+                //     ->help('Name of the Inspector');
+            })
+             ->when('in', [3, 4], function (Form $form) {
+                $form->textarea('status_comment', 'Enter status comment (Remarks)')
+                    ->help("Please specify with a comment");
+            })
+         
+           
+    
+            ->when('in', [5, 6], function (Form $form) {
+
+                $today = Carbon::now();
+              
+                $form->text('permit_number', __('Permit number'))
+                    ->help("Please Enter Permit number")
+                    ->default(rand(1000000, 9999999));
+                //make date a required field
+                $form->date('valid_from', 'Valid from date?')->default($today)->required();
+                $form->date('valid_until', 'Valid until date?')->required();
+            });
 
 
             // $form->datetime('valid_from', __('Valid from'))->default(date('Y-m-d H:i:s'));

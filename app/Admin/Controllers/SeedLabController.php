@@ -45,6 +45,9 @@ class SeedLabController extends AdminController
         // die("done");
         $grid = new Grid(new SeedLab());
 
+        //organise the grid in ascending order
+        $grid->model()->orderBy('id', 'desc');
+
         $grid->disableFilter();
         // $grid->disableRowSelector();
         
@@ -321,9 +324,8 @@ class SeedLabController extends AdminController
 
             $form->divider();
             $form->hidden('inspector_is_done', __('inspector_is_done'))->attribute(['value', 0]);
-            $form->radio('status', __('Status'))
+            $form->radio('status', __('Action'))
                 ->options([
-                    '1' => 'Pending',
                     '2' => 'Assign inspector',
                 ])
                 ->required()

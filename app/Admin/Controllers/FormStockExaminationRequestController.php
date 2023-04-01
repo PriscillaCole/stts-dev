@@ -47,6 +47,10 @@ class FormStockExaminationRequestController extends AdminController
 
         $grid = new Grid(new FormStockExaminationRequest());
 
+        //organize the grid in descending order of created_at
+        $grid->model()->orderBy('created_at', 'desc');
+
+
         if (Admin::user()->isRole('basic-user')) {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
             $grid->actions(function ($actions) {
@@ -298,6 +302,7 @@ class FormStockExaminationRequestController extends AdminController
                         $import_permits[$value->id] = $value->id;
                     }
                 }
+
             }
 
             foreach ($_import_permits as $key => $value) {
@@ -474,8 +479,7 @@ class FormStockExaminationRequestController extends AdminController
             $form->divider();
             $form->radio('status', __('Status'))
                 ->options([
-                    '1' => 'Pending',
-                    '2' => 'Under inspection',
+                    '2' => 'Assign Inspector',
                 ])
                 ->required()
                 ->when('2', function (Form $form) {

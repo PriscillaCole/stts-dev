@@ -214,6 +214,7 @@ class ImportExportPermitController extends AdminController
         $show->field('store_location', __('Store location'));
         $show->field('quantiry_of_seed', __('Quantity of seed'));
         $show->field('name_address_of_origin', __('Name address of origin'));
+        if($import_permit->dealers_in != null){
         $show->field('dealers_in', __('Crops'))
             ->unescape()
             ->as(function ($item) {
@@ -238,6 +239,7 @@ class ImportExportPermitController extends AdminController
                 $table = new Table($headers, $rows);
                 return $table;
             });
+        }
         $show->field('ista_certificate', __('Ista certificate'));
         $show->field('permit_number', __('Permit number'));
 
@@ -258,7 +260,7 @@ class ImportExportPermitController extends AdminController
         if (!Admin::user()->isRole('basic-user')){
             //button link to the show-details form
             //check the status of the form being shown
-            if($import_permit->status == 1 || $import_permit == null){
+            if($import_permit->status == 1 || $import_permit->status == 2 || $import_permit->status == null){
             $show->field('id','Action')->unescape()->as(function ($id) {
                 return "<a href='/admin/import-export-permits/$id/edit' class='btn btn-primary'>Take Action</a>";
             });
@@ -1232,53 +1234,64 @@ class ImportExportPermitController extends AdminController
             $form->divider();
 
             $form->radio('status', __('Status'))
-            ->options([ 
-                '3' => 'Halted',
-                '4' => 'Rejected',
-                '5' => 'Accepted',
-            ])
-            ->required()
-            ->when('2', function (Form $form) {
-                $items = Administrator::all();
-                $_items = [];
-                foreach ($items as $key => $item) {
-                    if (!Utils::has_role($item, "inspector")) {
-                        continue;
+                ->options([ 
+                    '3' => 'Halted',
+                    '4' => 'Rejected',
+                    '5' => 'Accepted',
+                ])
+                ->required()
+                ->when('2', function (Form $form) {
+                    $items = Administrator::all();
+                    $_items = [];
+                    foreach ($items as $key => $item) {
+                        if (!Utils::has_role($item, "inspector")) {
+                            continue;
+                        }
+                        $_items[$item->id] = $item->name . " - " . $item->id;
                     }
-                    $_items[$item->id] = $item->name . " - " . $item->id;
-                }
 
-                // $form->text('inspector', __('Inspector'))
-                //     ->options($_items)
-                //     ->readonly()
-                //     ->help('Name of the Inspector');
-            })
-             ->when('in', [3, 4], function (Form $form) {
-                $form->textarea('status_comment', 'Enter status comment (Remarks)')
-                    ->help("Please specify with a comment");
-            })
-         
-           
+                    // $form->text('inspector', __('Inspector'))
+                    //     ->options($_items)
+                    //     ->readonly()
+                    //     ->help('Name of the Inspector');
+                })
+                 ->when('in', [3, 4], function (Form $form) {
+                    $form->textarea('status_comment', 'Enter status comment (Remarks)')
+                        ->help("Please specify with a comment");
+                })
+             
+               
+        
+                ->when('in', [5, 6], function (Form $form) {
+
+                    $today = Carbon::now();
+                    $_today = Carbon::now();
+                   /*  echo ($today);
+                    echo "<br>";
+                    $_today = $today->addYear();*/
+
+                    /**
+                     * 
+                     * $id = request()->route()->parameters['form-sr4s'];
+                     * $model = $form->model()->find($id);
+                     * dd($model);
+
+                     * Applicaiton forms can only allow a person to apply for a category once. 
+                     * After the status is approved, this person gets a number (seed board reg no.) 
+                     * that is unique to the category and the user himself
+                     */
+                    $form->text('seed_board_registration_number', __('Enter Seed Board Registration number'))
+                        ->help("Please Enter seed board registration number")
+                        ->default(rand(1000000, 9999999));
+                    //make date a required field
+                    $form->date('valid_from', 'Valid from date?')->default($today)->required();
+                    $form->date('valid_until', 'Valid until date?')->required()->rules(function ($form) {
+                        return 'required|after_or_equal:valid_from';
+                    })->help('Please enter a date greater than or equal to the date entered in valid from');
     
-            ->when('in', [5, 6], function (Form $form) {
-
-                $today = Carbon::now();
-              
-                $form->text('permit_number', __('Permit number'))
-                    ->help("Please Enter Permit number")
-                    ->default(rand(1000000, 9999999));
-                //make date a required field
-                $form->date('valid_from', 'Valid from date?')->default($today)->required();
-                $form->date('valid_until', 'Valid until date?')->required();
-            });
-
-
-            // $form->datetime('valid_from', __('Valid from'))->default(date('Y-m-d H:i:s'));
-            // $form->datetime('valid_until', __('Valid until'))->default(date('Y-m-d H:i:s'));
-            // $form->text('status', __('Status'));
-            // $form->number('inspector', __('Inspector'));
-            // $form->textarea('status_comment', __('Status comment'));
+                });
         }
+
 
         return $form;
     }

@@ -20,6 +20,7 @@ class CreateMyNotificationsTable extends Migration
             $table->bigInteger('receiver_id')->nullable(); 
             $table->bigInteger('role_id')->nullable(); 
             $table->text('message')->nullable();
+            $table->text('form_link')->nullable();
             $table->text('link')->nullable();
             $table->string('status')->nullable(); 
             $table->string('model')->nullable(); 

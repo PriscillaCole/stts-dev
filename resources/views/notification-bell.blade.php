@@ -13,7 +13,7 @@
        
       @foreach ($notifications as $n) 
       <li >
-        <a id="notify" href="{{ $n->link }}" title="{{ $n->message }}">
+        <a id="notify" href="{{ $n->form_link }}" title="{{ $n->message }}">
           @if ($n->receiver_id == null)
           <i class="fa fa-users text-success"></i> 
           @else

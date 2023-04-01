@@ -184,37 +184,7 @@ class PlantingReturn extends Model
 
         self::created(function ($m) {
 
-            $not = new MyNotification();
-            $not->role_id = 2; 
-            $not->message = 'New Planting Return form has been added by '.Admin::user()->name.' '; 
-            $not->link = admin_url("planting-returns/{$m->id}"); 
-            $not->status = 'Unread'; 
-            $not->model = 'PlantingReturn';
-            $not->model_id = $m->id; 
-            $not->group_type = 'Group'; 
-            $not->action_status_to_make_done = '[]'; 
-            $not->save();
-            // $file = null;
-
-            // if ($m != null) {
-            //     if (strlen($m->sub_growers_file) > 3) {
-            //         if (file_exists('../public/uploads/files/' . $m->sub_growers_file)) {
-            //             $file = '../public/uploads/files/' . $m->sub_growers_file;
-            //         } else {
-            //             $m->sub_growers_file = null;
-            //             $m->save();
-            //             return;
-            //         }
-            //     } else {
-            //         return $m;
-            //     }
-            // } else {
-            //     return $m;
-            // }
-
-            // if ($file == null) {
-            //     return $m;
-            // }
+            Utils::send_notification($m, 'PlantingReturn', request()->segment(count(request()->segments())));
         
             self::import_sub_growers($m);
             return $m;
@@ -225,93 +195,8 @@ class PlantingReturn extends Model
         });
 
         self::updated(function ($m) {
-            $notifications = MyNotification::where('model', 'PlantingReturn')
-            ->where('model_id', $m->id) 
-            ->get();
-            foreach($notifications as $n){ 
-                $n->delete();
-            }
- 
-            //assigned status
-            if($m->status == 2){
-                $inspector  = Administrator::find($m->inspector);
-                if($inspector != null){
-                    $not = new MyNotification();
-                    $not->receiver_id = $inspector->id; 
-                    $not->message = "Dear {$inspector->name}, you have been assigned to inspect Planting Return form #{$m->id}."; 
-                    $not->link = admin_url("planting-returns/{$m->id}"); 
-                    $not->status = 'Unread'; 
-                    $not->model = 'PlantingReturn';
-                    $not->model_id = $m->id; 
-                    $not->group_type = 'Individual'; 
-                    $not->action_status_to_make_done = '[]'; 
-                    $not->save();  
-                } 
-                $farmer  = Administrator::find($m->administrator_id);
-                if($farmer != null){
-                    $not = new MyNotification();
-                    $not->receiver_id = $farmer->id; 
-                    $not->message = "Dear {$farmer->name}, your Planting Return form #{$m->id} is now under inspection."; 
-                    $not->link = admin_url("planting-returns/{$m->id}"); 
-                    $not->status = 'Unread'; 
-                    $not->model = 'PlantingReturn';
-                    $not->model_id = $m->id; 
-                    $not->group_type = 'Individual'; 
-                    $not->action_status_to_make_done = '[]'; 
-                    $not->save();  
-                }
-            }
-
-            //halted status for farmer
-            if($m->status == 3){
-                $farmer  = Administrator::find($m->administrator_id);
-                if($farmer != null){
-                    $not = new MyNotification();
-                    $not->receiver_id = $farmer->id; 
-                    $not->message = "Dear {$farmer->name}, your Planting Return form #{$m->id} has been halted by the inspector."; 
-                    $not->link = admin_url("planting-returns/{$m->id}"); 
-                    $not->status = 'Unread'; 
-                    $not->model = 'PlantingReturn';
-                    $not->model_id = $m->id; 
-                    $not->group_type = 'Individual'; 
-                    $not->action_status_to_make_done = '[]'; 
-                    $not->save();  
-                }
-            }
-
-            //rejected status for farmer
-            if($m->status == 4){
-                $farmer  = Administrator::find($m->administrator_id);
-                if($farmer != null){
-                    $not = new MyNotification();
-                    $not->receiver_id = $farmer->id; 
-                    $not->message = "Dear {$farmer->name}, your Planting Return form #{$m->id} has been rejected by the inspector."; 
-                    $not->link = admin_url("planting-returns/{$m->id}"); 
-                    $not->status = 'Unread'; 
-                    $not->model = 'PlantingReturn';
-                    $not->model_id = $m->id; 
-                    $not->group_type = 'Individual'; 
-                    $not->action_status_to_make_done = '[]'; 
-                    $not->save();  
-                }
-            }
-
-            //approved status for farmer
-            if($m->status == 5){
-                $farmer  = Administrator::find($m->administrator_id);
-                if($farmer != null){
-                    $not = new MyNotification();
-                    $not->receiver_id = $farmer->id; 
-                    $not->message = "Dear {$farmer->name}, your Planting Return form #{$m->id}/n has been approved by the inspector."; 
-                    $not->link = admin_url("planting-returns/{$m->id}"); 
-                    $not->status = 'Unread'; 
-                    $not->model = 'PlantingReturn';
-                    $not->model_id = $m->id; 
-                    $not->group_type = 'Individual'; 
-                    $not->action_status_to_make_done = '[]'; 
-                    $not->save();  
-                }
-            }
+            Utils::update_notification($m, 'PlantingReturn', request()->segment(count(request()->segments())-1));
+  
 
             $file = null;
             if ($m != null) {

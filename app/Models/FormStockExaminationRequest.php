@@ -76,6 +76,7 @@ class FormStockExaminationRequest extends Model
         });
 
         self::created(function ($model) {
+            Utils::send_notification($model, 'FormStockExaminationRequest', request()->segment(count(request()->segments())));
         });
 
         self::updating(function ($model) {
@@ -104,6 +105,8 @@ class FormStockExaminationRequest extends Model
                     $stock->save();
                 }
             }
+            Utils::update_notification($model, 'FormStockExaminationRequest', request()->segment(count(request()->segments())-1));
+  
 
         });
 

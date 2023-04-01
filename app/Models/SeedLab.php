@@ -90,6 +90,18 @@ class SeedLab extends Model
             // die("simple tezt");
         });
 */
+            self::created(function ($model) {
+
+                Utils::send_notification($model, 'SeedLab', request()->segment(count(request()->segments())));
+                
+            });
+
+
+            self::updated(function ($m) {
+
+                Utils::update_notification($m, 'SeedLab', request()->segment(count(request()->segments())-1));
+
+            });
 
         static::creating(function ($m) {
             $crop_variety_id = 1;

@@ -1285,10 +1285,7 @@ class ImportExportPermitController extends AdminController
                         ->default(rand(1000000, 9999999));
                     //make date a required field
                     $form->date('valid_from', 'Valid from date?')->default($today)->required();
-                    $form->date('valid_until', 'Valid until date?')->required()->rules(function ($form) {
-                        return 'required|after_or_equal:valid_from';
-                    })->help('Please enter a date greater than or equal to the date entered in valid from');
-    
+                    $form->date('valid_until', 'Valid until date?')->required();
                 });
         }
 

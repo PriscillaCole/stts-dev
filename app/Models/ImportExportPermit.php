@@ -66,7 +66,8 @@ class ImportExportPermit extends Model
                 $model->status = 1;
                 $model->inspector = null;
                 return $model;
-            }
+            } 
+            
             if(Admin::user()->isRole('inspector')){
                 if($model->status == 5){    
                     if(
@@ -80,6 +81,7 @@ class ImportExportPermit extends Model
                     }
                 }
             }
+            
 
         }); 
 

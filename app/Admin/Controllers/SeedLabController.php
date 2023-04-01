@@ -196,6 +196,12 @@ class SeedLabController extends AdminController
     protected function detail($id)
     {
         $show = new Show(SeedLab::findOrFail($id));
+        $seedlab = SeedLab::findOrFail($id);
+        if(Admin::user()->isRole('basic-user') ){
+            if($seedlab->status == 2 || $seedlab->status == 3 || $seedlab->status == 4 || $seedlab->status == 16){
+                \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'SeedLab'])->delete();
+            }
+        }
         $show->panel()
             ->tools(function ($tools) {
                 $tools->disableEdit();

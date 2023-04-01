@@ -147,6 +147,12 @@ class FormStockExaminationRequestController extends AdminController
     protected function detail($id)
     {
         $show = new Show(FormStockExaminationRequest::findOrFail($id));
+        $stockexam = FormStockExaminationRequest::findOrFail($id);
+        if(Admin::user()->isRole('basic-user') ){
+            if($stockexam->status == 2 || $stockexam->status == 3 || $stockexam->status == 4 || $stockexam->status == 16){
+                \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'FormStockExaminationRequest'])->delete();
+            }
+        }
         $show->panel()
             ->tools(function ($tools) {
                 $tools->disableEdit();

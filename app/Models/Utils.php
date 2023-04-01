@@ -523,7 +523,10 @@ class Utils
             // if (!$value->status == 1) {
             //     return false;
             // }
-    if ($value->is_import == 1) {
+    if ($value->is_import == 1 ) {
+            if ($value->status == 4) {
+                return true;
+            }
             if (!$value->valid_from) {
                 return false;
             }
@@ -556,6 +559,9 @@ class Utils
             //     return false;
             // }
     if ($value->is_import == 0) {
+            if ($value->status == 4) {
+                return true;
+            }
             if (!$value->valid_from) {
                 return false;
             }

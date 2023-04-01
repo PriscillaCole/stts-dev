@@ -77,9 +77,15 @@ class ImportExportPermitController extends AdminController
                 if (
                     $status == 2 ||
                     $status == 5 ||
+                    $status == 4 ||
                     $status == 6
                 ) {
                     $actions->disableEdit();
+                    $actions->disableDelete();
+                }
+                if (
+                    $status == 3
+                ) {
                     $actions->disableDelete();
                 }
                 if(Utils::check_expiration_date('ImportExportPermit',$this->getKey())){
@@ -1259,9 +1265,7 @@ class ImportExportPermitController extends AdminController
                     $form->textarea('status_comment', 'Enter status comment (Remarks)')
                         ->help("Please specify with a comment");
                 })
-             
-               
-        
+            
                 ->when('in', [5, 6], function (Form $form) {
 
                     $today = Carbon::now();
@@ -1280,8 +1284,8 @@ class ImportExportPermitController extends AdminController
                      * After the status is approved, this person gets a number (seed board reg no.) 
                      * that is unique to the category and the user himself
                      */
-                    $form->text('seed_board_registration_number', __('Enter Seed Board Registration number'))
-                        ->help("Please Enter seed board registration number")
+                    $form->text('permit_number', __('Enter Permit Number'))
+                        ->help("Please Enter Permit number")
                         ->default(rand(1000000, 9999999));
                     //make date a required field
                     $form->date('valid_from', 'Valid from date?')->default($today)->required();

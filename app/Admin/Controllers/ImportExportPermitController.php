@@ -293,6 +293,32 @@ class ImportExportPermitController extends AdminController
     protected function form()
     {
         $form = new Form(new ImportExportPermit());
+        if($form->isEditing()){
+            $import_export_permit = ImportExportPermit::find(request()->route()->parameters()['import_export_permit']);
+            if(Admin::user()->isRole('inspector')){
+                if($import_export_permit->status != 2){
+                   $form->html('<div class="alert alert-danger">You cannot edit this form, please commit the commissioner to make any changes. </div>');
+                   $form->footer(function ($footer) {
+
+                       // disable reset btn
+                       $footer->disableReset();
+
+                       // disable submit btn
+                       $footer->disableSubmit();
+
+                       // disable `View` checkbox
+                       $footer->disableViewCheck();
+
+                       // disable `Continue editing` checkbox
+                       $footer->disableEditingCheck();
+
+                       // disable `Continue Creating` checkbox
+                       $footer->disableCreatingCheck();
+
+                   });
+           }
+       }
+        }
 
         if ($form->isCreating()) {
             // if (!Utils::can_create_import_form()) {
@@ -984,71 +1010,6 @@ class ImportExportPermitController extends AdminController
                         }
                     })
                  
-        ->when('Researchers', function (Form $form) {
-            $seed_board_registration_number = null;
-            $sr4 = Utils::has_valid_sr4();
-            $application_category = Utils::check_application_category();
-            $user = Auth::user();
-                 if ($sr4 = null) {                     //compare the selected input with $application_category              
-                    $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
-                    // $form->text($address_of_current_user, __('Postal Address'))->required();
-                    $form->text('address', __('Postal Address'))->required();
-                    $form->text('telephone', __('Phone Number'))->required();
-                 
-                $form->text('store_location', __('Location of the store'))->required();
-                $form->text(
-                    'quantiry_of_seed',
-                    __('Quantity of seed of the same variety held in stock')
-                )
-                    ->help("(metric tons)")
-                    ->attribute(['type' => 'number'])
-                    ->required();
-                $form->text(
-                    'name_address_of_origin',
-                    __('Name and address of origin')
-                )
-                    ->required();
-    
-    
-                // ------------------------------------------------------------------
-                $form->tags('ista_certificate', __('Type Of Certificate'))
-                    ->required()
-                    ->options(['ISTA certificate', 'Phytosanitary certificate']);
-                // ------------------------------------------------------------------
-    
-                $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
-    
-                $form->radio('crop_category', __('Category'))
-                    ->options([
-                        'Commercial' => 'Commercial',
-                        'Research' => 'Research',
-                        'Own use' => 'Own use',
-                    ])->stacked()
-                    ->required();
-    
-                $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
-                '), function (NestedForm $form) {
-                    $_items = [];
-    
-                    foreach (CropVariety::all() as $key => $item) {
-                        $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
-                    }
-    
-                    $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
-                        ->required();
-                        //Specify other varieties
-                $form->textarea(
-                    'other_varieties',
-                    __('Specify other varieties.')
-                )
-                ->help('If varieties you are applying for were not listed');
-                    $form->hidden('category', __('Category'))->default("")->value($item->name);
-                    $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
-                });
-            }
-
-                   
-                    })
 
         ->when('Seed Processor', function (Form $form) {
             $seed_board_registration_number = null;
@@ -1130,7 +1091,72 @@ class ImportExportPermitController extends AdminController
                             //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
                             $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
                         }
-                    });
+                    })
+
+                    
+        ->when('Researchers', function (Form $form) {
+            $sr4 = Utils::has_valid_sr4();
+            $user = Auth::user();
+                 if ($sr4 == null) {                     //compare the selected input with $application_category              
+                    $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
+                    // $form->text($address_of_current_user, __('Postal Address'))->required();
+                    $form->text('address', __('Postal Address'))->required();
+                    $form->text('telephone', __('Phone Number'))->required();
+                 
+                $form->text('store_location', __('Location of the store'))->required();
+                $form->text(
+                    'quantiry_of_seed',
+                    __('Quantity of seed of the same variety held in stock')
+                )
+                    ->help("(metric tons)")
+                    ->attribute(['type' => 'number'])
+                    ->required();
+                $form->text(
+                    'name_address_of_origin',
+                    __('Name and address of origin')
+                )
+                    ->required();
+    
+    
+                // ------------------------------------------------------------------
+                $form->tags('ista_certificate', __('Type Of Certificate'))
+                    ->required()
+                    ->options(['ISTA certificate', 'Phytosanitary certificate']);
+                // ------------------------------------------------------------------
+    
+                $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
+    
+                $form->radio('crop_category', __('Category'))
+                    ->options([
+                        'Commercial' => 'Commercial',
+                        'Research' => 'Research',
+                        'Own use' => 'Own use',
+                    ])->stacked()
+                    ->required();
+    
+                $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
+                '), function (NestedForm $form) {
+                    $_items = [];
+    
+                    foreach (CropVariety::all() as $key => $item) {
+                        $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
+                    }
+    
+                    $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
+                        ->required();
+                        //Specify other varieties
+                $form->textarea(
+                    'other_varieties',
+                    __('Specify other varieties.')
+                )
+                ->help('If varieties you are applying for were not listed');
+                    $form->hidden('category', __('Category'))->default("")->value($item->name);
+                    $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
+                });
+            } else{
+                $form->html('<div class="alert alert-danger">Seems you have an existing SR4, please select the application category in the SR4. </div>');
+            }      
+            });
 
                 } 
                                                                                                 
@@ -1240,58 +1266,35 @@ class ImportExportPermitController extends AdminController
             $form->divider();
 
             $form->radio('status', __('Status'))
-                ->options([ 
+                ->options([
                     '3' => 'Halted',
                     '4' => 'Rejected',
                     '5' => 'Accepted',
                 ])
                 ->required()
-                ->when('2', function (Form $form) {
-                    $items = Administrator::all();
-                    $_items = [];
-                    foreach ($items as $key => $item) {
-                        if (!Utils::has_role($item, "inspector")) {
-                            continue;
-                        }
-                        $_items[$item->id] = $item->name . " - " . $item->id;
-                    }
-
-                    // $form->text('inspector', __('Inspector'))
-                    //     ->options($_items)
-                    //     ->readonly()
-                    //     ->help('Name of the Inspector');
-                })
-                 ->when('in', [3, 4], function (Form $form) {
+            
+                ->when('in', [3, 4], function (Form $form) {
                     $form->textarea('status_comment', 'Enter status comment (Remarks)')
                         ->help("Please specify with a comment");
                 })
-            
                 ->when('in', [5, 6], function (Form $form) {
-
-                    $today = Carbon::now();
-                    $_today = Carbon::now();
-                   /*  echo ($today);
-                    echo "<br>";
-                    $_today = $today->addYear();*/
-
-                    /**
-                     * 
-                     * $id = request()->route()->parameters['form-sr4s'];
-                     * $model = $form->model()->find($id);
-                     * dd($model);
-
-                     * Applicaiton forms can only allow a person to apply for a category once. 
-                     * After the status is approved, this person gets a number (seed board reg no.) 
-                     * that is unique to the category and the user himself
-                     */
-                    $form->text('permit_number', __('Enter Permit Number'))
+                    $form->text('permit_number', __('Permit number'))
                         ->help("Please Enter Permit number")
-                        ->default(rand(1000000, 9999999));
-                    //make date a required field
-                    $form->date('valid_from', 'Valid from date?')->default($today)->required();
-                    $form->date('valid_until', 'Valid until date?')->required();
+                        ->default("Import" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->readonly();
+                    // $form->date('valid_from', 'Valid from date?')->readonly();
+                    // $form->date('valid_until', 'Valid until date?')->readonly();
+                    $form->date('valid_from', 'Valid from date?');
+                    $form->date('valid_until', 'Valid until date?');
                 });
+
+
+            // $form->datetime('valid_from', __('Valid from'))->default(date('Y-m-d H:i:s'));
+            // $form->datetime('valid_until', __('Valid until'))->default(date('Y-m-d H:i:s'));
+            // $form->text('status', __('Status'));
+            // $form->number('inspector', __('Inspector'));
+            // $form->textarea('status_comment', __('Status comment'));
         }
+
 
 
         return $form;

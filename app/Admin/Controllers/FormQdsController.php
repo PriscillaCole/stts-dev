@@ -282,14 +282,15 @@ class FormQdsController extends AdminController
             });
        $show->field('status_comment', __('Status comment'));
 
-
-        if (!Admin::user()->isRole('basic-user')){
-            //button link to the show-details form
-            $show->field('id','Action')->unescape()->as(function ($id) {
-                return "<a href='/admin/form-qds/$id/edit' class='btn btn-primary'>Take Action</a>";
-            });
-        }
-
+       if (!Admin::user()->isRole('basic-user')){
+        //button link to the show-details form
+        //check the status of the form being shown
+        if($form_qds->status == 1 || $form_qds->status == 2 || $form_qds->status == null){
+        $show->field('id','Action')->unescape()->as(function ($id) {
+            return "<a href='/admin/form-qds/$id/edit' class='btn btn-primary'>Take Action</a>";
+        });
+    }
+    }
         if (Admin::user()->isRole('basic-user')) {
             if(Utils::is_form_rejected('FormQds')){
                 $show->field('id','Action')->unescape()->as(function ($id) {
@@ -309,39 +310,7 @@ class FormQdsController extends AdminController
     protected function form()
     {
         $form = new Form(new FormQds());
-        //  //check the id of the user before editing the form
-        //  if ($form->isEditing()) {
-        //     if (Admin::user()->isRole('basic-user')){
-
-        //         //get request id
-        //         $id = request()->route()->parameters()['form_qds'];
-        //         //get the form
-        //         $formQds = FormQds::find($id);
-        //         //get the user
-        //         $user = Auth::user();
-        //         if ($user->id != $formQds->administrator_id) {
-        //             $form->html('<div class="alert alert-danger">You cannot edit this form </div>');
-        //             $form->footer(function ($footer) {
-
-        //                 // disable reset btn
-        //                 $footer->disableReset();
-
-        //                 // disable submit btn
-        //                 $footer->disableSubmit();
-
-        //                 // disable `View` checkbox
-        //                 $footer->disableViewCheck();
-
-        //                 // disable `Continue editing` checkbox
-        //                 $footer->disableEditingCheck();
-
-        //                 // disable `Continue Creating` checkbox
-        //                 $footer->disableCreatingCheck();
-
-        //             });
-        //         }
-                
-        // }
+       
 
         if ($form->isCreating()) {
             if (!Utils::can_create_qds()) {
@@ -372,6 +341,12 @@ class FormQdsController extends AdminController
                 $form->dealers_in = json_encode($_POST['group-a']);
                 //echo($form->dealers_in);
             }
+        });
+
+        // callback after save
+        $form->saved(function (Form $form) {
+             //return to table view controller after saving the form data 
+             return redirect(admin_url('form-qds'));
         });
 
         $form->disableCreatingCheck();
@@ -410,7 +385,6 @@ class FormQdsController extends AdminController
                 //check if the form is being edited by the user who created it
                 $sec  = ((int)(request()->segment(3)));
                 $formQds = FormQds::find($sec);
-
                 if ($user->id != $formQds->administrator_id) {
                     $form->html('<div class="alert alert-danger">You cannot edit this form </div>');
                     $form->footer(function ($footer) {
@@ -431,9 +405,10 @@ class FormQdsController extends AdminController
                         $footer->disableCreatingCheck();
 
                     });
-                } 
+                
+            }
               
-               
+                  
                 if ($sec > 0) {
                     $da = FormQds::findOrFail($sec);
                     if ($da) {
@@ -457,6 +432,8 @@ class FormQdsController extends AdminController
                     }
                 }
             }
+
+            
             if (strlen($repeat) < 4) {
                 $repeat .= '<tr data-repeater-item>
                                     <td><input placeholder="Crop" value="" class="form-control" required name="crop" type="text"></td>
@@ -635,6 +612,34 @@ class FormQdsController extends AdminController
         }
 
         if (Admin::user()->isRole('inspector')) {
+            $sec  = ((int)(request()->segment(3)));
+            $formQds = FormQds::find($sec);
+            //call back if editing
+            if($form->isEditing()){
+                if(Admin::user()->isRole('inspector')){
+                    if($formQds->status != 2){
+                       $form->html('<div class="alert alert-danger">You cannot edit this form, please commit the commissioner to make any changes. </div>');
+                       $form->footer(function ($footer) {
+    
+                           // disable reset btn
+                           $footer->disableReset();
+    
+                           // disable submit btn
+                           $footer->disableSubmit();
+    
+                           // disable `View` checkbox
+                           $footer->disableViewCheck();
+    
+                           // disable `Continue editing` checkbox
+                           $footer->disableEditingCheck();
+    
+                           // disable `Continue Creating` checkbox
+                           $footer->disableCreatingCheck();
+    
+                       });
+               }
+           }
+            }
 
             $form->text('name_of_applicant', __('Name of applicant'))->default($user->name)->readonly();
             $form->text('address', __('Address'))->readonly();
@@ -664,18 +669,14 @@ class FormQdsController extends AdminController
                     $form->textarea('status_comment', 'Enter status comment (Remarks)')
                         ->help("Please specify with a comment");
                 })
-            
                 ->when('in', [5, 6], function (Form $form) {
-                    $today = Carbon::now();
-                    $form->hidden('grower_number', __('Grower number'))
-                        ->value("000")
-                        ->default("0000");
+
+                    $form->text('grower_number', __('Grower number'))
+                        ->default("Qds" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->readonly();
                     $form->text('registration_number', __('Registration number'))
                         ->help("Please Enter Registration number");
-                        $form->text('grower_number', __('Grower number'))
-                        ->default("Qds" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->readonly();
-                        $form->date('valid_from', 'Valid from date?')->default($today)->required();
-                        $form->date('valid_until', 'Valid until date?')->required();
+                    $form->date('valid_from', 'Valid from date?');
+                    $form->date('valid_until', 'Valid until date?');
                 });
 
 
@@ -684,11 +685,13 @@ class FormQdsController extends AdminController
             // $form->text('status', __('Status'));
             // $form->number('inspector', __('Inspector'));
             // $form->textarea('status_comment', __('Status comment'));
-            
         }
 
 
+
+
         return $form;
-    
+
+         
 }
 }

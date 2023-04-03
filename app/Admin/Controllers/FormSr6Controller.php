@@ -276,12 +276,15 @@ class FormSr6Controller extends AdminController
     
 
 
-        if (!Admin::user()->isRole('basic-user')){
-            //button link to the show-details form
-            $show->field('id','Action')->unescape()->as(function ($id) {
-                return "<a href='/admin/form-sr6s/$id/edit' class='btn btn-primary'>Take Action</a>";
-            });
-        }
+       if (!Admin::user()->isRole('basic-user')){
+        //button link to the show-details form
+        //check the status of the form being shown
+        if($form_sr6->status == 1 || $form_sr6->status == 2 || $form_sr6->status == null){
+        $show->field('id','Action')->unescape()->as(function ($id) {
+            return "<a href='/admin/form-sr6s/$id/edit' class='btn btn-primary'>Take Action</a>";
+        });
+    }
+    }
 
         if (Admin::user()->isRole('basic-user')) {
             if(Utils::is_form_rejected('FormSr6')){
@@ -306,14 +309,14 @@ class FormSr6Controller extends AdminController
 
          //check the id of the user before editing the form
          if ($form->isEditing()) {
-            if (Admin::user()->isRole('basic-user')){
-
-                //get request id
-                $id = request()->route()->parameters()['form_sr6'];
-                //get the form
-                $formSr6 = FormSr6::find($id);
-                //get the user
-                $user = Auth::user();
+             //get request id
+             $id = request()->route()->parameters()['form_sr6'];
+             //get the form
+             $formSr6 = FormSr6::find($id);
+             //get the user
+             $user = Auth::user();
+            if (Admin::user()->isRole('basic-user')) {
+               
                 if ($user->id != $formSr6->administrator_id) {
                     $form->html('<div class="alert alert-danger">You cannot edit this form </div>');
                     $form->footer(function ($footer) {
@@ -337,6 +340,29 @@ class FormSr6Controller extends AdminController
                 }
                
             }
+            if(Admin::user()->isRole('inspector')){
+                if($formSr6->status != 2){
+                   $form->html('<div class="alert alert-danger">You cannot edit this form, please commit the commissioner to make any changes. </div>');
+                   $form->footer(function ($footer) {
+
+                       // disable reset btn
+                       $footer->disableReset();
+
+                       // disable submit btn
+                       $footer->disableSubmit();
+
+                       // disable `View` checkbox
+                       $footer->disableViewCheck();
+
+                       // disable `Continue editing` checkbox
+                       $footer->disableEditingCheck();
+
+                       // disable `Continue Creating` checkbox
+                       $footer->disableCreatingCheck();
+
+                   });
+           }
+       }
            
         }
 
@@ -369,6 +395,12 @@ class FormSr6Controller extends AdminController
                 //echo($form->dealers_in);
             }
         });
+
+        // callback after save
+        $form->saved(function (Form $form) {
+            //return to table view controller after saving the form data 
+            return redirect(admin_url('form-sr6s'));
+       });
 
         $form->disableCreatingCheck();
         $form->tools(function (Form\Tools $tools) {
@@ -511,6 +543,7 @@ class FormSr6Controller extends AdminController
                 });
         }
 
+       
         if (Admin::user()->isRole('inspector')) {
 
             $form->text('type', __('Cateogry'));
@@ -526,38 +559,20 @@ class FormSr6Controller extends AdminController
                     '5' => 'Accepted', 
                 ])
                 ->required()
-
-                ->when('2', function (Form $form) {
-                    $items = Administrator::all();
-                    $_items = [];
-                    foreach ($items as $key => $item) {
-                        if (!Utils::has_role($item, "inspector")) {
-                            continue;
-                        }
-                        $_items[$item->id] = $item->name . " - " . $item->id;
-                    }
-
-                    // $form->text('inspector', __('Inspector'))
-                    //     ->options($_items)
-                    //     ->readonly()
-                    //     ->help('Name of the Inspector');
-                })
-                 ->when('in', [3, 4], function (Form $form) {
+                
+                ->when('in', [3, 4], function (Form $form) {
                     $form->textarea('status_comment', 'Enter status comment (Remarks)')
                         ->help("Please specify with a comment");
                 })
-                
-        
-               
-
                 ->when('in', [5, 6], function (Form $form) {
-               
+
                     $form->text('grower_number', __('Grower number'))
-                    ->default("Grower" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->readonly();
-               
-                    $today = Carbon::now();
-                    $form->date('valid_from', 'Valid from date')->default($today)->required();
-                    $form->date('valid_until', 'Valid until date')->required();  
+                    ->default("Grower" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->readonly()
+                        ->help("Please Enter grower number");
+                    $form->date('valid_from', 'Valid from date');
+                    $form->date('valid_until', 'Valid until date');
+
+                    
 
                 $form->text('registration_number', __('Enter Seed Board Registration number'))
                 ->help("Please Enter seed board registration number")
@@ -572,5 +587,7 @@ class FormSr6Controller extends AdminController
         }
 
         return $form;
+
+       
     }
 }

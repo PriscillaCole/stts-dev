@@ -338,9 +338,12 @@ class FormSr4Controller extends AdminController
 
     if (!Admin::user()->isRole('basic-user')){
         //button link to the show-details form
+        //check the status of the form being shown
+        if($form_sr4->status == 1 || $form_sr4->status == 2 || $form_sr4->status == null){
         $show->field('id','Action')->unescape()->as(function ($id) {
             return "<a href='/admin/form-sr4s/$id/edit' class='btn btn-primary'>Take Action</a>";
         });
+    }
     }
 
     if (Admin::user()->isRole('basic-user')) {
@@ -364,14 +367,16 @@ class FormSr4Controller extends AdminController
        
         //check the id of the user before editing the form
         if ($form->isEditing()) {
+             //get request id
+            $id = request()->route()->parameters()['form_sr4'];
+            //get the form
+             $formSr4 = FormSr4::find($id);
+             //get the user
+             $user = Auth::user();
+
             if (Admin::user()->isRole('basic-user')){
             //checking the user before accessing the form
-                //get request id
-                $id = request()->route()->parameters()['form_sr4'];
-               //get the form
-                $formSr4 = FormSr4::find($id);
-                //get the user
-                $user = Auth::user();
+                
                 if ($user->id != $formSr4->administrator_id) {
                     $form->html('<div class="alert alert-danger">You cannot edit this form </div>');
                     $form->footer(function ($footer) {
@@ -397,10 +402,39 @@ class FormSr4Controller extends AdminController
                     $this->show_fields($form);
                 }
             }
+            elseif(Admin::user()->isRole('inspector')){
+                 if($formSr4->status != 2){
+                    $form->html('<div class="alert alert-danger">You cannot edit this form, please commit the commissioner to make any changes. </div>');
+                    $form->footer(function ($footer) {
+
+                        // disable reset btn
+                        $footer->disableReset();
+
+                        // disable submit btn
+                        $footer->disableSubmit();
+
+                        // disable `View` checkbox
+                        $footer->disableViewCheck();
+
+                        // disable `Continue editing` checkbox
+                        $footer->disableEditingCheck();
+
+                        // disable `Continue Creating` checkbox
+                        $footer->disableCreatingCheck();
+
+                    });
+            }
+        }
             else {
                 $this->show_fields($form);
             }
         }
+
+        // callback after save
+        $form->saved(function (Form $form) {
+            //return to table view controller after saving the form data 
+            return redirect(admin_url('form-sr4s'));
+       });
 
 
         if ($form->isCreating()) {
@@ -695,6 +729,7 @@ class FormSr4Controller extends AdminController
         }
 
 
+    
         if (Admin::user()->isRole('inspector')) {
             // $form->text('type', __('Applicant type'))->readonly();
             // $form->text('name_of_applicant', __('Name of applicant'))->default($user->name)->readonly();
@@ -725,13 +760,10 @@ class FormSr4Controller extends AdminController
                     //     ->readonly()
                     //     ->help('Name of the Inspector');
                 })
-                 ->when('in', [3, 4], function (Form $form) {
-                    $form->textarea('status_comment', 'Enter status comment (Remarks)')
+                ->when('in', [3, 4], function (Form $form) {
+                    $form->textarea('status_comment', 'Inspector\'s comment (Remarks)')
                         ->help("Please specify with a comment");
                 })
-             
-               
-        
                 ->when('in', [5, 6], function (Form $form) {
 
                     $today = Carbon::now();
@@ -745,7 +777,6 @@ class FormSr4Controller extends AdminController
                      * $id = request()->route()->parameters['form-sr4s'];
                      * $model = $form->model()->find($id);
                      * dd($model);
-
                      * Applicaiton forms can only allow a person to apply for a category once. 
                      * After the status is approved, this person gets a number (seed board reg no.) 
                      * that is unique to the category and the user himself
@@ -753,9 +784,8 @@ class FormSr4Controller extends AdminController
                     $form->text('seed_board_registration_number', __('Enter Seed Board Registration number'))
                         ->help("Please Enter seed board registration number")
                         ->default(rand(1000000, 9999999));
-                    //make date a required field
-                    $form->date('valid_from', 'Valid from date?')->default($today)->required();
-                    $form->date('valid_until', 'Valid until date?')->required();
+                    $form->date('valid_from', 'Valid from date?');
+                    $form->date('valid_until', 'Valid until date?');
                 });
         }
 
@@ -772,7 +802,8 @@ class FormSr4Controller extends AdminController
             $footer->disableCreatingCheck();
         });
 
-        
+        //return to table view controller after saving the form data 
+        return redirect()->route('admin.form-sr4s.index'); 
 
     }
 }

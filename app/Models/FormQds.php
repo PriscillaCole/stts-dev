@@ -56,6 +56,8 @@ class FormQds extends Model
         parent::boot(); 
         self::creating(function($model){
             
+            
+            
         });
  
         self::updating(function($model){
@@ -69,7 +71,9 @@ class FormQds extends Model
         });
 
         self::created(function ($model) {
-            Utils::send_notification($model, 'FormQds', request()->segment(count(request()->segments())));  
+            Utils::send_notification($model, 'FormQds', request()->segment(count(request()->segments()))); 
+            
+            
         });
 
         self::updated(function ($m) {

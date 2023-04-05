@@ -109,7 +109,7 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
 
         self::created(function ($model) {
 
-            Utils::send_notification($model, 'FormSr4', 'form-sr4s');
+            Utils::send_notification($model, 'FormSr4', request()->segment(count(request()->segments())));
                
         });
         

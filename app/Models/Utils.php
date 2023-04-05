@@ -615,7 +615,7 @@ public static function send_notification($m, $model_name, $entity){
     $not->action_status_to_make_done = '[]';
     $not->save();
 
-    self::sendMail($not);
+    //self::sendMail($not);
 }
 
 

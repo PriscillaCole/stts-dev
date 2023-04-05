@@ -605,7 +605,7 @@ public static function send_notification($m, $model_name, $entity){
    // $model = "App\\Models\\" . ucfirst($model_name);
     $not = new MyNotification();
     $not->role_id = 2;
-    $not->message = 'New  form has been submitted by '.Admin::user()->name.' ';
+    $not->message = "New {$entity} has been submitted by ".Admin::user()->name.' ';
     $not->link = admin_url("auth/login"); 
     $not->form_link = admin_url("{$entity}/{$m->id}");
     $not->status = 'Unread'; 
@@ -617,6 +617,9 @@ public static function send_notification($m, $model_name, $entity){
 
     self::sendMail($not);
 }
+
+
+
 
 //function to update notifications
 public static function update_notification($m, $model_name, $entity){
@@ -887,6 +890,17 @@ public static function is_form_accepted($model_name){
     $recs = $model::where('administrator_id',  Admin::user()->id)->get();
     foreach ($recs as $key => $value) {
         if($value->status == 5){
+            return true;
+        }
+  }
+}
+
+//check if the recommendation has been updated
+public static function is_recommendation_updated($model_name){
+    $model = "App\\Models\\" . ucfirst($model_name);
+    $recs = $model::where('administrator_id',  Admin::user()->id)->get();
+    foreach ($recs as $key => $value) {
+        if($value->report_recommendation == 5){
             return true;
         }
   }
@@ -1306,4 +1320,5 @@ public static function check_application_category(){
             return $image->target_path;
         }
     }
+
 }

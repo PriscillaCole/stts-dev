@@ -72,8 +72,9 @@ class FormStockExaminationRequestController extends AdminController
             $grid->actions(function ($actions) {
                 $status = ((int)(($actions->row['status'])));
                 $actions->disableDelete();
+                $actions->disableEdit();
                 if (
-                    $status == 1
+                    $status == 1 
                 ) {
                     $actions->disableEdit();
                 }
@@ -168,7 +169,11 @@ class FormStockExaminationRequestController extends AdminController
         $show->field('import_export_permit_id', __('Import export permit id'));
         $show->field('planting_return_id', __('Planting return id'));
         $show->field('form_qds_id', __('Form qds id'));
-        $show->field('field_size', __('Field size'));
+       // $show->field('field_size', __('Field size'));
+        if ($stockexam->import_export_permit_id == null) {
+            $show->text('field_size', __('Enter field size (in Acres)'));
+            
+        }
         $show->field('yield', __('Yield'));
         $show->field('date', __('Date'));
         $show->field('purity', __('Purity'));
@@ -178,9 +183,25 @@ class FormStockExaminationRequestController extends AdminController
         $show->field('moldiness', __('Moldiness'));
         $show->field('noxious_weeds', __('Noxious weeds'));
         $show->field('recommendation', __('Recommendation'));
-        $show->field('status', __('status'));
-        $show->field('inspector', __('Inspector'));
+        $show->field('status', __('Status'))
+            ->unescape()
+            ->as(function ($status) {
+                return Utils::tell_status($status);
+            });
+        //$show->field('inspector', __('Inspector'));
         $show->field('status_comment', __('Status comment'));
+
+        if (!Admin::user()->isRole('basic-user')){
+            //button link to the show-details form
+            //check the status of the form being shown
+            if($stockexam->status == 1 || $stockexam->status == 2 || $stockexam->status == null){
+            $show->field('id','Action')->unescape()->as(function ($id) {
+                return "<a href='/admin/form-stock-examination-requests/$id/edit' class='btn btn-primary'>Take Action</a>";
+            });
+        }
+        }
+    
+          
 
         return $show;
     }
@@ -198,7 +219,7 @@ class FormStockExaminationRequestController extends AdminController
             $id = request()->route()->parameters['form_stock_examination_request'];
             $model = $form->model()->find($id);
             if ($model->status == 5) {
-                admin_warning("Warning", "This form has been accepted already. You cannot reverse the accept decision.");
+                admin_error("Error", "This form has been accepted already. You cannot reverse the accept decision.");
                 $form->tools(function (Form\Tools $tools) {
                     $tools->disableDelete();
                 });
@@ -209,7 +230,7 @@ class FormStockExaminationRequestController extends AdminController
                     $footer->disableCreatingCheck();
                     $footer->disableSubmit();
                 });
-                return $form;
+               // return $form;
             }
         }
 
@@ -516,6 +537,10 @@ class FormStockExaminationRequestController extends AdminController
     //Inspector form functionalities
 
         if (Admin::user()->isRole('inspector')) {
+            //get the request id from the url
+            $id = request()->route()->parameters['form_stock_examination_request'];
+            //get the form
+            $stockexam = FormStockexaminationRequest::find($id);
 
             $form->setTitle("Updating examination");
 
@@ -600,12 +625,13 @@ class FormStockExaminationRequestController extends AdminController
 
             $form->text('lot_number', __('Lot Number'))->required()
             ->attribute([
-                'value' => $model->id . rand(1000000, 999999999),
-            ]);
+                'value' => $model->id . rand(1000000, 9999999),
+            ])->readOnly();
 
     
-
+       if ($stockexam->import_export_permit_id == null){
             $form->text('field_size', __('Enter field size (in Acres)'));
+         } 
             $form->date('date', __('Stock Examination Date'));
 
             $form->divider();

@@ -430,11 +430,11 @@ class FormSr4Controller extends AdminController
             }
         }
 
-    //     // callback after save
-    //     $form->saved(function (Form $form) {
-    //         //return to table view controller after saving the form data 
-    //         return redirect(admin_url('form-sr4s'));
-    //    });
+        // callback after save
+        $form->saved(function (Form $form) {
+            //return to table view controller after saving the form data 
+            return redirect(admin_url('form-sr4s'));
+       });
 
 
         if ($form->isCreating()) {

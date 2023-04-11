@@ -320,13 +320,6 @@ class ImportExportPermitController extends AdminController
        }
         }
 
-         // callback after save
-         $form->saved(function (Form $form) {
-            //return to table view controller after saving the form data 
-            return redirect(admin_url('import-export-permits'));
-       });
-
-
         if ($form->isCreating()) {
             // if (!Utils::can_create_import_form()) {
             //     return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
@@ -1112,73 +1105,68 @@ class ImportExportPermitController extends AdminController
 
                     
         ->when('Researchers', function (Form $form) {
-            $sr4 = Utils::has_valid_sr4();
-            $user = Auth::user();
-            if ($sr4 != null) {
-                //compare the selected input with $application_category              
-                    $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
-                    // $form->text($address_of_current_user, __('Postal Address'))->required();
-                    $form->text('address', __('Postal Address'))->required();
-                    $form->text('telephone', __('Phone Number'))->required();
+            // $sr4 = Utils::has_valid_sr4();
+            // $user = Auth::user();
+            //     //compare the selected input with $application_category              
+            //         $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
+            //         // $form->text($address_of_current_user, __('Postal Address'))->required();
+            //         $form->text('address', __('Postal Address'))->required();
+            //         $form->text('telephone', __('Phone Number'))->required();
                  
-                $form->text('store_location', __('Location of the store'))->required();
-                $form->text(
-                    'quantiry_of_seed',
-                    __('Quantity of seed of the same variety held in stock')
-                )
-                    ->help("(metric tons)")
-                    ->attribute(['type' => 'number'])
-                    ->required();
-                $form->text(
-                    'name_address_of_origin',
-                    __('Name and address of origin')
-                )
-                    ->required();
+            //     $form->text('store_location', __('Location of the store'))->required();
+            //     $form->text(
+            //         'quantiry_of_seed',
+            //         __('Quantity of seed of the same variety held in stock')
+            //     )
+            //         ->help("(metric tons)")
+            //         ->attribute(['type' => 'number'])
+            //         ->required();
+            //     $form->text(
+            //         'name_address_of_origin',
+            //         __('Name and address of origin')
+            //     )
+            //         ->required();
     
     
-                // ------------------------------------------------------------------
-                $form->tags('ista_certificate', __('Type Of Certificate'))
-                    ->required()
-                    ->options(['ISTA certificate', 'Phytosanitary certificate']);
-                // ------------------------------------------------------------------
+            //     // ------------------------------------------------------------------
+            //     $form->tags('ista_certificate', __('Type Of Certificate'))
+            //         ->required()
+            //         ->options(['ISTA certificate', 'Phytosanitary certificate']);
+            //     // ------------------------------------------------------------------
     
-                $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
+            //     $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
     
-                $form->radio('crop_category', __('Category'))
-                    ->options([
-                        'Commercial' => 'Commercial',
-                        'Research' => 'Research',
-                        'Own use' => 'Own use',
-                    ])->stacked()
-                    ->required();
+            //     $form->radio('crop_category', __('Category'))
+            //         ->options([
+            //             'Commercial' => 'Commercial',
+            //             'Research' => 'Research',
+            //             'Own use' => 'Own use',
+            //         ])->stacked()
+            //         ->required();
     
-                $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
-                '), function (NestedForm $form) {
-                    $_items = [];
+            //     $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
+            //     '), function (NestedForm $form) {
+            //         $_items = [];
     
-                    foreach (CropVariety::all() as $key => $item) {
-                        $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
-                    }
+            //         foreach (CropVariety::all() as $key => $item) {
+            //             $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
+            //         }
     
-                    $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
-                        ->required();
-                        //Specify other varieties
-                $form->textarea(
-                    'other_varieties',
-                    __('Specify other varieties.')
-                )
-                ->help('If varieties you are applying for were not listed');
-                    $form->hidden('category', __('Category'))->default("")->value($item->name);
-                    $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
-                });
+            //         $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
+            //             ->required();
+            //             //Specify other varieties
+            //     $form->textarea(
+            //         'other_varieties',
+            //         __('Specify other varieties.')
+            //     )
+            //     ->help('If varieties you are applying for were not listed');
+            //         $form->hidden('category', __('Category'))->default("")->value($item->name);
+            //         $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
+            //     });
                  
-            }
-        else{
-            //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-            $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
-        }
+            });
 
-                }); 
+                } 
                                                                                     
             // $form->text('store_location', __('Location of the store'))->required();
             // $form->text(

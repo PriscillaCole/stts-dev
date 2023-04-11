@@ -1114,6 +1114,7 @@ class ImportExportPermitController extends AdminController
         ->when('Researchers', function (Form $form) {
             $sr4 = Utils::has_valid_sr4();
             $user = Auth::user();
+            if ($sr4 != null) {
                 //compare the selected input with $application_category              
                     $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
                     // $form->text($address_of_current_user, __('Postal Address'))->required();
@@ -1171,9 +1172,13 @@ class ImportExportPermitController extends AdminController
                     $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
                 });
                  
-            });
+            }
+        else{
+            //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
+            $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
+        }
 
-                } 
+                }); 
                                                                                     
             // $form->text('store_location', __('Location of the store'))->required();
             // $form->text(

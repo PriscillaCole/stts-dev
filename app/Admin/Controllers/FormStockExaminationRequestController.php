@@ -215,6 +215,11 @@ class FormStockExaminationRequestController extends AdminController
     {
         $form = new Form(new FormStockExaminationRequest());
 
+        $form->saved(function (Form $form) {
+            //return to table view controller after saving the form data 
+            return redirect(admin_url('form-stock-examination-requests'));
+       });
+
         if ($form->isEditing()) {
             $id = request()->route()->parameters['form_stock_examination_request'];
             $model = $form->model()->find($id);
@@ -393,6 +398,7 @@ class FormStockExaminationRequestController extends AdminController
                         $form->select('import_export_permit_id', __('Select Import Permit'))
                         ->rules('required')
                         ->options($import_permits);
+                        $form->textarea('remarks', __('Enter remarks'))->required();
                     }
                 
                 }
@@ -439,6 +445,7 @@ class FormStockExaminationRequestController extends AdminController
                 $form->select('planting_return_id', __('Select approved SR10'))
                         ->rules('required')
                         ->options($planting_returnings);
+                 $form->textarea('remarks', __('Enter remarks'))->required();
                 }
                 })
 
@@ -466,7 +473,9 @@ class FormStockExaminationRequestController extends AdminController
                         $form->select('form_qds_id', __('Select Approved QDS Crop Inspection'))
                             ->rules('required')
                             ->options($my_qds);
+                         $form->textarea('remarks', __('Enter remarks'))->required();
                     }
+
                 }
                 })->required();
 
@@ -476,7 +485,7 @@ class FormStockExaminationRequestController extends AdminController
             }
 
 
-            $form->textarea('remarks', __('Enter remarks'))->required();
+           
 
             $user = Auth::user();
             $form->hidden('administrator_id', __('Administrator id'))->value($user->id); 

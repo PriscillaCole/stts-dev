@@ -320,6 +320,13 @@ class ImportExportPermitController extends AdminController
        }
         }
 
+         // callback after save
+         $form->saved(function (Form $form) {
+            //return to table view controller after saving the form data 
+            return redirect(admin_url('import-export-permits'));
+       });
+
+
         if ($form->isCreating()) {
             // if (!Utils::can_create_import_form()) {
             //     return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
@@ -905,19 +912,27 @@ class ImportExportPermitController extends AdminController
                     }
     
                     $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
-                        ->required();
+                        ->attribute('id', 'crop_variety_id');
                         //Specify other varieties
-                $form->textarea(
-                    'other_varieties',
-                    __('Specify other varieties.')
-                )
-                ->help('If varieties you are applying for were not listed');
+                // $form->textarea(
+                //     'other_varieties',
+                //     __('Specify other varieties.')
+                // )
+                // ->help('If varieties you are applying for were not listed');
                     $form->hidden('category', __('Category'))->default("")->value($item->name);
                     $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
                 });
-    
+
+                //select field for country names uganda , kenya and tanzania
                 
-            
+                $form->select('country', __('Country'))->options([
+                    'Uganda' => 'Uganda',
+                    'Kenya' => 'Kenya',
+                    'Tanzania' => 'Tanzania',
+                ])->required()->attribute('id', 'country');
+                $form->textarea('other_varieties', __('Other Varieties'))
+                ->help('If varieties you are applying for were not listed')
+                ->attribute('id', 'other-varieties-field');
                         }else{
                             //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
                             $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
@@ -989,7 +1004,7 @@ class ImportExportPermitController extends AdminController
                     $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
                         ->required();
                         //Specify other varieties
-                $form->textarea(
+                 $form->textarea(
                     'other_varieties',
                     __('Specify other varieties.')
                 )
@@ -997,6 +1012,8 @@ class ImportExportPermitController extends AdminController
                     $form->hidden('category', __('Category'))->default("")->value($item->name);
                     $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
                 });
+
+                
     
                 
             
@@ -1097,7 +1114,7 @@ class ImportExportPermitController extends AdminController
         ->when('Researchers', function (Form $form) {
             $sr4 = Utils::has_valid_sr4();
             $user = Auth::user();
-                 if ($sr4 == null) {                     //compare the selected input with $application_category              
+                //compare the selected input with $application_category              
                     $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
                     // $form->text($address_of_current_user, __('Postal Address'))->required();
                     $form->text('address', __('Postal Address'))->required();
@@ -1153,19 +1170,11 @@ class ImportExportPermitController extends AdminController
                     $form->hidden('category', __('Category'))->default("")->value($item->name);
                     $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
                 });
-            } else{
-                $form->html('<div class="alert alert-danger">Seems you have an existing SR4, please select the application category in the SR4. </div>');
-            }      
+                 
             });
 
                 } 
-                                                                                                
-                                                                                            
-                                                                                                     
                                                                                     
-
-
-
             // $form->text('store_location', __('Location of the store'))->required();
             // $form->text(
             //     'quantiry_of_seed',
@@ -1299,4 +1308,6 @@ class ImportExportPermitController extends AdminController
 
         return $form;
     }
+
+    
 }

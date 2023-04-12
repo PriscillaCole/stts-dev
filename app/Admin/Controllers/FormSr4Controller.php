@@ -424,10 +424,11 @@ class FormSr4Controller extends AdminController
 
                     });
             }
-        }
             else {
                 $this->show_fields($form);
             }
+        }
+        
         }
 
         // callback after save
@@ -731,12 +732,12 @@ class FormSr4Controller extends AdminController
 
     
         if (Admin::user()->isRole('inspector')) {
-            // $form->text('type', __('Applicant type'))->readonly();
-            // $form->text('name_of_applicant', __('Name of applicant'))->default($user->name)->readonly();
-            // $form->text('address', __('Address'))->readonly();
-            // $form->text('company_initials', __('Company initials'))->readonly();
-            // $form->text('premises_location', __('Premises location'))->readonly();
-            // $form->file('receipt', __('Receipt'))->readonly(); 
+            $form->text('type', __('Applicant type'))->readonly();
+            $form->text('name_of_applicant', __('Name of applicant'))->default($user->name)->readonly();
+            $form->text('address', __('Address'))->readonly();
+            $form->text('company_initials', __('Company initials'))->readonly();
+            $form->text('premises_location', __('Premises location'))->readonly();
+            $form->file('receipt', __('Receipt'))->readonly(); 
 
             $form->radio('status', __('Status'))
                 ->options([ 

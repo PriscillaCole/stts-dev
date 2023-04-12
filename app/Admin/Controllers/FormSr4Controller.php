@@ -806,8 +806,7 @@ class FormSr4Controller extends AdminController
             $footer->disableCreatingCheck();
         });
 
-        //return to table view controller after saving the form data 
-        return redirect()->route('admin.form-sr4s.index'); 
+        
 
     }
 }

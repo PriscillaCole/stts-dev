@@ -25,5 +25,6 @@ class ImportExportPermitsHasCrops extends Model
         'import_export_permit_id',
         'category',
         'weight',
+        'measure',
     ];
 }

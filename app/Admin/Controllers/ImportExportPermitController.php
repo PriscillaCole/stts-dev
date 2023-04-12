@@ -41,38 +41,28 @@ class ImportExportPermitController extends AdminController
     {
         $grid = new Grid(new ImportExportPermit());
 
+        $grid->disableFilter();
+        $grid->disableExport();
+        $grid->model()->where('is_import', '=', 1);
+
         //check if the role is an inspector and has been assigned that form
-        if (Admin::user()->isRole('inspector')) {
+        if (Admin::user()->isRole('inspector')) 
+        {
             $grid->model()->where('inspector', '=', Admin::user()->id);
             //return an empty table if the inspector has not been assigned any forms
-            if (ImportExportPermit::where('inspector', '=', Admin::user()->id)->count() == 0) { 
+            if (ImportExportPermit::where('inspector', '=', Admin::user()->id)->count() == 0) 
+            { 
                 //return an empty table if the inspector has not been assigned an
                 $grid->model(0);
                    
+            }
         }
-    }
 
-        $grid->disableFilter();
-        $grid->disableExport();
-
-
-        $grid->model()->where('is_import', '=', 1);
-
-
-        if (Admin::user()->isRole('basic-user')) {
+        if (Admin::user()->isRole('basic-user')) 
+        {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
-
-            // if (!Utils::can_create_import_form()) {
-            //     $grid->disableCreateButton();
-            // }
-            // if (!Utils::can_create_import_export()) {
-            //     $grid->disableCreateButton();
-                
-            // }
-           
-
-
-            $grid->actions(function ($actions) {
+            $grid->actions(function ($actions)
+            {
                 $status = ((int)(($actions->row['status'])));
                 if (
                     $status == 2 ||
@@ -85,45 +75,33 @@ class ImportExportPermitController extends AdminController
                 }
                 if (
                     $status == 3
-                ) {
+                ){
                     $actions->disableDelete();
                 }
                 if(Utils::check_expiration_date('ImportExportPermit',$this->getKey())){
                         
                     $actions->add(new Renew(request()->segment(count(request()->segments()))));
                 
-            };
+                };
             });
-        } else if (Admin::user()->isRole('inspector')|| Admin::user()->isRole('admin')) {
-           // $grid->model()->where('inspector', '=', Admin::user()->id);
+        } 
+        else if (Admin::user()->isRole('inspector')|| Admin::user()->isRole('admin')) 
+        {
             $grid->disableCreateButton();
-
             $grid->actions(function ($actions) {
                 $status = ((int)(($actions->row['status'])));
                 $actions->disableDelete();
                 $actions->disableEdit();
-                // if (
-                //     $status != 2
-                // ) {
-                //     //$actions->disableEdit();
-                // }
-
-                // if (
-                //     $status == 5
-                // ) {
-                //     $actions->disableEdit();
-                //     $actions->disableDelete();
-                // }
+               
             });
-        } elseif (Admin::user()->isRole('admin')) {
-            $grid->disableCreateButton();
-
             $grid->filter(function ($search_param) {
                 $search_param->disableIdfilter();
                 $search_param->like('name', __("Search by Name"));
                 $search_param->like('status', __("Search by Status"));
             });
-        } else {
+
+        } 
+        else {
             $grid->disableCreateButton();
         }
 
@@ -139,28 +117,16 @@ class ImportExportPermitController extends AdminController
         $grid->column('ista_certificate', __('Type Of Certificate'))->sortable();
 
 
-        // $grid->column('administrator_id', __('Created by'))->display(function ($userId) {
-        //     $u = Administrator::find($userId);
-        //     if (!$u)
-        //         return "-";
-        //     return $u->name;
-        // })->sortable();
-    if(!Admin::user()->isRole('basic-user')){
-        $grid->column('inspector', __('Inspector'))->display(function ($userId) {
-            // if (Admin::user()->isRole('basic-user')) {
-            //     return "-";
-            // }
-            $u = Administrator::find($userId);
-            if (!$u)
-                return "Not assigned";
-            return $u->name;
-        })->sortable();
-    }
-
-        // $grid->column('status', __('Status'))->display(function ($status) {
-        //     return Utils::tell_status($status);
-        // })->sortable();
-
+        if(!Admin::user()->isRole('basic-user'))
+        {
+            $grid->column('inspector', __('Inspector'))->display(function ($userId) {
+                $u = Administrator::find($userId);
+                if (!$u)
+                    return "Not assigned";
+                return $u->name;
+            })->sortable();
+        }
+     //check if the status is expired or not
         $grid->column('status', __('Status'))->display(function ($status) {
             // check expiration date
              if (Utils::check_expiration_date('ImportExportPermit',$this->getKey())) {
@@ -184,6 +150,7 @@ class ImportExportPermitController extends AdminController
     protected function detail($id)
     {
         $import_permit = ImportExportPermit::findOrFail($id);
+        //delete the notification from the database once a user views the form
         if(Admin::user()->isRole('basic-user') ){
             if($import_permit->status == 2 || $import_permit->status == 3 || $import_permit->status == 4 || $import_permit->status == 5){
                 \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'ImportExportPermit'])->delete();
@@ -231,15 +198,10 @@ class ImportExportPermitController extends AdminController
                 $headers = ['Crop',  'Category', 'Weight'];
                 $rows = array();
                 foreach ($this->import_export_permits_has_crops as $key => $val) {
-                    //$var = CropVariety::find($val->crop_variety_id);
-
-
                     $row['crop'] = $val->variety->crop->name;
                     $row['variety'] = $val->variety->name;
-                    // $row['category'] = $val->category;
                     $row['weight'] = $val->weight;
                     $rows[] = $row;
-                    // dd($val);
                 }
 
                 $table = new Table($headers, $rows);
@@ -248,9 +210,6 @@ class ImportExportPermitController extends AdminController
         }
         $show->field('ista_certificate', __('Ista certificate'));
         $show->field('permit_number', __('Permit number'));
-
-       
-        //show the status
         $show->field('status', __('Status'))->unescape()->as(function ($status) {
             return Utils::tell_status($status);
         });
@@ -293,7 +252,9 @@ class ImportExportPermitController extends AdminController
     protected function form()
     {
         $form = new Form(new ImportExportPermit());
-        if($form->isEditing()){
+        if($form->isEditing())
+        {
+            //find the import permit id, if its status is not pending, block an inspector from editing and disable form actions
             $import_export_permit = ImportExportPermit::find(request()->route()->parameters()['import_export_permit']);
             if(Admin::user()->isRole('inspector')){
                 if($import_export_permit->status != 2){
@@ -316,273 +277,60 @@ class ImportExportPermitController extends AdminController
                        $footer->disableCreatingCheck();
 
                    });
-           }
-       }
+                }
+            }
         }
 
-        if ($form->isCreating()) {
-            // if (!Utils::can_create_import_form()) {
-            //     return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-            // //    session(['no_import_permit' => "You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit"]);
-            // //    return redirect(admin_url('form-sr4s/create'));
-            // }
+        if ($form->isCreating()) 
+        {
+          //check the status of the form before allowing a user to create a new one
+            if (!Utils::can_create_import()) {
+                return admin_warning("Warning", "You cannot create a new import permit request form  while still having a PENDING one.");
+                
+            }
+            if (Utils::can_renew_iform('ImportExportPermit')) {
+                return admin_warning("Warning", "You cannot create a new import form  while still having a valid one.");
 
-            
-        if (!Utils::can_create_import()) {
-            return admin_warning("Warning", "You cannot create a new import permit request form  while still having a PENDING one.");
-            
+            }
+
+         
         }
-
-        if (Utils::can_renew_iform('ImportExportPermit')) {
-            return admin_warning("Warning", "You cannot create a new import form  while still having a valid one.");
-
-        }
-        }
-
-        // if ($form->isCreating()) {
-        //     if (!Utils::previous_import_form_not_accepted()) {
-        //         return admin_error("Alert", "You can not apply for a new Import Permit while your last application hasn't been accepted yet! <br>If status isn't 'Pending', please check the Inspector's comment(s) to correct your application and submit again.");
-        //         // return redirect(admin_url('import-export-permits'));
-        //     }
-        // }
-
-        // dd(Utils::previous_import_form_not_accepted());
-
-        $form->setWidth(8, 4);
-        $form->disableCreatingCheck();
-        $form->tools(function (Form\Tools $tools) {
-            $tools->disableDelete();
-            $tools->disableView();
+         // callback after save
+        $form->saved(function (Form $form) 
+        {
+        //return to table view controller after saving the form data 
+            return redirect(admin_url('import-export-permits'));
         });
 
-        $form->footer(function ($footer) {
-            $footer->disableReset();
-            $footer->disableViewCheck();
-            $footer->disableEditingCheck();
-            $footer->disableCreatingCheck();
-        });
 
-        $user = Auth::user();
-        $form->hidden('is_import', __('is_import'))->default(1)->value(1)->required();
+      
 
-        if ($form->isCreating()) {
-            $form->hidden('administrator_id', __('Administrator id'))->value($user->id);
-        } else {
-            $form->hidden('administrator_id', __('Administrator id'));
-        }
+        //customize the form features
+            $form->setWidth(8, 4);
+            $form->disableCreatingCheck();
+            $form->tools(function (Form\Tools $tools) {
+                $tools->disableDelete();
+                $tools->disableView();
+            });
+
+            $form->footer(function ($footer) {
+                $footer->disableReset();
+                $footer->disableViewCheck();
+                $footer->disableEditingCheck();
+                $footer->disableCreatingCheck();
+            });
+
+            $user = Auth::user();
+            $form->hidden('is_import', __('is_import'))->default(1)->value(1)->required();
+
+            if ($form->isCreating()) {
+                $form->hidden('administrator_id', __('Administrator id'))->value($user->id);
+            } else {
+                $form->hidden('administrator_id', __('Administrator id'));
+            }
 
         if (Admin::user()->isRole('basic-user')) {
-            // $form->submitted(function (Form $form) {
-
-            //     if ($_POST['type'] != 'Researchers') {
-            //         $national_seed_board_reg_num = $this->show->field('national_seed_board_reg_num', __('National seed board reg num'));
-            //         $form
-            //         ->text($national_seed_board_reg_num, __('National seed board reg num'))
-            //         ->required()
-            //         ->readonly();
-            //     }
-            // });
-
-            // ----------------------------------------------
-            // // $address_of_current_user = FormSr6::find('address')->where('name_of_applicant', $user->name)->get();
-
-            // $address_of_current_user = FormSr4::findOrFail('address')->get();
-
-            // dd($address_of_current_user);
-            // ----------------------------------------------
-
-
-          
-
-            // $application_cats = [
-            //     'Seed Merchant' => 'Seed Merchant',
-            //     'Seed Producer' => 'Seed Producer',
-            //     'Seed Stockist' => 'Seed Stockist',
-            //     'Seed Importer' => 'Seed Importer',
-            //     'Seed Exporter' => 'Seed Exporter',
-            //     'Seed Processor' => 'Seed Processor',
-            //     'Researchers' => 'Researchers',
-            // ];
-
-            /*
-            $form->radio('type', __('Application category?'))
-                ->options([
-                    'Seed Merchant' => 'Seed Merchant',
-                    'Seed Producer' => 'Seed Producer',
-                    'Seed Stockist' => 'Seed Stockist',
-                    'Seed Importer' => 'Seed Importer',
-                    'Seed Exporter' => 'Seed Exporter',
-                    'Seed Processor' => 'Seed Processor',
-                    'Researchers' => 'Researchers',
-                    
-                    // foreach ($application_cats as $cat ) {
-                    //     return [$cat => $cat];
-                    // }
-                ])
-                // ->stacked()
-                ->required()
-                ->help('Which SR4 type are you applying for?')
-
-                ->when('Seed Merchant', function (Form $form) {
- 
-                    $seed_board_registration_number = null;
-                    $sr4 = Utils::has_valid_sr4();
-                    // if basic-user has an active sr4 form (if their sr4 form application has been accepted)
-                    
-                    if ($sr4 != null) {
-                        if ($sr4->seed_board_registration_number != null) {
-                                $seed_board_registration_number = $sr4->seed_board_registration_number;
-                                $form->text("", __('National Seed Board Registration Number'))
-                                ->default($seed_board_registration_number)
-                                ->readonly();
-                        }
-                    }
-                })
-
-                ->when('Seed Producer', function (Form $form) {
- 
-                    $seed_board_registration_number = null;
-                    $sr4 = Utils::has_valid_sr4();
-                    // if basic-user has an active sr4 form (if their sr4 form application has been accepted)
-                    
-                    if ($sr4 != null) {
-                        if ($sr4->seed_board_registration_number != null) {
-                                $seed_board_registration_number = $sr4->seed_board_registration_number;
-                                $form->text("", __('National Seed Board Registration Number'))
-                                ->default($seed_board_registration_number)
-                                ->readonly();
-                        }
-                    }
-                    
-                })
-                
-                ->when('Seed Stockist', function (Form $form) {
-                    $seed_board_registration_number = null;
-                    $sr4 = Utils::has_valid_sr4();
-                    // if basic-user has an active sr4 form (if their sr4 form application has been accepted)
-                    if ($sr4 != null) {
-                        if ($sr4->seed_board_registration_number != null) {
-                                $seed_board_registration_number = $sr4->seed_board_registration_number;
-                                $form->text("", __('National Seed Board Registration Number'))
-                                ->default($seed_board_registration_number)
-                                ->readonly();
-                        }
-                    }
-                })
-                
-                ->when('Seed Importer', function (Form $form) {
- 
-                    $seed_board_registration_number = null;
-                    $sr66 = Utils::has_valid_sr6();
-                    $sr4 = Utils::has_valid_sr4();
-                    // if basic-user has an active sr6 form (if their sr6 form application has been accepted)
-                    
-                    // if ($sr66 != null) {
-                    //     if ($sr66->registration_number != null) {
-                    //             $seed_board_registration_number = $sr66->registration_number;
-                    //             $form->text("", __('National Seed Board Registration Number'))
-                    //             ->default($seed_board_registration_number)
-                    //             ->readonly();
-                    //     }
-                    // }
-
-                    
-                    if ($sr4 != null) {
-                        if ($sr4->seed_board_registration_number != null) {
-                                $seed_board_registration_number = $sr4->seed_board_registration_number;
-                                $form->text("", __('National Seed Board Registration Number'))
-                                ->default($seed_board_registration_number)
-                                ->readonly();
-                        }
-                    }
-                })
-                
-                ->when('Seed Exporter', function (Form $form) {
- 
-                    $seed_board_registration_number = null;
-                    $sr66 = Utils::has_valid_sr6();
-                    $sr4 = Utils::has_valid_sr4();
-                    // if basic-user has an active sr6 form (if their sr6 form application has been accepted)
-                    
-                    // if ($sr66 != null) {
-                    //     if ($sr66->registration_number != null) {
-                    //             $seed_board_registration_number = $sr66->registration_number;
-                    //             $form->text("", __('National Seed Board Registration Number'))
-                    //             ->default($seed_board_registration_number)
-                    //             ->readonly();
-                    //     }
-                    // }
-                    
-                    if ($sr4 != null) {
-                        if ($sr4->seed_board_registration_number != null) {
-                                $seed_board_registration_number = $sr4->seed_board_registration_number;
-                                $form->text("", __('National Seed Board Registration Number'))
-                                ->default($seed_board_registration_number)
-                                ->readonly();
-                        }
-                    }
-                    
-                })
-                
-                ->when('Seed Processor', function (Form $form) {
- 
-                    $seed_board_registration_number = null;
-                    $sr4 = Utils::has_valid_sr4();
-                    // if basic-user has an active sr4 form (if their sr4 form application has been accepted)
-                    
-                    if ($sr4 != null) {
-                        if ($sr4->seed_board_registration_number != null) {
-                                $seed_board_registration_number = $sr4->seed_board_registration_number;
-                                $form->text("", __('National Seed Board Registration Number'))
-                                ->default($seed_board_registration_number)
-                                ->readonly();
-                        }
-                    }
-                });
-
-           
-           
-                // ->when('in', [
-            //     'Seed Merchant',
-            //     'Seed Producer',
-            //     'Seed Stockist',
-            //     'Seed Importer',
-            //     'Seed Exporter',
-            //     'Seed Processor',
-            // ], function (Form $form) {
-            // })
-
-            // $seed_board_registration_number = null;
-            // $sr4 = Utils::has_valid_sr4();
-
-            // // if basic-user has an active sr4 form (if their sr4 form application has been accepted)
-            // if ($sr4 != null) {
-            //     // echo $sr4;
-            //     if ($sr4->seed_board_registration_number != null) {
-            //         // if (strlen($sr4->seed_board_registration_number) > 1) {
-            //             $seed_board_registration_number = $sr4->seed_board_registration_number;
-            //             // echo $seed_board_registration_number;
-
-            //             $form->text("", __('National Seed Board Registration Number'))
-            //             ->default($seed_board_registration_number)
-            //             ->readonly();
-            //         // }
-            //     }
-            // }         
-            
-            // if (!$form->radio('type') == 'Researchers') {
-                // $form->text(
-                //     'national_seed_board_reg_num',
-                //     __('National Seed Board Registration Number')
-                // )
-                //     ->readonly()
-                //     ->value($seed_board_registration_number);
-            // }
-
-            
-            */
-
-
+            $application_category = Utils::check_application_category();
 
             $form->radio('type', __('Application Category?'))
                 ->options([
@@ -594,628 +342,160 @@ class ImportExportPermitController extends AdminController
                     'Seed Processor' => 'Seed Processor',
                     'Researchers' => 'Researchers',
 
-                    // foreach ($application_cats as $cat ) {
-                    //     return [$cat => $cat];
-                    // }
                 ])
-                // ->stacked()
-                ->required()
+                ->required()->default($application_category)
                 ->help('Which SR4 type are you applying for?')
 
-        ->when('Seed Producer', function (Form $form) {
-            $seed_board_registration_number = null;
-            $sr4 = Utils::has_valid_sr4();
-            $application_category = Utils::check_application_category();
-            $user = Auth::user();
-            // if basic-user has an active sr4 form (if their sr4 form application has been accepted)
-            if ($sr4 != null) {
-                                        //compare the selected input with $application_category
+            // 1.check if there exists a valid SR4
+            // 2.check if the application category in the sr4 matches the selected one
+            // 3.render the form in show_fields function
+            
+
+            ->when('Seed Producer', function (Form $form) 
+            {
+                
+                $sr4 = Utils::has_valid_sr4();
+                $application_category = Utils::check_application_category();
+                $user = Auth::user();
+                if ($sr4 != null) {
                     if($application_category == 'Seed Producer'){
-                    $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
-                    // $form->text($address_of_current_user, __('Postal Address'))->required();
-                    $form->text('address', __('Postal Address'))->required();
-                    $form->text('telephone', __('Phone Number'))->required();
-                    if ($sr4->seed_board_registration_number != null) {
-                    $seed_board_registration_number = $sr4->seed_board_registration_number;
-                    $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
-                        ->default($seed_board_registration_number)
-                        ->readonly();
-                }
-                $form->text('store_location', __('Location of the store'))->required();
-                $form->text(
-                    'quantiry_of_seed',
-                    __('Quantity of seed of the same variety held in stock')
-                )
-                    ->help("(metric tons)")
-                    ->attribute(['type' => 'number'])
-                    ->required();
-                $form->text(
-                    'name_address_of_origin',
-                    __('Name and address of origin')
-                )
-                    ->required();
-    
-    
-                // ------------------------------------------------------------------
-                $form->tags('ista_certificate', __('Type Of Certificate'))
-                    ->required()
-                    ->options(['ISTA certificate', 'Phytosanitary certificate']);
-                // ------------------------------------------------------------------
-    
-                $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
-    
-                $form->radio('crop_category', __('Category'))
-                    ->options([
-                        'Commercial' => 'Commercial',
-                        'Research' => 'Research',
-                        'Own use' => 'Own use',
-                    ])->stacked()
-                    ->required();
-    
-                $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
-                '), function (NestedForm $form) {
-                    $_items = [];
-    
-                    foreach (CropVariety::all() as $key => $item) {
-                        $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
+                    $this->show_fields($form,$user,$sr4);
+
+                    }else{
+
+                    $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
                     }
-    
-                    $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
-                        ->required();
-                        //Specify other varieties
-                $form->textarea(
-                    'other_varieties',
-                    __('Specify other varieties if any.')
-                )
-                ->help('If varieties you are applying for were not listed');
-                    $form->hidden('category', __('Category'))->default("")->value($item->name);
-                    $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
-                });
-    
-                
-            
-                        }else{
-                            //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-                            $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
-                        }
-                    }else{
-                            //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-                            $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
-                        }
-                    })
-                    ->when('Seed Merchant', function (Form $form) {
-                        $seed_board_registration_number = null;
-                        $sr4 = Utils::has_valid_sr4();
-                        $application_category = Utils::check_application_category();
-                        $user = Auth::user();
-                        // if basic-user has an active sr4 form (if their sr4 form application has been accepted)
-                        if ($sr4 != null) {
-                                                    //compare the selected input with $application_category
-                                if($application_category == 'Seed Merchant'){
-                                $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
-                                // $form->text($address_of_current_user, __('Postal Address'))->required();
-                                $form->text('address', __('Postal Address'))->required();
-                                $form->text('telephone', __('Phone Number'))->required();
-                                if ($sr4->seed_board_registration_number != null) {
-                                $seed_board_registration_number = $sr4->seed_board_registration_number;
-                                $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
-                                    ->default($seed_board_registration_number)
-                                    ->readonly();
-                            }
-                            $form->text('store_location', __('Location of the store'))->required();
-                            $form->text(
-                                'quantiry_of_seed',
-                                __('Quantity of seed of the same variety held in stock')
-                            )
-                                ->help("(metric tons)")
-                                ->attribute(['type' => 'number'])
-                                ->required();
-                            $form->text(
-                                'name_address_of_origin',
-                                __('Name and address of origin')
-                            )
-                                ->required();
-                
-                
-                            // ------------------------------------------------------------------
-                            $form->tags('ista_certificate', __('Type Of Certificate'))
-                                ->required()
-                                ->options(['ISTA certificate', 'Phytosanitary certificate']);
-                            // ------------------------------------------------------------------
-                
-                            $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
-                
-                            $form->radio('crop_category', __('Category'))
-                                ->options([
-                                    'Commercial' => 'Commercial',
-                                    'Research' => 'Research',
-                                    'Own use' => 'Own use',
-                                ])->stacked()
-                                ->required();
-                
-                            $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
-                            '), function (NestedForm $form) {
-                                $_items = [];
-                
-                                foreach (CropVariety::all() as $key => $item) {
-                                    $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
-                                }
-                
-                                $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
-                                    ->required();
-                                    //Specify other varieties
-                            $form->textarea(
-                                'other_varieties',
-                                __('Specify other varieties if any.')
-                            )
-                            ->help('If varieties you are applying for were not listed');
-                                $form->hidden('category', __('Category'))->default("")->value($item->name);
-                                $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
-                            });
-                
-                            
-                        
-                                    }else{
-                                        //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-                                        $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
-                                    }
-                                }else{
-                                        //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-                                        $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
-                                    }
-                                })
+                }else{
 
-                                ->when('Seed Stockist', function (Form $form) {
-                                    $seed_board_registration_number = null;
-                                    $sr4 = Utils::has_valid_sr4();
-                                    $application_category = Utils::check_application_category();
-                                    $user = Auth::user();
-                                    // if basic-user has an active sr4 form (if their sr4 form application has been accepted)
-                                    if ($sr4 != null) {
-                                                                //compare the selected input with $application_category
-                                            if($application_category == 'Seed Stockist'){
-                                            $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
-                                            // $form->text($address_of_current_user, __('Postal Address'))->required();
-                                            $form->text('address', __('Postal Address'))->required();
-                                            $form->text('telephone', __('Phone Number'))->required();
-                                            if ($sr4->seed_board_registration_number != null) {
-                                            $seed_board_registration_number = $sr4->seed_board_registration_number;
-                                            $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
-                                                ->default($seed_board_registration_number)
-                                                ->readonly();
-                                        }
-                                        $form->text('store_location', __('Location of the store'))->required();
-                                        $form->text(
-                                            'quantiry_of_seed',
-                                            __('Quantity of seed of the same variety held in stock')
-                                        )
-                                            ->help("(metric tons)")
-                                            ->attribute(['type' => 'number'])
-                                            ->required();
-                                        $form->text(
-                                            'name_address_of_origin',
-                                            __('Name and address of origin')
-                                        )
-                                            ->required();
-                            
-                            
-                                        // ------------------------------------------------------------------
-                                        $form->tags('ista_certificate', __('Type Of Certificate'))
-                                            ->required()
-                                            ->options(['ISTA certificate', 'Phytosanitary certificate']);
-                                        // ------------------------------------------------------------------
-                            
-                                        $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
-                            
-                                        $form->radio('crop_category', __('Category'))
-                                            ->options([
-                                                'Commercial' => 'Commercial',
-                                                'Research' => 'Research',
-                                                'Own use' => 'Own use',
-                                            ])->stacked()
-                                            ->required();
-                            
-                                        $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
-                                        '), function (NestedForm $form) {
-                                            $_items = [];
-                            
-                                            foreach (CropVariety::all() as $key => $item) {
-                                                $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
-                                            }
-                            
-                                            $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
-                                                ->required();
-                                                //Specify other varieties
-                                        $form->textarea(
-                                            'other_varieties',
-                                            __('Specify other varieties if any.')
-                                        )
-                                        ->help('If varieties you are applying for were not listed');
-                                            $form->hidden('category', __('Category'))->default("")->value($item->name);
-                                            $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
-                                        });
-                            
-                                        
-                                    
-                                                }else{
-                                                    //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-                                                    $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
-                                                }
-                                            }else{
-                                                    //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-                                                    $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
-                                                }
-                                            })
-        ->when('Seed Importer', function (Form $form) {
-            $seed_board_registration_number = null;
-            $sr4 = Utils::has_valid_sr4();
-            $application_category = Utils::check_application_category();
-            $user = Auth::user();
-            // if basic-user has an active sr4 form (if their sr4 form application has been accepted)
-            if ($sr4 != null) {
-                                        //compare the selected input with $application_category
-                    if($application_category == 'Seed Importer'){
-                    $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
-                    // $form->text($address_of_current_user, __('Postal Address'))->required();
-                    $form->text('address', __('Postal Address'))->required();
-                    $form->text('telephone', __('Phone Number'))->required();
-                    if ($sr4->seed_board_registration_number != null) {
-                    $seed_board_registration_number = $sr4->seed_board_registration_number;
-                    $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
-                        ->default($seed_board_registration_number)
-                        ->readonly();
-                }
-                $form->text('store_location', __('Location of the store'))->required();
-                $form->text(
-                    'quantiry_of_seed',
-                    __('Quantity of seed of the same variety held in stock')
-                )
-                    ->help("(metric tons)")
-                    ->attribute(['type' => 'number'])
-                    ->required();
-                $form->text(
-                    'name_address_of_origin',
-                    __('Name and address of origin')
-                )
-                    ->required();
-    
-    
-                // ------------------------------------------------------------------
-                $form->tags('ista_certificate', __('Type Of Certificate'))
-                    ->required()
-                    ->options(['ISTA certificate', 'Phytosanitary certificate']);
-                // ------------------------------------------------------------------
-    
-                $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
-    
-                $form->radio('crop_category', __('Category'))
-                    ->options([
-                        'Commercial' => 'Commercial',
-                        'Research' => 'Research',
-                        'Own use' => 'Own use',
-                    ])->stacked()
-                    ->required();
-    
-                    $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
-                    '), function (NestedForm $form) {
-                        $_items = [];
-        
-                        foreach (CropVariety::all() as $key => $item) {
-                            $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
-                        }
-        
-                        $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
-                            ->required();
-                            //Specify other varieties
-                    $form->textarea(
-                        'other_varieties',
-                        __('Specify other varieties if any.')
-                    )
-                    ->help('If varieties you are applying for were not listed');
-                        $form->hidden('category', __('Category'))->default("")->value($item->name);
-                        $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
-                    });
-
-                        }else{
-                            //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-                            $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
-                        }
-                    }else{
-                            //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-                            $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
-                        }
-                    })
-
-        ->when('Seed Exporter', function (Form $form) {
-            $seed_board_registration_number = null;
-            $sr4 = Utils::has_valid_sr4();
-            $application_category = Utils::check_application_category();
-            $user = Auth::user();
-            // if basic-user has an active sr4 form (if their sr4 form application has been accepted)
-            if ($sr4 != null) {
-                                        //compare the selected input with $application_category
-                    if($application_category == 'Seed Exporter'){
-                    $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
-                    // $form->text($address_of_current_user, __('Postal Address'))->required();
-                    $form->text('address', __('Postal Address'))->required();
-                    $form->text('telephone', __('Phone Number'))->required();
-                    if ($sr4->seed_board_registration_number != null) {
-                    $seed_board_registration_number = $sr4->seed_board_registration_number;
-                    $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
-                        ->default($seed_board_registration_number)
-                        ->readonly();
-                }
-                $form->text('store_location', __('Location of the store'))->required();
-                $form->text(
-                    'quantiry_of_seed',
-                    __('Quantity of seed of the same variety held in stock')
-                )
-                    ->help("(metric tons)")
-                    ->attribute(['type' => 'number'])
-                    ->required();
-                $form->text(
-                    'name_address_of_origin',
-                    __('Name and address of origin')
-                )
-                    ->required();
-    
-    
-                // ------------------------------------------------------------------
-                $form->tags('ista_certificate', __('Type Of Certificate'))
-                    ->required()
-                    ->options(['ISTA certificate', 'Phytosanitary certificate']);
-                // ------------------------------------------------------------------
-    
-                $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
-    
-                $form->radio('crop_category', __('Category'))
-                    ->options([
-                        'Commercial' => 'Commercial',
-                        'Research' => 'Research',
-                        'Own use' => 'Own use',
-                    ])->stacked()
-                    ->required();
-    
-                $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
-                '), function (NestedForm $form) {
-                    $_items = [];
-    
-                    foreach (CropVariety::all() as $key => $item) {
-                        $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
+                    $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
                     }
-    
-                    $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
-                        ->required();
-                        //Specify other varieties
-                 $form->textarea(
-                    'other_varieties',
-                    __('Specify other varieties if any.')
-                )
-                ->help('If varieties you are applying for were not listed');
-                    $form->hidden('category', __('Category'))->default("")->value($item->name);
-                    $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
-                });
+            })
 
+
+            ->when('Seed Merchant', function (Form $form) 
+            {
                 
-    
+                $sr4 = Utils::has_valid_sr4();
+                $application_category = Utils::check_application_category();
+                $user = Auth::user();
+                if ($sr4 != null) {
+                    if($application_category == 'Seed Merchant'){
+                        $this->show_fields($form,$user,$sr4);
                 
-            
-                        }else{
-                            //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-                            $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
-                        }
                     }else{
-                            //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-                            $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
-                        }
-                    })
-                 
-
-        ->when('Seed Processor', function (Form $form) {
-            $seed_board_registration_number = null;
-            $sr4 = Utils::has_valid_sr4();
-            $application_category = Utils::check_application_category();
-            $user = Auth::user();
-            // if basic-user has an active sr4 form (if their sr4 form application has been accepted)
-            if ($sr4 != null) {
-                                        //compare the selected input with $application_category
-                    if($application_category == 'Seed Processor'){
-                    $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
-                    // $form->text($address_of_current_user, __('Postal Address'))->required();
-                    $form->text('address', __('Postal Address'))->required();
-                    $form->text('telephone', __('Phone Number'))->required();
-                    if ($sr4->seed_board_registration_number != null) {
-                    $seed_board_registration_number = $sr4->seed_board_registration_number;
-                    $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
-                        ->default($seed_board_registration_number)
-                        ->readonly();
-                }
-                $form->text('store_location', __('Location of the store'))->required();
-                $form->text(
-                    'quantiry_of_seed',
-                    __('Quantity of seed of the same variety held in stock')
-                )
-                    ->help("(metric tons)")
-                    ->attribute(['type' => 'number'])
-                    ->required();
-                $form->text(
-                    'name_address_of_origin',
-                    __('Name and address of origin')
-                )
-                    ->required();
-    
-    
-                // ------------------------------------------------------------------
-                $form->tags('ista_certificate', __('Type Of Certificate'))
-                    ->required()
-                    ->options(['ISTA certificate', 'Phytosanitary certificate']);
-                // ------------------------------------------------------------------
-    
-                $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
-    
-                $form->radio('crop_category', __('Category'))
-                    ->options([
-                        'Commercial' => 'Commercial',
-                        'Research' => 'Research',
-                        'Own use' => 'Own use',
-                    ])->stacked()
-                    ->required();
-    
-                $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
-                '), function (NestedForm $form) {
-                    $_items = [];
-    
-                    foreach (CropVariety::all() as $key => $item) {
-                        $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
-                    }
-    
-                    $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
-                        ->required();
-                        //Specify other varieties
-                $form->textarea(
-                    'other_varieties',
-                    __('Specify other varieties if any.')
-                )
-                ->help('If varieties you are applying for were not listed');
-                    $form->hidden('category', __('Category'))->default("")->value($item->name);
-                    $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
-                });
-    
-                
-            
-                        }else{
-                            //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-                            $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
-                        }
-                    }else{
-                            //return admin_error("You must apply for SR4 and be 'Accepted' or have an 'accepted' SR4 to apply for a new Import Permit");
-                            $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
-                        }
-                    })
-
                     
-        ->when('Researchers', function (Form $form) {
-            $sr4 = Utils::has_valid_sr4();
-            $user = Auth::user();
-            if ($sr4 == null) {
-                //compare the selected input with $application_category              
-                    $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
-                    // $form->text($address_of_current_user, __('Postal Address'))->required();
-                    $form->text('address', __('Postal Address'))->required();
-                    $form->text('telephone', __('Phone Number'))->required();
-                 
-                $form->text('store_location', __('Location of the store'))->required();
-                $form->text(
-                    'quantiry_of_seed',
-                    __('Quantity of seed of the same variety held in stock')
-                )
-                    ->help("(metric tons)")
-                    ->attribute(['type' => 'number'])
-                    ->required();
-                $form->text(
-                    'name_address_of_origin',
-                    __('Name and address of origin')
-                )
-                    ->required();
-    
-    
-                // ------------------------------------------------------------------
-                $form->tags('ista_certificate', __('Type Of Certificate'))
-                    ->required()
-                    ->options(['ISTA certificate', 'Phytosanitary certificate']);
-                // ------------------------------------------------------------------
-    
-                $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
-    
-                $form->radio('crop_category', __('Category'))
-                    ->options([
-                        'Commercial' => 'Commercial',
-                        'Research' => 'Research',
-                        'Own use' => 'Own use',
-                    ])->stacked()
-                    ->required();
-    
-                $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
-                '), function (NestedForm $form) {
-                    $_items = [];
-    
-                    foreach (CropVariety::all() as $key => $item) {
-                        $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
+                        $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
+                        }
+                }else{
+                    
+                        $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
                     }
-    
-                    $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
-                        ->required();
-                        //Specify other varieties
-                $form->textarea(
-                    'other_varieties',
-                    __('Specify other varieties if any.')
-                )
-                ->help('If varieties you are applying for were not listed');
-                    $form->hidden('category', __('Category'))->default("")->value($item->name);
-                    $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
-                });
-            }else{
+            })
 
-                $form->html('<div class="alert alert-danger">Seems you have a valid SR4,please choose the application category in the form. </div>');
-            }   
+
+            ->when('Seed Stockist', function (Form $form) 
+            {
+
+                $sr4 = Utils::has_valid_sr4();
+                $application_category = Utils::check_application_category();
+                $user = Auth::user();
+                if ($sr4 != null) {
+                        if($application_category == 'Seed Stockist'){
+                            $this->show_fields($form,$user,$sr4);
+                    
+                        }else{
+                        
+                        $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
+                        }
+                }else{
+                        
+                        $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
+                    }
+            })
+
+
+            ->when('Seed Importer', function (Form $form) 
+            {
+            
+                $sr4 = Utils::has_valid_sr4();
+                $application_category = Utils::check_application_category();
+                $user = Auth::user();
+                
+                if ($sr4 != null) {
+                    if($application_category == 'Seed Importer'){
+                    $this->show_fields($form,$user,$sr4);
+
+                    }else{
+
+                    $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
+                    }
+                }else{
+
+                    $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
+                    }
+            })
+
+
+            ->when('Seed Exporter', function (Form $form) 
+            {
+                $sr4 = Utils::has_valid_sr4();
+                $application_category = Utils::check_application_category();
+                $user = Auth::user();
+                if ($sr4 != null) {
+                    if($application_category == 'Seed Exporter'){
+                        $this->show_fields($form,$user,$sr4);
+                
+                    }else{
+                    
+                        $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
+                        }
+                }else{
+                    
+                        $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
+                    }
+            })
+                        
+
+            ->when('Seed Processor', function (Form $form) 
+            {
+                $sr4 = Utils::has_valid_sr4();
+                $application_category = Utils::check_application_category();
+                $user = Auth::user();
+                if ($sr4 != null) {
+                    if($application_category == 'Seed Processor'){
+                    $this->show_fields($form,$user,$sr4);
+
+                    }else{
+
+                    $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
+                    }
+                }else{
+
+                    $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
+                    }
+            })
+
+                            
+            ->when('Researchers', function (Form $form) 
+            {
+                $sr4 = Utils::has_valid_sr4();
+                $user = Auth::user();
+                if ($sr4 == null) {
+                        $this->show_fields($form,$user);
+
+                }else{
+
+                    $form->html('<div class="alert alert-danger">Seems you have a valid SR4,please choose the application category in the form. </div>');
+                }   
             });
+                            
 
-                } 
-                                                                                    
-            // $form->text('store_location', __('Location of the store'))->required();
-            // $form->text(
-            //     'quantiry_of_seed',
-            //     __('Quantity of seed of the same variety held in stock')
-            // )
-            //     ->help("(metric tons)")
-            //     ->attribute(['type' => 'number'])
-            //     ->required();
-            // $form->text(
-            //     'name_address_of_origin',
-            //     __('Name and address of origin')
-            // )
-            //     ->required();
+        } 
 
 
-            // // ------------------------------------------------------------------
-            // $form->tags('ista_certificate', __('Type Of Certificate'))
-            //     ->required()
-            //     ->options(['ISTA certificate', 'Phytosanitary certificate']);
-            // // ------------------------------------------------------------------
 
-            // $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
-
-            // $form->radio('crop_category', __('Category'))
-            //     ->options([
-            //         'Commercial' => 'Commercial',
-            //         'Research' => 'Research',
-            //         'Own use' => 'Own use',
-            //     ])->stacked()
-            //     ->required();
-
-            // $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
-            // '), function (NestedForm $form) {
-            //     $_items = [];
-
-            //     foreach (CropVariety::all() as $key => $item) {
-            //         $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
-            //     }
-
-            //     $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
-            //         ->required();
-            //     $form->hidden('category', __('Category'))->default("")->value($item->name);
-            //     $form->text('weight', __('Weight (in KGs)'))->attribute('type', 'number')->required();
-            // });
-
-            // //Specify other varieties
-            // $form->textarea(
-            //     'other_varieties',
-            //     __('Specify other varieties.')
-            // )
-            // ->help('If varieties you are applying for were not listed');
-        
-
-        if (Admin::user()->isRole('admin')) {
+        if (Admin::user()->isRole('admin')) 
+        {
             //$form->file('ista_certificate', __('Ista certificate'))->required();
             $form->text('name', __('Name of applicant'))->default($user->name)->readonly();
             $form->text('telephone', __('Telephone'))->readonly();
@@ -1241,18 +521,12 @@ class ImportExportPermitController extends AdminController
                         ->options($_items)
                         ->help('Please select inspector')
                         ->rules('required');
-                })
-                ->when('in', [3, 4], function (Form $form) {
-                    $form->textarea('status_comment', 'Enter status comment (Remarks)')
-                        ->help("Please specify with a comment");
-                })
-                ->when('in', [5, 6], function (Form $form) {
-                    $form->date('valid_from', 'Valid from date?')->readonly();
-                    $form->date('valid_until', 'Valid until date?')->readonly();
                 });
+                
         }
 
-        if (Admin::user()->isRole('inspector')) {
+        if (Admin::user()->isRole('inspector')) 
+        {
 
             $form->text('name', __('Name of applicant'))->default($user->name)->readonly();
             $form->text('telephone', __('Telephone'))->readonly();
@@ -1273,26 +547,88 @@ class ImportExportPermitController extends AdminController
                     $form->textarea('status_comment', 'Enter status comment (Remarks)')
                         ->help("Please specify with a comment");
                 })
-                ->when('in', [5, 6], function (Form $form) {
+                ->when('5', function (Form $form) {
                     $form->text('permit_number', __('Permit number'))
                         ->help("Please Enter Permit number")
                         ->default("Import" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->readonly();
-                    // $form->date('valid_from', 'Valid from date?')->readonly();
-                    // $form->date('valid_until', 'Valid until date?')->readonly();
                     $form->date('valid_from', 'Valid from date?');
                     $form->date('valid_until', 'Valid until date?');
                 });
 
-
-            // $form->datetime('valid_from', __('Valid from'))->default(date('Y-m-d H:i:s'));
-            // $form->datetime('valid_until', __('Valid until'))->default(date('Y-m-d H:i:s'));
-            // $form->text('status', __('Status'));
-            // $form->number('inspector', __('Inspector'));
-            // $form->textarea('status_comment', __('Status comment'));
         }
 
 
+            return $form;
+    }
 
+    //form function
+    public function show_fields($form, $user, $sr4)
+    {
+        
+        $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
+        $form->text('address', __('Postal Address'))->required();
+        $form->text('telephone', __('Phone Number'))->required();  
+        if ($sr4->seed_board_registration_number != null) {
+            $seed_board_registration_number = $sr4->seed_board_registration_number;
+            $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
+                ->default($seed_board_registration_number)
+                ->readonly(); 
+        }      
+        $form->text('store_location', __('Location of the store'))->required();
+        $form->text(
+            'quantiry_of_seed',
+            __('Quantity of seed of the same variety held in stock')
+        )
+            ->help("(metric tons)")
+            ->attribute(['type' => 'number'])
+            ->required();
+        $form->text(
+            'name_address_of_origin',
+            __('Name and address of origin')
+        )
+            ->required();
+
+        $form->tags('ista_certificate', __('Type Of Certificate'))
+            ->required()
+            ->options(['ISTA certificate', 'Phytosanitary certificate']);
+
+        $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
+
+        $form->radio('crop_category', __('Category'))
+            ->options([
+                'Commercial' => 'Commercial',
+                'Research' => 'Research',
+                'Own use' => 'Own use',
+            ])->stacked()
+            ->required();
+
+        $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
+        '), function (NestedForm $form) {
+            $_items = [];
+
+            foreach (CropVariety::all() as $key => $item) {
+                $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
+            }
+
+            $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
+                ->required();
+                
+            $form->textarea(
+                'other_varieties',
+                __('Specify other varieties if any.')
+            )
+            ->help('If varieties you are applying for were not listed');
+                $form->hidden('category', __('Category'))->default("")->value($item->name);
+                $form->radio('measure', __('Weight Measurement'))
+                ->options([
+                    'Kgs' => 'Kgs',
+                    'Metric Tons' => 'Metric Tons',
+                ])
+                ->required();
+
+                $form->text('weight', __('Weight'))->attribute('type', 'number')->required();
+                   
+        });
         return $form;
     }
 

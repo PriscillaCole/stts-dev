@@ -148,6 +148,7 @@ class FormStockExaminationRequestController extends AdminController
     protected function detail($id)
     {
         $show = new Show(FormStockExaminationRequest::findOrFail($id));
+        //delete notification after user has viewed it
         $stockexam = FormStockExaminationRequest::findOrFail($id);
         if(Admin::user()->isRole('basic-user') ){
             if($stockexam->status == 2 || $stockexam->status == 3 || $stockexam->status == 4 || $stockexam->status == 16){
@@ -214,11 +215,6 @@ class FormStockExaminationRequestController extends AdminController
     protected function form()
     {
         $form = new Form(new FormStockExaminationRequest());
-
-        $form->saved(function (Form $form) {
-            //return to table view controller after saving the form data 
-            return redirect(admin_url('form-stock-examination-requests'));
-       });
 
         if ($form->isEditing()) {
             $id = request()->route()->parameters['form_stock_examination_request'];
@@ -361,49 +357,47 @@ class FormStockExaminationRequestController extends AdminController
                     '3' => 'QDs',
                 ])
                 
-                ->when('1', function (Form $form) {
-                    $all_import_permits =  ImportExportPermit::where([
-                        'administrator_id' => Admin::user()->id,
-                        'is_import' => 1
-                    ])->get();
-                    
-                    if($all_import_permits->isEmpty()){
-                         $form->html('<div class="alert alert-danger">You cannot create a new Stock examination request if don\'t have a valid Import permit </div>');
-                    }else{
-                    $import_permits = [];
-                    foreach ($all_import_permits as $key => $value) {
-                        if ($value->status == 5) {  // if accepted
-                            $min_date = Carbon::parse($value->valid_until);
-                            if (!$min_date->isToday()) {  // if expiry date is not today
-                                if (!$min_date->isPast()) {  // if expiry date is valid
-                                    $import_permits[$value->id] = "Import Permit Number: " . $value->permit_number;
-                                }
-                            } else {
-                                // $import_permits[$value->id] = $value->id;
-                                $import_permits[$value->id] = "Import Permit Number: " . $value->permit_number;
+        ->when('1', function (Form $form) 
+        {
+            $all_import_permits =  ImportExportPermit::where([
+                'administrator_id' => Admin::user()->id,
+                'is_import' => 1
+            ])->get();
+            
+            if($all_import_permits->isEmpty())
+            {
+                    $form->html('<div class="alert alert-danger">You cannot create a new Stock examination request if don\'t have a valid Import permit </div>');
+            }
+            else
+            {
+                $import_permits = [];
+                foreach ($all_import_permits as $key => $value) 
+                {
+                    if ($value->status == 5)
+                    { 
+                        $min_date = Carbon::parse($value->valid_until);
+                        if (!$min_date->isToday() && !$min_date->isPast()) 
+                        {  
+                            $import_permits[$value->id] = "Import Permit Number: " . $value->permit_number;
+                            
+                        } else 
+                        {
+                            $form->html('<div class="alert alert-danger">Sorry! it looks like your import permit is expired , Please re-apply for one.</div>');
 
-                            }
                         }
- 
-                    // if (count($all_import_permits) >= 1) {
-                    //     // $form->select('import_export_permit_id', __('Import permit number'))
-                    //     //     ->rules('required')
-                    //     //     ->options($import_permits);
-                    //     echo "fooooo";
-                    // }
-
                     }
- 
-                    if (count($all_import_permits) >= 1) {
-                        $form->select('import_export_permit_id', __('Select Import Permit'))
-                        ->rules('required')
-                        ->options($import_permits);
-                        $form->textarea('remarks', __('Enter remarks'))->required();
-                    }
-                
                 }
 
-                })    // end when 1
+                if (count($import_permits) >= 1) {
+                    $form->select('import_export_permit_id', __('Select Import Permit'))
+                    ->rules('required')
+                    ->options($import_permits);
+                    $form->textarea('remarks', __('Enter remarks'))->required();
+                }
+            
+            }
+
+        })    // end when 1
 
                 ->when('2', function (Form $form) {
 
@@ -445,7 +439,6 @@ class FormStockExaminationRequestController extends AdminController
                 $form->select('planting_return_id', __('Select approved SR10'))
                         ->rules('required')
                         ->options($planting_returnings);
-                 $form->textarea('remarks', __('Enter remarks'))->required();
                 }
                 })
 
@@ -473,9 +466,7 @@ class FormStockExaminationRequestController extends AdminController
                         $form->select('form_qds_id', __('Select Approved QDS Crop Inspection'))
                             ->rules('required')
                             ->options($my_qds);
-                         $form->textarea('remarks', __('Enter remarks'))->required();
                     }
-
                 }
                 })->required();
 
@@ -485,7 +476,7 @@ class FormStockExaminationRequestController extends AdminController
             }
 
 
-           
+            
 
             $user = Auth::user();
             $form->hidden('administrator_id', __('Administrator id'))->value($user->id); 

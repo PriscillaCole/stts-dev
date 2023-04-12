@@ -428,8 +428,10 @@ class FormSr4Controller extends AdminController
                 $this->show_fields($form);
             }
         }
-        
+        else {
+            $this->show_fields($form);
         }
+    }
 
         // callback after save
         $form->saved(function (Form $form) {
@@ -478,7 +480,8 @@ class FormSr4Controller extends AdminController
 
     
         return $form;
-    }
+    
+}
 
     public function show_fields($form){
         

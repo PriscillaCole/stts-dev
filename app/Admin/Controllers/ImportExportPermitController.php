@@ -618,7 +618,6 @@ class ImportExportPermitController extends AdminController
                 __('Specify other varieties if any.')
             )
             ->help('If varieties you are applying for were not listed');
-                $form->hidden('category', __('Category'))->default("")->value($item->name);
                 $form->radio('measure', __('Weight Measurement'))
                 ->options([
                     'Kgs' => 'Kgs',

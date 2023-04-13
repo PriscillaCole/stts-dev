@@ -116,11 +116,11 @@ class SeedLab extends Model
 
     public function crop_variety()
     {
-        $c = CropVariety::find($this->crop_variety_id);
-        if ($c == null) {
-            $this->crop_variety_id = 1;
-            $this->save();
-        }
+        // $c = CropVariety::find($this->crop_variety_id);
+        // if ($c == null) {
+        //     $this->crop_variety_id = 1;
+        //     $this->save();
+        // }
         return $this->belongsTo(CropVariety::class);
     }
 

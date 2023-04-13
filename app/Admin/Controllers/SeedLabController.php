@@ -5,6 +5,7 @@ namespace App\Admin\Controllers;
 use App\Models\CropVariety;
 use App\Models\FormStockExaminationRequest;
 use App\Models\MarketableSeed;
+use App\Models\ImportExportPermitsHasCrops;
 use App\Models\SeedLab;
 use App\Models\StockRecord;
 use App\Models\Utils;
@@ -41,41 +42,29 @@ class SeedLabController extends AdminController
         //$tot = Utils::get_stock_balance($u->id,1);
 
         // $s = SeedLab::find(23);
-
-        // die("done");
+  
         $grid = new Grid(new SeedLab());
-
+        
         //organise the grid in ascending order
         $grid->model()->orderBy('id', 'desc');
-
         $grid->disableFilter();
-        // $grid->disableRowSelector();
-        
-       /// $grid->column('id', __('Id'))->sortable();
         $grid->column('created_at', __('Created'))
             ->display(function ($item) {
                 return Carbon::parse($item)->diffForHumans();
             })->sortable();
-
-        // $grid->column('administrator_id', __('Applicant'))->display(function ($user) {
-        //     $_user = Administrator::find($user);
-        //     if (!$_user) {
-        //         return "-";
-        //     }
-        //     return $_user->name;
-        // })->sortable();
-        $grid->column('crop_variety_id', __('Crop variety id'))->display(function ($user) {
-            $_user = CropVariety::find($user);
-            if (!$_user) {
+            
+        $grid->column('crop_variety_id', __('Crop variety id'))->display(function ($variety_id) {
+            $_variety = CropVariety::find($variety_id);
+            if (!$_variety) {
                 return "-";
             }
-            return $_user->name . ", " . $_user->name;
+            return $_variety->name;
         })->sortable();
         // $grid->column('mother_lot', __('Mother lot'));
         $grid->column('lot_number', __('Lot number'));
         $grid->column('lab_test_number', __('Lab test number'));
         $grid->column('collection_date', __('Collection date'));
-
+        
 
         $grid->column('quantity', __('Quantity'))->display(function ($quantity) {
             return number_format($quantity);
@@ -84,12 +73,13 @@ class SeedLabController extends AdminController
         $grid->column('status', __('Status'))->display(function ($status) {
             return Utils::tell_status($status);
         })->sortable();
-
+        
         $grid->column('report_recommendation', __('Recommendation'))->display(function ($status) {
             return Utils::tell_status($status);
         })->sortable();
  //check the status of the report_recommendation column and display the print button
-    if (Utils::is_recommendation_updated('SeedLab')) {
+    if (Utils::is_recommendation_updated('SeedLab')) 
+    {
         $grid->column('print', __('Lab Certificate'))->display(function ($status) {
             return '<a target="_blank" href="' . url('/print') . '">Print Certificate</a>';
         })->sortable();
@@ -110,7 +100,8 @@ class SeedLabController extends AdminController
 
 
 
-        if (Admin::user()->isRole('basic-user')) {
+        if (Admin::user()->isRole('basic-user')) 
+        {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
 
             $grid->actions(function ($actions) {
@@ -172,8 +163,7 @@ class SeedLabController extends AdminController
                 }
             });
         }
-
-
+       
         // $grid->column('collection_date', __('Collection date'));
         // $grid->column('payment_receipt', __('Payment receipt'));
         // $grid->column('applicant_remarks', __('Applicant remarks'));
@@ -197,6 +187,7 @@ class SeedLabController extends AdminController
         // $grid->column('status_comment', __('Status comment'));
 
         return $grid;
+        
     }
 
     /**
@@ -299,24 +290,24 @@ class SeedLabController extends AdminController
      */
     protected function form()
     {
-        // $m = SeedLab::find(81);
-        // $m->broken_germs = rand(100,10000);
-        // $m->status = 11;
-        // $m->save();
-
-        $form = new Form(new SeedLab());
-
-        $user = Admin::user();
         
+        $form = new Form(new SeedLab());
+        $form->setWidth(8, 4);
+        $user = Admin::user();
         // callback after save
-        $form->saved(function (Form $form) {
+        $form->saved(function (Form $form) 
+        {
             //return to table view controller after saving the form data 
             return redirect(admin_url('seed-labs'));
         });
-        if ($form->isCreating()) {
-            $form->hidden('administrator_id', __('Administrator id'))
-                ->default($user->id);
-            $form->saving(function ($form) {
+
+        if ($form->isCreating()) 
+        {
+            $form->hidden('administrator_id', __('Administrator id'))->default($user->id);
+
+            //save the lot numberas per the stock examination form
+            $form->saving(function ($form) 
+            {
                 $exam = FormStockExaminationRequest::find($form->form_stock_examination_request_id);
                     if (!$exam) {
 
@@ -330,119 +321,106 @@ class SeedLabController extends AdminController
             });
         }
 
-        if (Admin::user()->isRole('basic-user')) {
+        if (Admin::user()->isRole('basic-user')) 
+        {
+
             $exams_list = FormStockExaminationRequest::where([
                 'administrator_id' => $user->id,
                 'status' => 5
             ])->get();
-
-
-            if (count($exams_list) < 1) {
+            
+            if (count($exams_list) < 1) 
+            {
                 return admin_error("Alert", "You don't have any valid stock examination request. <br>First apply for Stock Examination, wait till your application is accepted, and then return here.");
-                // return redirect(admin_url('seed-labs'));
+        
             }
-            $form->hidden('crop_variety_id', __('Crop variety id'));
-
-           
+        
             $items_in_table = FormStockExaminationRequest::where('administrator_id', $user->id)->get();
             $names = [];
-        
-            
-            foreach($items_in_table as $stock_exm_rec) {
-               $names[$stock_exm_rec->id] = "Lot Number: " . $stock_exm_rec->lot_number;
-            
-               
+            foreach($items_in_table as $stock_exm_rec) 
+            {
+               $names[$stock_exm_rec->id] = "Lot Number: " . $stock_exm_rec->lot_number;   
             }
-
-            // dd($names);
-            $form->setWidth(8, 4);
-            // $form->select('form_stock_examination_request_id', __('Select Stock examination form'))
-            //     //->default("")
-            //     ->options($names)->value($ids)->required();
-
-
-
+            
             //field to capture stock examination form id
             $form->select('form_stock_examination_request_id', __('Select Stock examination form'))
                 ->options($names);
             $form->date('collection_date', __('Collection date'))->default(date('Y-m-d'))->required();
             $form->file('payment_receipt', __('Attach Payment receipt'))->required();
-            $form->hidden('crop_variety_id', __('crop_variety_id'));
             $form->textarea('applicant_remarks', __('Enter remarks'))->required();
             $form->hidden('lot_number', __('lot_number'));
         }
 
 
-        if (Admin::user()->isRole('admin')) {
-            if ($form->isEditing()) {
+        if (Admin::user()->isRole('admin')) 
+        {
+            if ($form->isEditing()) 
+            {
                 $id = request()->route()->parameters['seed_lab'];
                 $model = $form->model()->find($id);
-                if (!$model) {
+                if (!$model) 
+                {
                     die("Form not found");
                 }
-
-
-                $form->display('applicant', 'Applicant')
-                    ->default($model->user->name);
-
-                // $form->display('applicant', 'Crop variety')
-                //     ->default($model->name);
-
-                $form->display('collection_date', 'Collection date')
-                    ->default($model->user->collection_date);
+                $form->display('applicant', 'Applicant')->default($model->user->name);
+                $form->display('collection_date', 'Collection date')->default($model->user->collection_date);
+                
             }
 
-            $form->saving(function ($form) {
-
+            $form->saving(function ($form) 
+            {
+                $id = request()->route()->parameters['seed_lab'];
+                $seed_lab = SeedLab::find($id);
+               //get crop variety from the import permit id when form is saving
+                $stock_examination_form = FormStockExaminationRequest::where('id', $seed_lab->form_stock_examination_request_id)->first();
+                $has_crop = ImportExportPermitsHasCrops::where('import_export_permit_id', $stock_examination_form->import_export_permit_id)->first();
+                $variety = CropVariety::where('id', $has_crop->crop_variety_id)->first();
+        
                 $form->inspector_is_done = 0;
+                $form->crop_variety_id = $variety->id;
             });
 
             $form->divider();
             $form->hidden('inspector_is_done', __('inspector_is_done'))->attribute(['value', 0]);
+            $form->hidden('crop_variety_id', __('crop_variety_id'));
             $form->radio('status', __('Action'))
                 ->options([
                     '2' => 'Assign inspector',
                 ])
                 ->required()
-                ->when('2', function (Form $form) {
-                    $items = Administrator::all();
-                    $_items = [];
-                    foreach ($items as $key => $item) {
-                        if (!Utils::has_role($item, "inspector")) {
-                            continue;
-                        }
-                        $_items[$item->id] = $item->name . " - " . $item->id;
+
+            ->when('2', function (Form $form) 
+            {
+                $items = Administrator::all();
+                $_items = [];
+                foreach ($items as $key => $item) {
+                    if (!Utils::has_role($item, "inspector")) {
+                        continue;
                     }
-                    $form->select('inspector', __('Inspector'))
-                        ->options($_items)
-                        ->help('Please select inspector')
-                        ->rules('required');
-                })
-                ->when('in', [3, 4], function (Form $form) {
-                    $form->textarea('status_comment', 'Enter status comment (Remarks)')
-                        ->help("Please specify with a comment");
-                })
-                ->when('in', [5, 6], function (Form $form) {
-                    $form->date('valid_from', 'Valid from date?');
-                    $form->date('valid_until', 'Valid until date?');
-                });
+                    $_items[$item->id] = $item->name . " - " . $item->id;
+                }
+                $form->select('inspector', __('Inspector'))
+                    ->options($_items)
+                    ->help('Please select inspector')
+                    ->rules('required');
+            });
+             
         }
 
-        if (Admin::user()->isRole('inspector')) {
+        if (Admin::user()->isRole('inspector')) 
+        {
             $form->hidden('parent_id');
             $form->hidden('order');
             $form->hidden('title');
             $form->hidden('temp_parent');
-
-            
+           
             if ($form->isEditing()) {
-                if ((($form->packaging * $form->number_of_units) > ($form->quantity)) || ($form->sample_weight > $form->quantity)) {
+
+                if ((($form->packaging * $form->number_of_units) > ($form->quantity)) || ($form->sample_weight > $form->quantity)) 
+                {
                     return admin_error("Alert", "You're attempting to test a sample that is more than what the applicant has in stock.
                     <br>Please reduce your sample size and the packaging size as well.");
                 }
-            }
-
-            if ($form->isEditing()) {
 
                 $id = request()->route()->parameters['seed_lab'];
                 $model = $form->model()->find($id);
@@ -476,33 +454,39 @@ class SeedLabController extends AdminController
                 }
 
             
-                $form->saving(function ($form) {
+                $form->saving(function ($form) 
+                {
                     $id = request()->route()->parameters['seed_lab'];
                     $model = $form->model()->find($id);
                     $quantity = (int)($form->quantity);
-                    if ($quantity < 1) {
+                    //convert the quantity to a positive number incase a user enters a negative number
+                    if ($quantity < 1) 
+                    {
                         $quantity = (-1) * $quantity;
-                        // $quantity = (12) * (-($quantity));
                     }
-
-
                     $form->quantity = $quantity;
 
+                    //get the available stock of the crop variety
                     $records = StockRecord::where([
                         'administrator_id' => $model->user->id,
                         'crop_variety_id' => $model->crop_variety_id
                     ])->get();
                     $tot = 0;
-
-                    foreach ($records as $key => $value) {
+                    
+                    //get the total stock of that particular crop variety
+                    foreach ($records as $key => $value) 
+                    {
                         $tot += ((int)($value->quantity));
                     }
-
-                    if ($quantity > $tot) {
-                        admin_info("Information", "There is insuficient quantity stock of this crop vareity. <br>You tried to 
-                        enter quantity " . number_format($quantity) . " from " . number_format($tot) . " (Metric Tonnes).");
-                        return redirect(admin_url('seed-labs'));
+                    
+                    //check if the quantity entered is more than the available stock
+                    if ($quantity > $tot) 
+                    {
+                      return  response('<p class="alert alert-warning">You are attempting to test a sample that is more than what the applicant has in stock.<a href="/admin/seed-labs"> Go Back </a></p>');
+                      
                     }
+
+                    
 
                     $mother = SeedLab::where('lot_number', $form->mother_lot)->first();
                     $form->parent_id = 0;
@@ -561,8 +545,7 @@ class SeedLabController extends AdminController
                 // $mother11 = Auth::user()->stock_records->sum('quantity');
                 $mother11 = DB::table('stock_records')->where("administrator_id", $model->administrator_id)->sum('quantity');
         // $query = StockRecord::all();
-
-// dd($mother11);
+        // dd($mother11);
                 $form->text('quantity', __('Enter the quantity represented (in Metric Tonnes)'))
                     // ->default("")
                     // ->value($tot)
@@ -578,7 +561,7 @@ class SeedLabController extends AdminController
 
                 $form->text('packaging', __('Packaging'))->required();
                 $form->hidden('number_of_units', __('Number of units'))->default("");
-                $form->text('mother_lot', __('Mother lot'))->attribute('type', 'number')->required();
+                $form->text('mother_lot', __('Mother lot'))->attribute('type', 'number');
                 //$form->text('lot_number', __('Lot Number'))->default(rand(1000000, 999999999));
                 $form->display('lot_number', __('Lot Number'));
                 $form->select('sample_condition', __('Sample condition'))

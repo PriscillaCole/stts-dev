@@ -44,21 +44,21 @@ class FormStockExaminationRequest extends Model
             }
         }
 
-        if ($import_export_permit_id > 0) {
-            $permit = ImportExportPermitsHasCrops::find($import_export_permit_id);
-            if ($permit != null) {
-                $varity = CropVariety::find($permit->crop_variety_id);
-                if ($varity != null) {
-                    return $varity;
-                }else{
-                    Utils::create_default_tables();
-                    $permit->crop_variety_id = 1;
-                    $permit->save();
-                    $varity = CropVariety::find(1);
-                    return $varity;
-                } 
-            }
-        }  
+        // if ($import_export_permit_id > 0) {
+        //     $permit = ImportExportPermitsHasCrops::find($import_export_permit_id);
+        //     if ($permit != null) {
+        //         $varity = CropVariety::find($permit->crop_variety_id);
+        //         if ($varity != null) {
+        //             return $varity;
+        //         }else{
+        //             Utils::create_default_tables();
+        //             $permit->crop_variety_id = 5;
+        //             $permit->save();
+        //             $varity = CropVariety::find(1);
+        //             return $varity;
+        //         } 
+        //     }
+        // }  
     }
     public function variety()
     {
@@ -80,13 +80,7 @@ class FormStockExaminationRequest extends Model
         });
 
         self::updating(function ($model) {
-            
-            // if (!Admin::user()->isRole('inspector')) {
-            //     // change if inspector
-            //     // if(strlen($model->lot_number)<2){
-            //         $model->lot_number = rand(10000000,1000000000);
-            //     // }
-            // }
+          
         });
 
         self::updated(function ($model) {

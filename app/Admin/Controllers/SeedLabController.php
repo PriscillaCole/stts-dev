@@ -724,7 +724,7 @@ class SeedLabController extends AdminController
             }
         }
 
-
+        //lab technician form
         if (Admin::user()->isRole('lab-technician')) 
         { 
 
@@ -750,24 +750,6 @@ class SeedLabController extends AdminController
                     }
                     $form->quantity = $quantity;
 
-                    $records = StockRecord::where([
-                        'administrator_id' => $model->user->id,
-                        'crop_variety_id' => $model->crop_variety_id
-                    ])->get();
-                    $tot = 0;
-                    foreach ($records as $key => $value) 
-                    {
-                        $tot += ((int)($value->quantity));
-                    }
-
-                    if ($quantity > $tot) 
-                    {
-                        admin_error("Warning", "There is insufitient quantity stock of this crop variety. You tried to 
-                        enter quantity " . number_format($quantity) . " from " . number_format($tot) . " (Metric Tonnes).");
-                        return redirect(admin_url('seed-labs/' . $model->id . "/edit"))->withInput();
-                    }
-
-
                     $purity = (int)($form->purity);
                     $germination_capacity = (int)($form->germination_capacity);
                     $p_x_g = (($purity * $germination_capacity) / 100);
@@ -775,18 +757,22 @@ class SeedLabController extends AdminController
                     $form->p_x_g = $p_x_g;
                     $form->status = 5;
 
-
+                    //saving to the stock records
                     $StockRecord = new StockRecord();
                     $StockRecord->administrator_id = $model->administrator_id;
                     $StockRecord->crop_variety_id = $model->crop_variety_id;
+                    $StockRecord->seed_lab_id = $model->seed_lab_id;
                     $StockRecord->is_deposit = 0;
                     $StockRecord->lot_number = $model->lot_number;
+                    $StockRecord->seed_class = $model->seed_class;
+                    $StockRecord->source = $model->source;
                     $StockRecord->is_transfer = 0;
                     $StockRecord->seed_class = null;
                     $StockRecord->source = null;
                     $StockRecord->quantity = $model->quantity;
 
-                    if ($StockRecord->quantity > 0) {
+                    if ($StockRecord->quantity > 0)
+                     {
                         $StockRecord->quantity = ((-1) * $StockRecord->quantity);
                     }
 
@@ -794,19 +780,20 @@ class SeedLabController extends AdminController
                     $StockRecord->save();
 
 
-                    
+                    //saving to the marketable seed
                     $stock_out = new MarketableSeed();
                     $stock_out->administrator_id = $StockRecord->administrator_id;
                     $stock_out->crop_variety_id = $model->crop_variety_id;
-                    //$stock_out->seed_label_id = $model->seed_label_id;
+                    $stock_out->seed_lab_id = $model->id;
+                    $stock_out->seed_label_id = $model->seed_label_id;
                     $stock_out->lot_number = $model->lot_number;
                     $stock_out->quantity = (-1) * ($model->quantity);
-                   // $stock_out->seed_class = $model->seed_class;
-                   // $stock_out->source = $model->source;
-                   // $stock_out->detail = $model->detail;
+                    $stock_out->seed_class = $model->seed_class;
+                    $stock_out->source = $model->source;
+                    $stock_out->detail = $model->detail;
                     $stock_out->is_deposit = 0;
-                   // $stock_out->seed_label_package_id = $model->seed_label_package_id;
-                   // $stock_out->lab_test_number = $model->lab_test_number;
+                    $stock_out->seed_label_package_id = $model->seed_label_package_id;
+                    $stock_out->lab_test_number = $model->lab_test_number;
                     $stock_out->save();
                 
                     

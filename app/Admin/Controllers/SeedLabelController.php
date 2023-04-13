@@ -8,6 +8,7 @@ use App\Models\SeedLab;
 use App\Models\SeedLabel;
 use App\Models\SeedLabelPackage;
 use App\Models\Utils;
+use Illuminate\Support\MessageBag;
 use Carbon\Carbon;
 use Encore\Admin\Auth\Database\Administrator;
 use Encore\Admin\Controllers\AdminController;
@@ -36,80 +37,54 @@ class SeedLabelController extends AdminController
 
 
         $grid->disableFilter();
-        // $grid->disableRowSelector();
+    
 
-        if (Admin::user()->isRole('usta')) {
+        if (Admin::user()->isRole('usta')) 
+        {
             $grid->disableCreateButton();
             $grid->disableExport();
             //$grid->model()->where('status', '=', 13);
             $grid->actions(function ($actions) {
                 $actions->disableDelete();
                 $status = ((int)(($actions->row['status'])));
-                if ($status == 0) {
-                    $status = 1;
-                }
                 if (
                     $status != 13
                 ) {
                     $actions->disableEdit();
                 }
             });
-        } else if (Admin::user()->isRole('basic-user')) {
-
+        } 
+        else if (Admin::user()->isRole('basic-user')) 
+        {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
-
             $grid->actions(function ($actions) {
                 $status = ((int)(($actions->row['status'])));
-                if ($status == 0) {
-                    $status = 1;
-                }
+              
                 if (
                     $status != 1 &&
                     $status != 3
-                ) {
-                    //$actions->disableEdit();
+                ) 
+                {
+                    
                     $actions->disableDelete();
                 }
             });
-        } else if (Admin::user()->isRole('inspector')) {
+        } 
+        else if (Admin::user()->isRole('admin')) 
+        {
             $grid->disableCreateButton();
-            $grid->model()->where('administrator_id', '=', Admin::user()->id);
             $grid->actions(function ($actions) {
                 $actions->disableDelete();
-                $status = ((int)(($actions->row['status'])));
-                if (
-                    $status != 2
-                ) {
-                    $actions->disableEdit();
-                }
+              
             });
-        } else if (Admin::user()->isRole('lab-reception')) {
-            $grid->disableCreateButton();
-            $grid->model()->where('status', 9);
-            $grid->actions(function ($actions) {
-                $actions->disableDelete();
-                $status = ((int)(($actions->row['status'])));
-            });
-        }
-        
-        else if (Admin::user()->isRole('lab-technician')) {
-            $grid->disableCreateButton();
-            $grid->disableExport();
-            $grid->model()->where('status', 10);
-            $grid->actions(function ($actions) {
-                $actions->disableDelete();
-                $status = ((int)(($actions->row['status'])));
-            });
-        }
-
-
+        } 
+      
+     
         $grid->column('created_at', __('Created'))
             ->display(function ($item) {
                 return Carbon::parse($item)->diffForHumans();
             })->sortable();
         
-        
-
         $grid->column('administrator_id', __('Crated by'))->display(function ($user) {
             $_user = Administrator::find($user);
             if (!$_user) {
@@ -117,11 +92,7 @@ class SeedLabelController extends AdminController
             }
             return $_user->name;
         })->sortable();
-        // $grid->column('seed_lab_id', __('Lab Test Number'))->display(function ($user) {
-
-        //     return $this->seed_lab->lot_number;
-        // })->sortable();
-
+        
         $grid->column('crop_variety_id', __('Crop variety'))->display(function () {
             return $this->crop_variety->name;
         })->sortable();
@@ -139,13 +110,6 @@ class SeedLabelController extends AdminController
             return Utils::tell_status($status);
         })->sortable();
 
-
-
-
-
-
-
-
         return $grid;
     }
 
@@ -159,23 +123,66 @@ class SeedLabelController extends AdminController
     {
 
         $show = new Show(SeedLabel::findOrFail($id));
+
+        $model = SeedLabel::findOrFail($id);
         $show->panel()
             ->tools(function ($tools) {
                 $tools->disableEdit();
                 $tools->disableDelete();
             });;
 
-        $show->field('id', __('Id'));
         $show->field('created_at', __('Created at'));
         $show->field('updated_at', __('Updated at'));
-        $show->field('administrator_id', __('Administrator id'));
-        $show->field('seed_lab_id', __('Seed lab id'));
-        $show->field('crop_variety_id', __('Crop variety id'));
-        $show->field('seed_label_package_id', __('Seed label package id'));
+        $show->field('administrator_id', __('Administrator id'))->as(function ($user) {
+            $_user = Administrator::find($user);
+            if (!$_user) {
+                return "-";
+            }
+            return $_user->name;
+        });
+        $show->field('seed_lab_id', __('Seed lab id'))->as(function ($seed) {
+            return SeedLab::find($seed)->lab_test_number;
+        });
+        $show->field('crop_variety_id', __('Crop variety id'))->as(function ($crop) {
+            return CropVariety::find($crop)->name;
+        });
+        $show->field('seed_label_package_id', __('Seed label package id'))->as(function ($seed) {
+            return SeedLabelPackage::find($seed)->package_price;
+        });
         $show->field('quantity', __('Quantity'));
         $show->field('applicant_remarks', __('Applicant remarks'));
-        $show->field('status', __('Status'));
-        $show->field('status_comment', __('Status comment'));
+        $show->field('receipt', __('Receipt'))->file();
+        $show->field('status', __('Status'))->unescape()->as(function ($status) 
+        {
+            return Utils::tell_status($status);
+        });
+        //check if the status comment is null
+        if($model->status_comment != null)
+        {
+            $show->field('status_comment', __('Status comment'));
+        }
+        else
+        {
+            $show->field('status_comment', __('Status comment'))->as(function ($status) 
+            {
+                return "No comment";
+            });
+        }
+
+        if (!Admin::user()->isRole('basic-user'))
+        {
+            //button link to the show-details form
+            //check the status of the form being shown
+            if($model->status == 1 || $model->status == 2 || $model->status == null)
+            {
+                $show->field('id','Action')->unescape()->as(function ($id) 
+                {
+                    return "<a href='/admin/seed-labels/$id/edit' class='btn btn-primary'>Take Action</a>";
+                });
+            }
+        }
+    
+        
 
         return $show;
     }
@@ -191,11 +198,24 @@ class SeedLabelController extends AdminController
         $user = Admin::user();
         $seed_labs = [];
 
-        if ($form->isCreating()) {
-            if (!Admin::user()->isRole('basic-user')) {
-                admin_error("Warning", "You don't have previleges to create this form.");
-                return redirect(admin_url('seed-labels'));
-            }
+        if(Admin::user()->isRole('basic-user'))
+        {
+            //callback after the form has saved to calculate the total amount by multiplying the total quantity by the price per unit
+            $form->saved(function(Form $form)
+            {
+                $seed_label = $form->seed_label_package_id;
+                $price = SeedLabelPackage::find($seed_label)->package_price;
+                $quantity = $form->quantity;
+                $total_amount = $price * $quantity;
+
+                return  response(' <p class="alert alert-success"> Your total amount is ' . $total_amount . ' Shillings . <a href="/admin/seed-labels"> Ok </a></p> ');
+            });
+
+        }
+
+        if ($form->isCreating()) 
+        {
+            
             $form->hidden('administrator_id', __('Administrator id'))
                 ->default($user->id);
 
@@ -203,17 +223,19 @@ class SeedLabelController extends AdminController
                 'administrator_id' => $user->id,
                 'status' => 5
             ])->get();
-            foreach ($res as $key => $sl) { 
-                if ($sl->quantity < 1) {
+            foreach ($res as $key => $sl) 
+            { 
+                if ($sl->quantity < 1) 
+                {
                     continue;
                 } 
-                // $seed_labs[$sl->id] = "Lab Test Number: " . $sl->lot_number . ", CROP: " . $sl->crop_variety->name . " - " . $sl->crop_variety->name . ", QTY: " . $sl->quantity . " KGs";
+                
                 $seed_labs[$sl->id] = "Lab Test Number: " . $sl->lab_test_number;
             }
 
             if (count($seed_labs) < 1) {
                 return admin_error("Alert", "You don't have any  valid LAB TEST NUMBER. Apply for seed lab to aquire a LAB TEST NUMBER.");
-                // return redirect(admin_url('seed-labels'));
+                
             }
 
             $form->hidden('administrator_id')->default($user->id);

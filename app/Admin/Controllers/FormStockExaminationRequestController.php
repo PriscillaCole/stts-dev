@@ -525,7 +525,7 @@ class FormStockExaminationRequestController extends AdminController
             $form->hidden('crop_variety_id', __('crop_variety_id'));
         }
 
-         //Admin form functionalities
+     //Admin form functionalities
         if (Admin::user()->isRole('admin') && $form->isEditing()) 
         {
             $form->setTitle("Assigning an inspector");
@@ -559,7 +559,7 @@ class FormStockExaminationRequestController extends AdminController
                
         }
 
-    //Inspector form functionalities
+       //Inspector form functionalities
 
         if (Admin::user()->isRole('inspector')) 
         {
@@ -595,8 +595,6 @@ class FormStockExaminationRequestController extends AdminController
                     'Certified seed' => 'Certified seed',
                 ])
                 ->required();
-
-
             $form->text('lot_number', __('Lot Number'))->required()
             ->attribute([
                 'value' => $model->id . rand(1000000, 9999999),

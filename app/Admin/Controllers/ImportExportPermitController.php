@@ -556,7 +556,7 @@ class ImportExportPermitController extends AdminController
                 {
                     if($application_category == 'Seed Processor')
                     {
-                    $this->show_fields($form,$user,$sr4);
+                    $this->show_fields($form,$user);
 
                     }
                     else
@@ -578,7 +578,7 @@ class ImportExportPermitController extends AdminController
                 $user = Auth::user();
                 if ($sr4 == null) 
                 {
-                        $this->show_fields($form,$user,$sr4);
+                        $this->show_fields($form,$user);
 
                 }
                 else
@@ -666,19 +666,22 @@ class ImportExportPermitController extends AdminController
     }
 
     //form function
-    public function show_fields($form, $user, $sr4)
+    public function show_fields($form, $user)
     {
-        
+        $sr4 = Utils::has_valid_sr4();
         $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
         $form->text('address', __('Postal Address'))->required();
-        $form->text('telephone', __('Phone Number'))->required();  
-        if ($sr4->seed_board_registration_number != null) 
+        $form->text('telephone', __('Phone Number'))->required(); 
+        if($sr4 != null) 
         {
-            $seed_board_registration_number = $sr4->seed_board_registration_number;
-            $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
-                ->default($seed_board_registration_number)
-                ->readonly(); 
-        }      
+            if ($sr4->seed_board_registration_number != null) 
+            {
+                $seed_board_registration_number = $sr4->seed_board_registration_number;
+                $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
+                    ->default($seed_board_registration_number)
+                    ->readonly(); 
+            } 
+        }     
         $form->text('store_location', __('Location of the store'))->required();
         $form->number( 'quantiry_of_seed', __('Quantity of seed of the same variety held in stock') )
             ->help("(metric tons)")

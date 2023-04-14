@@ -34,6 +34,8 @@ class FormSr4Controller extends AdminController
     protected function grid()
     {
         $grid = new Grid(new FormSr4());
+        //organize the grid in descending order of created_at
+        $grid->model()->orderBy('created_at', 'desc');
 
         //disable batch delete
         $grid->batchActions(function ($batch) 

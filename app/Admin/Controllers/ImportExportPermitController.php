@@ -40,6 +40,8 @@ class ImportExportPermitController extends AdminController
     protected function grid()
     {
         $grid = new Grid(new ImportExportPermit());
+          //organize the grid in descending order of created_at
+          $grid->model()->orderBy('created_at', 'desc');
 
         //disable batch delete
         $grid->batchActions(function ($batch) 

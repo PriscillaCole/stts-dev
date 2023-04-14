@@ -38,14 +38,7 @@ class FormStockExaminationRequestController extends AdminController
     protected function grid()
     {
 
-        /*$ms = FormStockExaminationRequest::all();
-        $m = $ms->first();
-        $m->germination = rand(1000000000,100000000000);
-        $m->status = 5;
-        $m->save();
-        dd($m->id."");
-        die();*/
-
+       
         $grid = new Grid(new FormStockExaminationRequest());
 
         //organize the grid in descending order of created_at
@@ -259,8 +252,21 @@ class FormStockExaminationRequestController extends AdminController
                 $has_crop = ImportExportPermitsHasCrops::where('import_export_permit_id',$form->import_export_permit_id)->first();
                 $variety = CropVariety::where('id', $has_crop->crop_variety_id)->first();
                 $form->crop_variety_id = $variety->id;
+                
+                // $has_crop = ImportExportPermitsHasCrops::where('import_export_permit_id',$form->import_export_permit_id)->get();
+                // $variety = CropVariety::where('id', $has_crop->crop_variety_id)->get();
+                // die($variety);
+                // $crop_varieties = [];
+                // foreach ($variety as $key => $value) 
+                // {  
+                //     $crop_varieties[$value->id] = "Variety: " . $value->name;
+                            
+                // }
+                // $form->textarea('remarks', __('Enter remarks'))->required();
+                // $form->select('crop_variety_id', __('Crop Variety'))->options($crop_varieties)->required();
+                // return $form;
             });
-    
+
 
             $all_qds =  FormCropDeclaration::where([
                 'administrator_id' => Admin::user()->id

@@ -827,7 +827,7 @@ class SeedLabController extends AdminController
                 ])
                     ->required();
 
-                $form->text('p_x_g', __('PXG'))->attribute([])
+                $form->hidden('p_x_g', __('PXG'))->attribute([])
                     ->readonly()
                     ->disable();
 

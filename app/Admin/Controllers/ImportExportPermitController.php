@@ -256,6 +256,8 @@ class ImportExportPermitController extends AdminController
             return Utils::tell_status($status);
         });
 
+        $show->field('status_comment', __('Comment'));
+
          //check if valid_from , valid_until are empty,if they are then dont show them
          if ($import_permit->valid_from != null) 
          {

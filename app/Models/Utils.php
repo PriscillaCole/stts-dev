@@ -828,7 +828,7 @@ public static function sendMail($not)
 {
     if($not->group_type == 'Individual')
     {
-        $receivers = Utils::get_users_by_role_notify($not->role_id);
+        $receivers = Utils::get_users_by_role_notify($not->receiver_id);
         $emails = [];
         foreach($receivers as $r)
         {

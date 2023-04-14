@@ -383,7 +383,7 @@ class FormSr4Controller extends AdminController
 
         if (Admin::user()->isRole('basic-user')) 
         {
-            if(Utils::is_form_rejected('FormSr4'))
+            if(Utils::is_form_halted('FormSr4'))
             {
                 $show->field('id','Action')->unescape()->as(function ($id) 
                 {

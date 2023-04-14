@@ -764,7 +764,7 @@ public static function update_notification($m, $model_name, $entity)
                 $not->action_status_to_make_done = '[]'; 
                 $not->save();  
 
-                //self::sendMail($not);
+                self::sendMail($not);
             }
         }
 
@@ -938,12 +938,12 @@ public static function can_renew_iform($model_name){
     return false; 
 }
 //check if form is rejected
-public static function is_form_rejected($model_name){
+public static function is_form_halted($model_name){
     $model = "App\\Models\\" . ucfirst($model_name);
     $recs = $model::where('administrator_id',  Admin::user()->id)->get();
     foreach ($recs as $key => $value) {
         //check if the status is rejected or halted
-        if($value->status == 4 || $value->status == 3){
+        if($value->status == 3){
             return true;
         }
     }

@@ -53,23 +53,7 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
         'receipt',
         'accept_declaration'
     ];
-
-    //function to send mail
-    public static function sendMail($not)
-    {
-        if($not->group_type == 'Individual'){
-            $receivers = Utils::get_users_by_role_notify($not->role_id);
-            $emails = [];
-            foreach($receivers as $r){
-                $emails[] = $r->email;
-            } 
-            Mail::to($emails)
-                    ->send(new Notification($not->message, $not->link));
-               
-        } 
-    }
-
-
+    
     public static function boot()
     {
         parent::boot();

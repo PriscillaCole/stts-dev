@@ -33,21 +33,7 @@ class ImportExportPermit extends Model
         'national_seed_board_reg_num',
         'is_import',
     ];
-        //function to send mail
-        public static function sendMail($not)
-        {
-            if($not->group_type == 'Individual'){
-                $receivers = Utils::get_users_by_role_notify($not->role_id);
-                $emails = [];
-                foreach($receivers as $r){
-                    $emails[] = $r->email;
-                } 
-                Mail::to($emails)
-                        ->send(new Notification($not->message, $not->link));
-                   
-            } 
-        }
-
+     
     public function import_export_permits_has_crops()
     {
         return $this->hasMany(ImportExportPermitsHasCrops::class);
@@ -56,11 +42,13 @@ class ImportExportPermit extends Model
     public static function boot()
     {
         parent::boot(); 
-        self::creating(function($model){
+        self::creating(function($model)
+        {
             // ... code here
         });
  
-        self::updating(function($model){
+        self::updating(function($model)
+        {
             if(
                 Admin::user()->isRole('basic-user')
             ){
@@ -69,7 +57,8 @@ class ImportExportPermit extends Model
                 return $model;
             } 
             
-            if(Admin::user()->isRole('inspector')){
+            if(Admin::user()->isRole('inspector'))
+            {
                 if($model->status == 5){    
                     if(
                         $model->valid_from == null ||
@@ -96,15 +85,15 @@ class ImportExportPermit extends Model
         self::updated(function ($m) {
             Utils::update_notification($m, 'ImportExportPermit', request()->segment(count(request()->segments())-1));
 
-            
-
         });
 
-        self::deleting(function ($model) {
+        self::deleting(function ($model) 
+        {
             // ... code here
         });
 
-        self::deleted(function ($model) {
+        self::deleted(function ($model) 
+        {
             // ... code here
         });
     } 

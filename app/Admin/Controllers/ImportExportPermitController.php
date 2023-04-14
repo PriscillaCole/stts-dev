@@ -41,7 +41,25 @@ class ImportExportPermitController extends AdminController
     {
         $grid = new Grid(new ImportExportPermit());
 
-        $grid->disableFilter();
+        //disable batch delete
+        $grid->batchActions(function ($batch) 
+        {
+            $batch->disableDelete();
+        });
+
+        //customise filter
+        $grid->filter(function($filter){
+
+            // Remove the default id filter
+            $filter->disableIdFilter();
+        
+            // Add a column filter
+            $filter->like('name', 'Name');
+            
+        
+            //... additional filter options
+        });
+
         $grid->disableExport();
         $grid->model()->where('is_import', '=', 1);
 
@@ -101,14 +119,14 @@ class ImportExportPermitController extends AdminController
             });
 
         } 
-        else {
+        else
+        {
             $grid->disableCreateButton();
         }
 
-
-        $grid->column('id', __('Id'));
         $grid->column('created_at', __('Created'))
-            ->display(function ($item) {
+            ->display(function ($item) 
+            {
                 return Carbon::parse($item)->diffForHumans();
             })->sortable();
         $grid->column('name', __('Name'));
@@ -119,17 +137,21 @@ class ImportExportPermitController extends AdminController
 
         if(!Admin::user()->isRole('basic-user'))
         {
-            $grid->column('inspector', __('Inspector'))->display(function ($userId) {
+            $grid->column('inspector', __('Inspector'))->display(function ($userId) 
+            {
                 $u = Administrator::find($userId);
                 if (!$u)
                     return "Not assigned";
                 return $u->name;
             })->sortable();
         }
-     //check if the status is expired or not
-        $grid->column('status', __('Status'))->display(function ($status) {
+
+       //check if the status is expired or not
+        $grid->column('status', __('Status'))->display(function ($status) 
+        {
             // check expiration date
-             if (Utils::check_expiration_date('ImportExportPermit',$this->getKey())) {
+             if (Utils::check_expiration_date('ImportExportPermit',$this->getKey())) 
+             {
                  return Utils::tell_status(6);
              } else{
                  return Utils::tell_status($status);
@@ -151,28 +173,34 @@ class ImportExportPermitController extends AdminController
     {
         $import_permit = ImportExportPermit::findOrFail($id);
         //delete the notification from the database once a user views the form
-        if(Admin::user()->isRole('basic-user') ){
-            if($import_permit->status == 2 || $import_permit->status == 3 || $import_permit->status == 4 || $import_permit->status == 5){
+        if(Admin::user()->isRole('basic-user') )
+        {
+            if($import_permit->status == 2 || $import_permit->status == 3 || $import_permit->status == 4 || $import_permit->status == 5)
+            {
                 \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'ImportExportPermit'])->delete();
             }
         }
+
         $show = new Show(ImportExportPermit::findOrFail($id));
-        // $show->setWidth(8, 4);
         $show->panel()
-            ->tools(function ($tools) {
+            ->tools(function ($tools) 
+            {
                 $tools->disableEdit();
                 $tools->disableDelete();
             });
 
         $show->field('created_at', __('Created'))
-            ->as(function ($item) {
-                if (!$item) {
+            ->as(function ($item) 
+            {
+                if (!$item) 
+                {
                     return "-";
                 }
                 return Carbon::parse($item)->diffForHumans();
             });
         $show->field('administrator_id', __('Created by id'))
-            ->as(function ($userId) {
+            ->as(function ($userId) 
+            {
                 $u = Administrator::find($userId);
                 if (!$u)
                     return "-";
@@ -187,17 +215,23 @@ class ImportExportPermitController extends AdminController
         $show->field('store_location', __('Store location'));
         $show->field('quantiry_of_seed', __('Quantity of seed'));
         $show->field('name_address_of_origin', __('Name address of origin'));
-        if($import_permit->dealers_in != null){
-        $show->field('dealers_in', __('Crops'))
+
+        //show table of crops associated with an import permit
+    
+
+        $show->field('import_export_permits_has_crops', __('Crops'))
             ->unescape()
-            ->as(function ($item) {
-                if (!$this->import_export_permits_has_crops) {
+            ->as(function ($item) 
+            {
+                if (!$this->import_export_permits_has_crops) 
+                {
                     return "None";
                 }
 
                 $headers = ['Crop',  'Category', 'Weight'];
                 $rows = array();
-                foreach ($this->import_export_permits_has_crops as $key => $val) {
+                foreach ($this->import_export_permits_has_crops as $key => $val) 
+                {
                     $row['crop'] = $val->variety->crop->name;
                     $row['variety'] = $val->variety->name;
                     $row['weight'] = $val->weight;
@@ -207,34 +241,47 @@ class ImportExportPermitController extends AdminController
                 $table = new Table($headers, $rows);
                 return $table;
             });
-        }
+        
         $show->field('ista_certificate', __('Ista certificate'));
-        $show->field('permit_number', __('Permit number'));
-        $show->field('status', __('Status'))->unescape()->as(function ($status) {
+        if($import_permit->permit_number != null)
+        {
+           $show->field('permit_number', __('Permit number'));
+        }
+    
+        $show->field('status', __('Status'))->unescape()->as(function ($status) 
+        {
+
             return Utils::tell_status($status);
         });
 
          //check if valid_from , valid_until are empty,if they are then dont show them
-         if ($import_permit->valid_from != null) {
+         if ($import_permit->valid_from != null) 
+         {
             $show->field('valid_from', __('Valid from'));
         }
         if ($import_permit->valid_until != null) {
             $show->field('valid_until', __('Valid until'));
         }
 
-        if (!Admin::user()->isRole('basic-user')){
+        if (!Admin::user()->isRole('basic-user'))
+        {
             //button link to the show-details form
             //check the status of the form being shown
-            if($import_permit->status == 1 || $import_permit->status == 2 || $import_permit->status == null){
-            $show->field('id','Action')->unescape()->as(function ($id) {
+            if($import_permit->status == 1 || $import_permit->status == 2 || $import_permit->status == null)
+            {
+            $show->field('id','Action')->unescape()->as(function ($id) 
+            {
                 return "<a href='/admin/import-export-permits/$id/edit' class='btn btn-primary'>Take Action</a>";
             });
-        }
+            }
         }
     
-        if (Admin::user()->isRole('basic-user')) {
-            if(Utils::is_form_rejected('ImportExportPermit')){
-                $show->field('id','Action')->unescape()->as(function ($id) {
+        if (Admin::user()->isRole('basic-user')) 
+        {
+            if(Utils::is_form_halted('ImportExportPermit'))
+            {
+                $show->field('id','Action')->unescape()->as(function ($id)
+                {
                     return "<a href='/admin/import-export-permits/$id/edit' class='btn btn-primary'>Take Action</a>";
                 });
             }
@@ -252,6 +299,13 @@ class ImportExportPermitController extends AdminController
     protected function form()
     {
         $form = new Form(new ImportExportPermit());
+
+        // callback after save to return to the table view
+        $form->saved(function (Form $form) 
+        {
+            return redirect(admin_url('import-export-permits'));
+        });
+
         if($form->isEditing())
         {
             //find the import permit id, if its status is not pending, block an inspector from editing and disable form actions
@@ -284,11 +338,13 @@ class ImportExportPermitController extends AdminController
         if ($form->isCreating()) 
         {
           //check the status of the form before allowing a user to create a new one
-            if (!Utils::can_create_import()) {
+            if (!Utils::can_create_import()) 
+            {
                 return admin_warning("Warning", "You cannot create a new import permit request form  while still having a PENDING one.");
                 
             }
-            if (Utils::can_renew_iform('ImportExportPermit')) {
+            if (Utils::can_renew_iform('ImportExportPermit')) 
+            {
                 return admin_warning("Warning", "You cannot create a new import form  while still having a valid one.");
 
             }
@@ -306,14 +362,17 @@ class ImportExportPermitController extends AdminController
       
 
         //customize the form features
+
             $form->setWidth(8, 4);
             $form->disableCreatingCheck();
-            $form->tools(function (Form\Tools $tools) {
+            $form->tools(function (Form\Tools $tools) 
+            {
                 $tools->disableDelete();
                 $tools->disableView();
             });
 
-            $form->footer(function ($footer) {
+            $form->footer(function ($footer) 
+            {
                 $footer->disableReset();
                 $footer->disableViewCheck();
                 $footer->disableEditingCheck();
@@ -323,13 +382,19 @@ class ImportExportPermitController extends AdminController
             $user = Auth::user();
             $form->hidden('is_import', __('is_import'))->default(1)->value(1)->required();
 
-            if ($form->isCreating()) {
+            if ($form->isCreating()) 
+            {
                 $form->hidden('administrator_id', __('Administrator id'))->value($user->id);
-            } else {
+            } 
+            else 
+            {
                 $form->hidden('administrator_id', __('Administrator id'));
             }
-
-        if (Admin::user()->isRole('basic-user')) {
+             
+        
+        //basic-user forms
+        if (Admin::user()->isRole('basic-user')) 
+        {
             $application_category = Utils::check_application_category();
 
             $form->radio('type', __('Application Category?'))
@@ -350,25 +415,29 @@ class ImportExportPermitController extends AdminController
             // 2.check if the application category in the sr4 matches the selected one
             // 3.render the form in show_fields function
             
-
             ->when('Seed Producer', function (Form $form) 
             {
                 
                 $sr4 = Utils::has_valid_sr4();
                 $application_category = Utils::check_application_category();
                 $user = Auth::user();
-                if ($sr4 != null) {
-                    if($application_category == 'Seed Producer'){
-                    $this->show_fields($form,$user,$sr4);
+                if ($sr4 != null) 
+                {
+                    if($application_category == 'Seed Producer')
+                    {
+                        $this->show_fields($form,$user,$sr4);
 
-                    }else{
-
-                    $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
                     }
-                }else{
+                    else
+                    {
 
+                        $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
+                    }
+                }
+                else
+                {
                     $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
-                    }
+                }
             })
 
 
@@ -378,18 +447,22 @@ class ImportExportPermitController extends AdminController
                 $sr4 = Utils::has_valid_sr4();
                 $application_category = Utils::check_application_category();
                 $user = Auth::user();
-                if ($sr4 != null) {
-                    if($application_category == 'Seed Merchant'){
+                if ($sr4 != null) 
+                {
+                    if($application_category == 'Seed Merchant')
+                    {
                         $this->show_fields($form,$user,$sr4);
                 
-                    }else{
-                    
-                        $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
-                        }
-                }else{
-                    
-                        $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
                     }
+                    else
+                    {
+                        $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
+                    }
+                }
+                else
+                {
+                        $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
+                }
             })
 
 
@@ -399,18 +472,23 @@ class ImportExportPermitController extends AdminController
                 $sr4 = Utils::has_valid_sr4();
                 $application_category = Utils::check_application_category();
                 $user = Auth::user();
-                if ($sr4 != null) {
-                        if($application_category == 'Seed Stockist'){
+                if ($sr4 != null) 
+                {
+                        if($application_category == 'Seed Stockist')
+                        {
                             $this->show_fields($form,$user,$sr4);
                     
-                        }else{
-                        
-                        $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
                         }
-                }else{
-                        
-                        $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
-                    }
+                        else
+                        {
+                            $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
+                        }
+                }
+                else
+                {          
+                    $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
+                    
+                }
             })
 
 
@@ -421,18 +499,23 @@ class ImportExportPermitController extends AdminController
                 $application_category = Utils::check_application_category();
                 $user = Auth::user();
                 
-                if ($sr4 != null) {
-                    if($application_category == 'Seed Importer'){
-                    $this->show_fields($form,$user,$sr4);
+                if ($sr4 != null) 
+                {
+                    if($application_category == 'Seed Importer')
+                    {
+                         $this->show_fields($form,$user,$sr4);
 
-                    }else{
-
-                    $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
                     }
-                }else{
+                    else
+                    {
 
+                         $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
+                    }
+                }
+                else
+                {
                     $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
-                    }
+                }
             })
 
 
@@ -441,18 +524,21 @@ class ImportExportPermitController extends AdminController
                 $sr4 = Utils::has_valid_sr4();
                 $application_category = Utils::check_application_category();
                 $user = Auth::user();
-                if ($sr4 != null) {
-                    if($application_category == 'Seed Exporter'){
+                if ($sr4 != null) 
+                {
+                    if($application_category == 'Seed Exporter')
+                    {
                         $this->show_fields($form,$user,$sr4);
-                
-                    }else{
-                    
-                        $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
-                        }
-                }else{
-                    
-                        $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
                     }
+                    else
+                    {
+                        $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
+                    }
+                }
+                else
+                {
+                    $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
+                }
             })
                         
 
@@ -461,18 +547,23 @@ class ImportExportPermitController extends AdminController
                 $sr4 = Utils::has_valid_sr4();
                 $application_category = Utils::check_application_category();
                 $user = Auth::user();
-                if ($sr4 != null) {
-                    if($application_category == 'Seed Processor'){
+                if ($sr4 != null) 
+                {
+                    if($application_category == 'Seed Processor')
+                    {
                     $this->show_fields($form,$user,$sr4);
 
-                    }else{
+                    }
+                    else
+                    {
 
                     $form->html('<div class="alert alert-danger">The selected application category doesn\'t match the one in your Sr4 form.Please clarify that </div>');
                     }
-                }else{
-
+                }
+                else
+                {
                     $form->html('<div class="alert alert-danger">You cannot create a new import permit request if don\'t have a valid SR4 form </div>');
-                    }
+                }
             })
 
                             
@@ -480,10 +571,13 @@ class ImportExportPermitController extends AdminController
             {
                 $sr4 = Utils::has_valid_sr4();
                 $user = Auth::user();
-                if ($sr4 == null) {
-                        $this->show_fields($form,$user);
+                if ($sr4 == null) 
+                {
+                        $this->show_fields($form,$user,$sr4);
 
-                }else{
+                }
+                else
+                {
 
                     $form->html('<div class="alert alert-danger">Seems you have a valid SR4,please choose the application category in the form. </div>');
                 }   
@@ -492,8 +586,7 @@ class ImportExportPermitController extends AdminController
 
         } 
 
-
-
+        //admin form fields
         if (Admin::user()->isRole('admin')) 
         {
             //$form->file('ista_certificate', __('Ista certificate'))->required();
@@ -507,12 +600,15 @@ class ImportExportPermitController extends AdminController
                     '2' => 'Assign inspector',
                 ])
                 ->required()
-                ->when('2', function (Form $form) {
+                ->when('2', function (Form $form) 
+                {
                     $items = Administrator::all();
                     $_items = [];
 
-                    foreach ($items as $key => $item) {
-                        if (!Utils::has_role($item, "inspector")) {
+                    foreach ($items as $key => $item) 
+                    {
+                        if (!Utils::has_role($item, "inspector")) 
+                        {
                             continue;
                         }
                         $_items[$item->id] = $item->name . " - " . $item->id;
@@ -525,6 +621,7 @@ class ImportExportPermitController extends AdminController
                 
         }
 
+        //inspector form fields
         if (Admin::user()->isRole('inspector')) 
         {
 
@@ -543,11 +640,13 @@ class ImportExportPermitController extends AdminController
                 ])
                 ->required()
             
-                ->when('in', [3, 4], function (Form $form) {
+                ->when('in', [3, 4], function (Form $form) 
+                {
                     $form->textarea('status_comment', 'Enter status comment (Remarks)')
                         ->help("Please specify with a comment");
                 })
-                ->when('5', function (Form $form) {
+                ->when('5', function (Form $form) 
+                {
                     $form->text('permit_number', __('Permit number'))
                         ->help("Please Enter Permit number")
                         ->default("Import" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->readonly();
@@ -568,24 +667,18 @@ class ImportExportPermitController extends AdminController
         $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
         $form->text('address', __('Postal Address'))->required();
         $form->text('telephone', __('Phone Number'))->required();  
-        if ($sr4->seed_board_registration_number != null) {
+        if ($sr4->seed_board_registration_number != null) 
+        {
             $seed_board_registration_number = $sr4->seed_board_registration_number;
             $form->text("national_seed_board_reg_num", __('National Seed Board Registration Number'))
                 ->default($seed_board_registration_number)
                 ->readonly(); 
         }      
         $form->text('store_location', __('Location of the store'))->required();
-        $form->text(
-            'quantiry_of_seed',
-            __('Quantity of seed of the same variety held in stock')
-        )
+        $form->number( 'quantiry_of_seed', __('Quantity of seed of the same variety held in stock') )
             ->help("(metric tons)")
-            ->attribute(['type' => 'number'])
             ->required();
-        $form->text(
-            'name_address_of_origin',
-            __('Name and address of origin')
-        )
+        $form->text('name_address_of_origin', __('Name and address of origin'))
             ->required();
 
         $form->tags('ista_certificate', __('Type Of Certificate'))
@@ -595,37 +688,40 @@ class ImportExportPermitController extends AdminController
         $form->html('<h3>I or We wish to apply for a license to import seed as indicated below:</h3>');
 
         $form->radio('crop_category', __('Category'))
-            ->options([
+            ->options
+            ([
                 'Commercial' => 'Commercial',
                 'Research' => 'Research',
                 'Own use' => 'Own use',
             ])->stacked()
             ->required();
 
-        $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties
-        '), function (NestedForm $form) {
+        $form->hasMany('import_export_permits_has_crops', __('Click on "New" to Add Crop varieties '), function (NestedForm $form) 
+        {
+            //access the crop varities in the variety table
             $_items = [];
 
-            foreach (CropVariety::all() as $key => $item) {
+            foreach (CropVariety::all() as $key => $item) 
+            {
                 $_items[$item->id] = "CROP: " . $item->crop->name . ", VARIETY: " . $item->name;
             }
 
             $form->select('crop_variety_id', 'Add Crop Variety')->options($_items)
                 ->required();
                 
-            $form->textarea(
-                'other_varieties',
-                __('Specify other varieties if any.')
-            )
+            $form->textarea('other_varieties', __('Specify other varieties if any.') )
             ->help('If varieties you are applying for were not listed');
-                $form->radio('measure', __('Weight Measurement'))
-                ->options([
+            $form->radio('measure', __('Weight Measurement'))
+                ->options
+                ([
                     'Kgs' => 'Kgs',
                     'Metric Tons' => 'Metric Tons',
                 ])
                 ->required();
+                $form->number('weight','Weight')
+                ->required();
 
-                $form->text('weight', __('Weight'))->attribute('type', 'number')->required();
+            
                    
         });
         return $form;

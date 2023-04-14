@@ -186,7 +186,7 @@ class SeedLabController extends AdminController
         //delete notifications after they have been viewed
         if(Admin::user()->isRole('basic-user') )
         {
-            if($seedlab->status == 2 || $seedlab->status == 3 || $seedlab->status == 4 || $seedlab->status == 16)
+            if($seedlab->status == 2 || $seedlab->status == 3 || $seedlab->status == 4 || $seedlab->status == 16 || $seedlab == 10)
             {
                 \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'SeedLab'])->delete();
             }

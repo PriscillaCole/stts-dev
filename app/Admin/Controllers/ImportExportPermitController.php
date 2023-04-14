@@ -88,6 +88,7 @@ class ImportExportPermitController extends AdminController
                     $status == 2 ||
                     $status == 5 ||
                     $status == 4 ||
+                    $status == 3 ||
                     $status == 6
                 ) {
                     $actions->disableEdit();

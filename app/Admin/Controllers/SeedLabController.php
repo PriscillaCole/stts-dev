@@ -787,7 +787,7 @@ class SeedLabController extends AdminController
                     $stock_out->seed_lab_id = $model->id;
                     $stock_out->seed_label_id = $model->seed_label_id;
                     $stock_out->lot_number = $model->lot_number;
-                    $stock_out->quantity = (-1) * ($model->quantity);
+                    $stock_out->quantity = $model->quantity;
                     $stock_out->seed_class = $model->seed_class;
                     $stock_out->source = $model->source;
                     $stock_out->detail = $model->detail;

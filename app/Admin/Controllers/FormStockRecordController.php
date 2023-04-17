@@ -80,11 +80,12 @@ class FormStockRecordController extends AdminController
         $grid->column('quantity', __('Quantity (M. Tonnes)'))->display(function ($q) 
         {
             return number_format($q);
-        })->sortable()
-            ->totalRow(function ($amount) 
-            {
-                return number_format($amount);
-            });
+        })->sortable();
+    
+            // ->totalRow(function ($amount) 
+            // {
+            //     return number_format($amount);
+            // });
 
         $grid->disableActions();
         $grid->disableRowSelector();

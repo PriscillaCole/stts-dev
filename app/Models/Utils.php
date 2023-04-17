@@ -644,7 +644,7 @@ public static function update_notification($m, $model_name, $entity)
                 $not->action_status_to_make_done = '[]'; 
                 $not->save();  
                 
-                self::sendMail($not);
+                //self::sendMail($not);
         }
         //under inspection for farmer and inspector
         if($m->status == 2)
@@ -664,7 +664,7 @@ public static function update_notification($m, $model_name, $entity)
                 $not->action_status_to_make_done = '[]'; 
                 $not->save();  
 
-                self::sendMail($not);
+                //self::sendMail($not);
             } 
             $farmer  = Administrator::find($m->administrator_id);
             if($farmer != null)
@@ -693,7 +693,7 @@ public static function update_notification($m, $model_name, $entity)
                 $not->action_status_to_make_done = '[]'; 
                 $not->save();  
 
-                self::sendMail($not);
+               // self::sendMail($not);
             }
         }  
 
@@ -716,7 +716,7 @@ public static function update_notification($m, $model_name, $entity)
                 $not->action_status_to_make_done = '[]'; 
                 $not->save(); 
                 
-                self::sendMail($not);
+               // self::sendMail($not);
 
 
             }
@@ -741,7 +741,7 @@ public static function update_notification($m, $model_name, $entity)
                 $not->action_status_to_make_done = '[]'; +
                 $not->save();  
 
-                self::sendMail($not);
+               // self::sendMail($not);
             }
         }
 
@@ -764,7 +764,7 @@ public static function update_notification($m, $model_name, $entity)
                 $not->action_status_to_make_done = '[]'; 
                 $not->save();  
 
-                self::sendMail($not);
+               // self::sendMail($not);
             }
         }
 
@@ -788,7 +788,7 @@ public static function update_notification($m, $model_name, $entity)
                 $not->action_status_to_make_done = '[]'; 
                 $not->save();  
 
-                self::sendMail($not);
+                //self::sendMail($not);
             }
 
 
@@ -815,7 +815,7 @@ public static function update_notification($m, $model_name, $entity)
                 $not->action_status_to_make_done = '[]'; 
                 $not->save();  
 
-                self::sendMail($not);
+                //self::sendMail($not);
             }
 
 

@@ -576,7 +576,7 @@ class FormSr6Controller extends AdminController
 
                 $form->text('registration_number', __('Enter Seed Board Registration number'))
                 ->help("Please Enter seed board registration number")
-                ->default(rand(1000000, 9999999));
+                ->default("MAAIF" ."/". date('Y') ."/". "SG". "/". mt_rand(10000000, 99999999));
                 });
 
             // $form->datetime('valid_from', __('Valid from'))->default(date('Y-m-d H:i:s'));

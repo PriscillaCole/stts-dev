@@ -39,6 +39,44 @@ class SeedLabelController extends AdminController
 
         $grid->disableFilter();
     
+        //view only labels with a status of 13 if the user is not an administrator
+        if (Admin::user()->isRole('usta')) 
+        {
+            
+            $grid->model()->where('status', '=', 13);
+
+        } 
+        else if (Admin::user()->isRole('basic-user')) 
+        {
+            $grid->model()->where('administrator_id', '=', Admin::user()->id);
+            $grid->actions(function ($actions) {
+                $status = ((int)(($actions->row['status'])));
+
+                if (
+                    $status != 1 &&
+                    $status != 3
+                ) 
+                {
+                    
+                    $actions->disableDelete();
+                }
+            });
+        } 
+        else if (Admin::user()->isRole('administrator')) 
+        {
+            $grid->actions(function ($actions) {
+                $status = ((int)(($actions->row['status'])));
+
+                if (
+                    $status != 1 &&
+                    $status != 3
+                ) 
+                {
+                    
+                    $actions->disableDelete();
+                }
+            });
+        }
 
         if (Admin::user()->isRole('usta')) 
         {

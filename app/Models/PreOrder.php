@@ -40,4 +40,30 @@ class PreOrder extends Model
         }
         return $this->belongsTo(CropVariety::class);
     }
+
+    
+    public static function boot()
+    {
+        parent::boot();
+
+            self::created(function ($model) 
+            {
+
+                Utils::send_notification($model, 'PreOrder', request()->segment(count(request()->segments())));
+    
+            });
+
+
+            self::updated(function ($model) 
+            {
+
+                Utils::update_notification($model, 'PreOrder', request()->segment(count(request()->segments())-1));
+
+            });
+
+            static::creating(function ($model) 
+            {
+           
+            });
+    }
 }

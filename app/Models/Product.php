@@ -27,20 +27,29 @@ class Product extends Model
 
 
 
-    // protected $fillable = [
-    //     'crop_variety_id', 
-    //     'seed_label_id', 
-    //     'quantity', 
-    //     'lab_test_number', 
-    //     'lot_number', 
-    //     'seed_class', 
-    //     'price', 
-    //     'wholesale_price', 
-    //     'image',
-    //     'images',
-    //     'source',
-    //     'detail',
-    //     'name',
-    //     'total_price',
-    // ];
+  
+    public static function boot()
+    {
+        parent::boot();
+
+            self::created(function ($model) 
+            {
+
+                Utils::send_notification($model, 'Product', request()->segment(count(request()->segments())));
+    
+            });
+
+
+            self::updated(function ($model) 
+            {
+
+                Utils::update_notification($model, 'Product', request()->segment(count(request()->segments())-1));
+
+            });
+
+            static::creating(function ($model) 
+            {
+           
+            });
+    }
 }

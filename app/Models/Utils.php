@@ -1053,7 +1053,7 @@ public static function check_application_category(){
         if ($status == 2)
             return '<span class="badge badge-warning">Shipping</span>';
         if ($status == 3)
-            return '<span class="badge badge-success">Completed</span>';
+            return '<span class="badge badge-success">Delivered</span>';
         if ($status == 4)
             return '<span class="badge badge-danger">Canceled</span>';
         if ($status == 5)

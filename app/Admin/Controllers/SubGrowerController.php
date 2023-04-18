@@ -44,6 +44,19 @@ class SubGrowerController extends AdminController
         // $s->save();
         // dd("done");
         $grid = new Grid(new SubGrower());
+
+        //as an inspector, view only subgrowers assigned to you
+          //check if the role is an inspector and has been assigned that form
+          if (Admin::user()->isRole('inspector'))  
+          {
+              $grid->model()->where('inspector', '=', Admin::user()->id);
+              //return an empty table if the inspector has not been assigned any forms
+              if (Subgrower::where('inspector', '=', Admin::user()->id)->count() == 0) 
+              { 
+                  //return an empty table if the inspector has not been assigned an
+                  $grid->model(0);       
+              }
+          }
       
 
         if (Admin::user()->isRole('admin')) {

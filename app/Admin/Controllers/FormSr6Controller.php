@@ -287,7 +287,7 @@ class FormSr6Controller extends AdminController
     }
 
         if (Admin::user()->isRole('basic-user')) {
-            if(Utils::is_form_rejected('FormSr6')){
+            if(Utils::is_form_halted('FormSr6')){
                 $show->field('id','Action')->unescape()->as(function ($id) {
                     return "<a href='/admin/form-sr6s/$id/edit' class='btn btn-primary'>Take Action</a>";
                 });

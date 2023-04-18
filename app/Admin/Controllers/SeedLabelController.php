@@ -5,6 +5,7 @@ namespace App\Admin\Controllers;
 use App\Models\CropVariety;
 use App\Models\MarketableSeed;
 use App\Models\SeedLab;
+use App\Models\Product;
 use App\Models\SeedLabel;
 use App\Models\SeedLabelPackage;
 use App\Models\Utils;
@@ -337,51 +338,59 @@ class SeedLabelController extends AdminController
         {
             $form->saving(function ($form) 
             {
-                $id = request()->route()->parameters['seed_label'];
-                $model = $form->model()->find($id);
+                   $id = request()->route()->parameters['seed_label'];
+                   $model = $form->model()->find($id);
+                   //die($model);
                 if ($model->is_processed) 
                 {
-                    dd("This form is already processed.");
-                }
-                if (!$model->seed_lab) 
-                {
-                    dd("Seed lab not found");
-                }
-                if ($model->quantity > $model->seed_lab->quantity) 
-                {
-                    admin_error("Warning", "There is a less amount of this variety in seedlab for this applicant.");
-                    return redirect(admin_url('seed-labels'));
+                    die("This form is already processed.");
                 }
 
-                $new_rec = new MarketableSeed();
-                $new_rec->administrator_id = $model->administrator_id;
-                $new_rec->crop_variety_id = $model->crop_variety_id;
-                $new_rec->seed_label_package_id = $model->seed_label_package_id;
-                $new_rec->is_deposit = 1;
-                $new_rec->lab_test_number = $model->seed_lab->lab_test_number;
-                $new_rec->lot_number = $model->seed_lab->lot_number;
-                $new_rec->quantity = $model->quantity;
-                $new_rec->seed_label_id = $model->id;
-                $new_rec->source = "From seedlab test number: " . $model->seed_lab->lab_test_number;
-                $new_rec->detail = "From seedlab ID: " . $model->seed_lab->id;
+                $new_product = new Product();
+                $new_product->administrator_id = $model->administrator_id;
+                $new_product->crop_variety_id = $model->crop_variety_id;
+                $new_product->name = $model->crop_variety->name;
+                $new_product->detail = $model->applicant_remarks;
+                $new_product->price = $model->price;
+                $new_product->quantity = $model->quantity;
+                $new_product->image_url = $model->image;
+                $new_product->seed_label_id = $model->id;
+                $new_product->lab_test_number = $model->seed_lab->lab_test_number;
+                $new_product->lot_number = $model->lot_number;
+                $new_product->seed_class = $model->seed_lab->seed_class;
+                $new_product->save();
 
-                if ($new_rec->save()) 
-                {
-                    $model->seed_lab->quantity = $model->seed_lab->quantity - $new_rec->quantity;
-                    if ($model->seed_lab->save())
-                    {
-                        $model->is_processed = 1;
-                        $model->status = 14;
-                        if ($model->save()) 
-                        {  // saving labels printed in labels table
-                            admin_success("Success!", "Label printing was successfully processed.");
-                            return redirect(admin_url('seed-labels'));
-                        }
-                    }
-                }
+              
 
-                dd($new_rec);
-                dd("Usta saving here....");
+                // $new_rec = new MarketableSeed();
+                // $new_rec->administrator_id = $model->administrator_id;
+                // $new_rec->crop_variety_id = $model->crop_variety_id;
+                // $new_rec->seed_label_package_id = $model->seed_label_package_id;
+                // $new_rec->is_deposit = 1;
+                // $new_rec->lab_test_number = $model->seed_lab->lab_test_number;
+                // $new_rec->lot_number = $model->seed_lab->lot_number;
+                // $new_rec->quantity = $model->quantity;
+                // $new_rec->seed_label_id = $model->id;
+                // $new_rec->source = "From seedlab test number: " . $model->seed_lab->lab_test_number;
+                // $new_rec->detail = "From seedlab ID: " . $model->seed_lab->id;
+
+                // if ($new_rec->save()) 
+                // {
+                //     $model->seed_lab->quantity = $model->seed_lab->quantity - $new_rec->quantity;
+                //     if ($model->seed_lab->save())
+                //     {
+                //         $model->is_processed = 1;
+                //         $model->status = 14;
+                //         if ($model->save()) 
+                //         {  // saving labels printed in labels table
+                //             admin_success("Success!", "Label printing was successfully processed.");
+                //             return redirect(admin_url('seed-labels'));
+                //         }
+                //     }
+                // }
+
+                // dd($new_rec);
+                // dd("Usta saving here....");
             });
 
             $form->radio('status', __('Set as printed'))

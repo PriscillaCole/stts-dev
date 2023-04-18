@@ -143,7 +143,7 @@ class FormStockExaminationRequestController extends AdminController
         //delete notification after user has viewed it
         $stockexam = FormStockExaminationRequest::findOrFail($id);
         if(Admin::user()->isRole('basic-user') ){
-            if($stockexam->status == 2 || $stockexam->status == 3 || $stockexam->status == 4 || $stockexam->status == 16){
+            if($stockexam->status == 2 || $stockexam->status == 3 || $stockexam->status == 4 ||$stockexam->status == 5 || $stockexam->status == 16){
                 \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'FormStockExaminationRequest'])->delete();
             }
         }
@@ -252,21 +252,8 @@ class FormStockExaminationRequestController extends AdminController
                 $has_crop = ImportExportPermitsHasCrops::where('import_export_permit_id',$form->import_export_permit_id)->first();
                 $variety = CropVariety::where('id', $has_crop->crop_variety_id)->first();
                 $form->crop_variety_id = $variety->id;
-                
-                // $has_crop = ImportExportPermitsHasCrops::where('import_export_permit_id',$form->import_export_permit_id)->get();
-                // $variety = CropVariety::where('id', $has_crop->crop_variety_id)->get();
-                // die($variety);
-                // $crop_varieties = [];
-                // foreach ($variety as $key => $value) 
-                // {  
-                //     $crop_varieties[$value->id] = "Variety: " . $value->name;
-                            
-                // }
-                // $form->textarea('remarks', __('Enter remarks'))->required();
-                // $form->select('crop_variety_id', __('Crop Variety'))->options($crop_varieties)->required();
-                // return $form;
             });
-
+    
 
             $all_qds =  FormCropDeclaration::where([
                 'administrator_id' => Admin::user()->id
@@ -591,8 +578,8 @@ class FormStockExaminationRequestController extends AdminController
             $form->display('name', __('Name of applicant'))
                 ->default($u->name);
   
-            $form->text('yield', __('Enter Yield/Seed quantity (in Metric tonnes)'))
-                ->attribute('type', 'number')
+            $form->display('yield', __('Enter Yield/Seed quantity (in Metric tonnes)'))
+                ->default($has_crop->weight)
                 ->required();
             $form->select('seed_class', __('seed_class'))
                 ->options([

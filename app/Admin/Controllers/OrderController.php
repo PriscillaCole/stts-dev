@@ -37,12 +37,10 @@ class OrderController extends AdminController
      */
     protected function grid()
     {
-
-
-        //$grid->column('administrator_id', __('Administrator id'));
         $grid = new Grid(new Order());
 
-        if (!Admin::user()->isRole('admin')) {
+        if (!Admin::user()->isRole('admin')) 
+        {
             $grid->model()
                 ->where([
                     'administrator_id' => Admin::user()->id,
@@ -57,24 +55,49 @@ class OrderController extends AdminController
         $grid->disableColumnSelector();
         $grid->disableCreateButton();
 
-        $grid->column('id', __('Order ID'));
-        $grid->column('created_at', __('Created'))->display(function ($t) {
+        //check the status of the order and disable the edit and delete actions
+        $grid->actions(function ($actions) 
+        {
+            $order = $actions->row;
+            if ($order->status != 1 ) 
+            {
+                $actions->disableDelete();
+            
+            }
+        });
+
+        //check if the owner of the order is the authoirzed user
+        $grid->actions(function ($actions) 
+        {
+            if (Utils::check_order()) 
+            {
+                $actions->disableDelete();
+            
+            }
+        });
+
+        $grid->column('created_at', __('Created'))->display(function ($t) 
+        {
             return Carbon::parse($t)->toFormattedDateString();
         })->sortable();
         $grid->column('order_by', __('Order by'))
-            ->display(function ($id) {
-                if ($id == Admin::user()->id) {
+            ->display(function ($id) 
+            {
+                if ($id == Admin::user()->id) 
+                {
                     return "Me";
                 }
                 $u = Administrator::find($id);
-                if (!$u) {
+                if (!$u) 
+                {
                     return "-";
                 }
                 return $u->name;
             })->sortable();
         $grid->column('product_id', __('Product'))
-            ->display(function ($id) {
-                $u = Product::find($id);
+            ->display(function ($id) 
+            {
+                $u = CropVariety::find($id);
                 if (!$u) {
                     return "-";
                 }
@@ -82,23 +105,83 @@ class OrderController extends AdminController
             })->sortable();
 
         $grid->column('quantity', __('Quantity'))
-            ->display(function ($id) {
+            ->display(function ($id) 
+            {
                 return number_format($id) . " KGs";
             })->sortable();
         $grid->column('total_price', __('Total price'))
-            ->display(function ($id) {
+            ->display(function ($id) 
+            {
                 return "UGX. " . number_format($id);
             })->sortable();
 
         $grid->column('status', __('Status'))
-            ->display(function ($status) {
+            ->display(function ($status) 
+            {
                 return  Utils::tell_order_status($status);
             })->sortable();
-
-
+       if(Utils::check_order_status())
+       {
+                //confirm order button
+                $grid->column('id', __('Confirm Order'))->display(function ($id) 
+                {
+                    $order = Order::findOrFail($id);
+                    $confirmedClass = $order->status == 6 ? 'btn-primary' : 'btn-blue';
+                    $confirmedText = $order->status == 6 ? 'Confirmed' : 'Confirm';
+                    if($order->status == 6) 
+                    {
+                        return "<a id='confirm-order-{$id}' href='" . route('orders.confirm', ['id' => $id]) . "' class='btn btn-xs $confirmedClass confirm-order' data-id='{$id} ' disabled>$confirmedText</a>";
+                    }
+                    return "<a id='confirm-order-{$id}' href='" . route('orders.confirm', ['id' => $id]) . "' class='btn btn-xs $confirmedClass confirm-order' data-id='{$id}'>$confirmedText</a>";
+                })->sortable();
+                
+                // css styling the button to blue initially
+                Admin::style('.btn-blue {color: #fff; background-color: #0000FF; border-color: #0000FF;}');
+                
+                //Script to edit the form status field to 2 on click of the confirm order button
+                Admin::script
+                ('
+                    $(".confirm-order").click(function(e) 
+                    {
+                        e.preventDefault();
+                        var id = $(this).data("id");
+                        var url = "' . route('orders.confirm', ['id' => ':id']) . '";
+                        url = url.replace(":id", id);
+                        var button = $("#confirm-order-" + id);
+                        $.ajax(
+                            {
+                                url: url,
+                                type: "PUT",
+                                data: 
+                                {
+                                    _method: "PUT",
+                                    _token: LA.token,
+                                    status: 6,
+                                },
+                                success: function (data) 
+                                {
+                                    $.pjax.reload("#pjax-container");
+                                    toastr.success("Order confirmed successfully");
+                    
+                                }
+                            });
+                    });
+                ');
+                        
+            
+        }
+        
         return $grid;
     }
 
+    public function confirm($id)
+    {
+        $order = Order::findOrFail($id);
+        $order->status = 6; // or whatever status code you need
+        $order->save();
+        return response()->json(['status' => 'success']);
+    }
+    
 
     /**
      * Make a show builder.
@@ -109,18 +192,49 @@ class OrderController extends AdminController
     protected function detail($id)
     {
         $show = new Show(Order::findOrFail($id));
-        $show->field('id', __('Id'));
+        //disable panel actions
+        $show->panel()->tools(function ($tools) 
+        {
+            $tools->disableDelete();
+        });
         $show->field('created_at', __('Created at'));
         $show->field('updated_at', __('Updated at'));
-        $show->field('administrator_id', __('Administrator id'));
-        $show->field('order_by', __('Order by'));
-        $show->field('crop_variety_id', __('Crop variety id'));
-        $show->field('product_id', __('Product id'));
+        $show->field('administrator_id', __('Administrator id'))->as(function ($id) 
+        {
+            $u = Administrator::find($id);
+            if (!$u) 
+            {
+                return "-";
+            }
+            return $u->name;
+        });
+        $show->field('order_by', __('Order by'))->as(function ($id) 
+        {
+            $u = Administrator::find($id);
+            if (!$u) 
+            {
+                return "-";
+            }
+            return $u->name;
+        });
+       
+        $show->field('product_id', __('Product'))->as(function ($id) 
+        {
+            $u = Product::find($id);
+            if (!$u) 
+            {
+                return "-";
+            }
+            return $u->name;
+        });
         $show->field('quantity', __('Quantity'));
         $show->field('detail', __('Detail'));
         $show->field('payment_type', __('Payment type'));
         $show->field('receipt', __('Receipt'));
-        $show->field('status', __('Status'));
+        $show->field('status', __('Status'))->unescape()->as(function ($status) 
+        {
+            return  Utils::tell_order_status($status);
+        })->sortable();
 
         return $show;
     }
@@ -134,6 +248,13 @@ class OrderController extends AdminController
     protected function form()
     {
         $form = new Form(new Order());
+
+        //disable the delete tools
+        $form->tools(function (Form\Tools $tools) 
+        {
+            $tools->disableDelete();
+        });
+
 
         if ($form->isEditing()) {
 
@@ -268,10 +389,10 @@ class OrderController extends AdminController
                     ->required();
             }
 
-            if ($pro->status == 3) {
-                admin_warning("Warning", "This order completed, 
-                it's stage cannot be updated anymore.");
-            } else {
+            // if ($pro->status == 3) {
+            //     admin_warning("Warning", "This order completed, 
+            //     it's stage cannot be updated anymore.");
+            // } else {
                 if ($pro->order_by != Admin::user()->id) {
                     $form->radio('status', "Update order status")
                         ->options([
@@ -285,8 +406,9 @@ class OrderController extends AdminController
                         ->required();
                 } else {
                     admin_warning("Warning", "You cannot update status of your own order.");
+                    
                 }
-            }
+           // }
         }
 
         if ($form->isCreating()) {

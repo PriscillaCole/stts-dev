@@ -712,7 +712,7 @@ class FormSr4Controller extends AdminController
                 ])
                 ->required();
         }
-
+        
         // administrator form fields
         if (Admin::user()->isRole('admin')) 
         {

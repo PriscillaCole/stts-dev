@@ -1007,6 +1007,29 @@ public static function check_inspector_remarks(){
     }
 }
 
+//check if the administrator id is the same as the authenticated user for an order
+public static function check_order()
+{
+    $orders = Order::where('administrator_id',  Admin::user()->id)->get();
+    foreach ($orders as $key => $value)
+    { 
+            return true;
+    }
+}
+
+//check if order status is 3
+public static function check_order_status()
+{
+    $orders = Order::where('order_by',  Admin::user()->id)->get();
+    foreach ($orders as $key => $value)
+    { 
+        if($value->status == 3){
+            return true;
+        }
+    }
+}
+
+
 //check the selected  formSr4 application category selected by a user
 public static function check_application_category(){
 
@@ -1035,6 +1058,8 @@ public static function check_application_category(){
             return '<span class="badge badge-danger">Canceled</span>';
         if ($status == 5)
             return '<span class="badge badge-warning">Processing</span>';
+        if ($status == 6)
+            return '<span class="badge badge-success">Received</span>';
     }
 
     public static function tell_status($status)
@@ -1190,11 +1215,11 @@ public static function check_application_category(){
     {
         // $url = url("storage/uploads");
         if ($name == null || (strlen($name) < 2)) {
-            $url = url('storage/uploads/default.png');
+            $url = url('uploads/files/default.png');
         // } else if (file_exists(public_path('storage/uploads' . $name))) {
         //     $url = url("storage/uploads/" . $name);
         } else {
-            $url = url("storage/uploads/" . $name);
+            $url = url("uploads/" . $name);
         }
         return $url;
     }
@@ -1240,7 +1265,7 @@ public static function check_application_category(){
             ) {
                 $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
                 $file_name = time() . "-" . rand(100000, 1000000) . "." . $ext;
-                $destination = 'public/storage/uploads/' . $file_name;
+                $destination = 'public/uploads/' . $file_name;
 
                 $res = move_uploaded_file($file['tmp_name'], $destination);
                 if (!$res) {

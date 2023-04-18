@@ -234,47 +234,24 @@ class ImportExportPermitController2 extends AdminController
         if ($export_permit->valid_until != null) {
             $show->field('valid_until', __('Valid until'));
         }
-      $show->comments('Comments', function ($comments) {
-
-            $comments->resource('/admin/comments');
-          //get the status of the comments related to the form
-        
-            $comments->comment();
-            $comments->created_at('Date')->display(function ($item) {
-                return Carbon::parse($item)->diffForHumans();
-            });
-          
-            //disable action buttons
-            $comments->disableActions();
-            //disable pagination
-            $comments->disablePagination();
-            //disable filtering
-            $comments->disableFilter();
-            //disable create button
-            $comments->disableCreateButton();
-            //disable row selector
-            $comments->disableRowSelector();
-            //disable export
-            $comments->disableExport();
-            //disable column selector
-            $comments->disableColumnSelector();
-
-    
-        });
         
         if (!Admin::user()->isRole('basic-user'))
         {
-            //button link to the show-details form
+           //button link to the show-details form
+            //check the status of the form being shown
+            if($export_permit->status == 1 || $export_permit->status == 2 || $import_permit->status == null)
+            {
             $show->field('id','Action')->unescape()->as(function ($id) 
             {
-                return "<a href='/admin/import-export-permits-2/$id/edit' class='btn btn-primary'>Take Action</a>";
+                return "<a href='/admin/import-export-permits/$id/edit' class='btn btn-primary'>Take Action</a>";
             });
+            }
         }
 
            
         if (Admin::user()->isRole('basic-user')) 
         {
-            if(Utils::is_form_rejected('ImportExportPermit'))
+            if(Utils::is_form_halted('ImportExportPermit'))
             {
                 $show->field('id','Action')->unescape()->as(function ($id) 
                 {
@@ -301,10 +278,13 @@ class ImportExportPermitController2 extends AdminController
         {
             //find the import permit id, if its status is not pending, block an inspector from editing and disable form actions
             $import_export_permit = ImportExportPermit::find(request()->route()->parameters()['import_export_permit']);
-            if(Admin::user()->isRole('inspector')){
-                if($import_export_permit->status != 2){
+            if(Admin::user()->isRole('inspector'))
+            {
+                if($import_export_permit->status != 2)
+                {
                    $form->html('<div class="alert alert-danger">You cannot edit this form, please commit the commissioner to make any changes. </div>');
-                   $form->footer(function ($footer) {
+                   $form->footer(function ($footer) 
+                    {
 
                        // disable reset btn
                        $footer->disableReset();
@@ -321,7 +301,7 @@ class ImportExportPermitController2 extends AdminController
                        // disable `Continue Creating` checkbox
                        $footer->disableCreatingCheck();
 
-                   });
+                    });
                 }
             }
         }
@@ -705,15 +685,9 @@ class ImportExportPermitController2 extends AdminController
                 
             $form->textarea('other_varieties', __('Specify other varieties if any.') )
             ->help('If varieties you are applying for were not listed');
-            $form->radio('measure', __('Weight Measurement'))
-                ->options
-                ([
-                    'Kgs' => 'Kgs',
-                    'Metric Tons' => 'Metric Tons',
-                ])
-                ->required();
-                $form->number('weight','Weight')
-                ->required();
+            
+            $form->number('weight','Weight in (Kgs)')
+            ->required();
 
             
                    

@@ -10,6 +10,7 @@ use App\Http\Middleware\Authenticate;
 use Illuminate\Support\Facades\DB;
 use App\Admin\Controllers\Charts\QualityAssurance\BarGraphTotalsController;
 use App\Admin\Controllers\Charts\QualityAssurance\PieChartTotalsController;
+use App\Admin\Controllers\OrderController;
 
 
 use App\Admin\Controllers\FormSr6CropQueryController;
@@ -76,6 +77,9 @@ Route::get('password/reset', [PasswordResetController::class, 'showForgetPasswor
 Route::post('password/reset', [PasswordResetController::class, 'submitForgetPasswordForm']); 
 Route::get('reset/password', [PasswordResetController::class, 'showResetPasswordForm'])->name('password.get');
 Route::post('resets/password', [PasswordResetController::class, 'submitResetPasswordForm']);
+
+Route::put('/admin/orders/{id}/confirm',  [OrderController::class, 'confirm'])->name('orders.confirm');
+
 
 Route::view('/error', 'errors.404')->name('404');
 

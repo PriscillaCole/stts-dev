@@ -38,8 +38,8 @@ use Encore\Admin\Facades\Admin;
                 @endphp
 
                 <a href="{{$link}}">
-                    <span class="mailbox-attachment-icon has-img">
-                        <img  src="{!! $img !!}"/>
+                    <span class="mailbox-attachment-icon has-img" style="height:125px">
+                        <img  src="{!! $img !!}" width="100px" height="100px"/>
                     </span>
                  
                     <div class="mailbox-attachment-info">

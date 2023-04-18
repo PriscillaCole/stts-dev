@@ -315,10 +315,13 @@ class ImportExportPermitController extends AdminController
         {
             //find the import permit id, if its status is not pending, block an inspector from editing and disable form actions
             $import_export_permit = ImportExportPermit::find(request()->route()->parameters()['import_export_permit']);
-            if(Admin::user()->isRole('inspector')){
-                if($import_export_permit->status != 2){
-                   $form->html('<div class="alert alert-danger">You cannot edit this form, please commit the commissioner to make any changes. </div>');
-                   $form->footer(function ($footer) {
+            if(Admin::user()->isRole('inspector'))
+            {
+                if($import_export_permit->status != 2)
+                {
+                   $form->html('<div class="alert alert-danger">You cannot edit this form, please contact the commissioner to make any changes. </div>');
+                   $form->footer(function ($footer) 
+                   {
 
                        // disable reset btn
                        $footer->disableReset();
@@ -719,15 +722,9 @@ class ImportExportPermitController extends AdminController
                 
             $form->textarea('other_varieties', __('Specify other varieties if any.') )
             ->help('If varieties you are applying for were not listed');
-            $form->radio('measure', __('Weight Measurement'))
-                ->options
-                ([
-                    'Kgs' => 'Kgs',
-                    'Metric Tons' => 'Metric Tons',
-                ])
-                ->required();
-                $form->number('weight','Weight')
-                ->required();
+           
+            $form->number('weight','Weight in (Kgs)')
+            ->required();
 
             
                    

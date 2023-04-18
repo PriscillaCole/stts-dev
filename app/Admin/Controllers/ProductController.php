@@ -35,99 +35,100 @@ class ProductController extends AdminController
 
         $market_records = MarketableSeed::where('is_counted', 0)->get();
 
-        foreach ($market_records as $key => $market_rec) {
-            $pro = null;
-            $pro = Product::where('lab_test_number', $market_rec->lab_test_number)->first();
+        // foreach ($market_records as $key => $market_rec) {
+        //     $pro = null;
+        //     $pro = Product::where('lab_test_number', $market_rec->lab_test_number)->first();
 
-            if ($pro == null) {
-                $new_pro = new Product();
-                $new_pro->administrator_id = $market_rec->administrator_id;
-                $new_pro->crop_variety_id = $market_rec->crop_variety_id;
-                $new_pro->seed_label_id = $market_rec->seed_label_id;
-                $new_pro->quantity = (int) ($market_rec->quantity);
-                $new_pro->lab_test_number = $market_rec->lab_test_number;
-                $new_pro->lot_number = $market_rec->lot_number;
-                $new_pro->seed_class = $market_rec->seed_class;
-                $new_pro->price = $market_rec->price;
-                $new_pro->wholesale_price = $market_rec->price;
-                $new_pro->image = $market_rec->image;
-                $new_pro->images = $market_rec->images;
-                $new_pro->source = $market_rec->source;
-                $new_pro->detail = $market_rec->detail;
-                $new_pro->name = $market_rec->crop_variety->name;
+        //     if ($pro == null) 
+        //     {
+        //         $new_pro = new Product();
+        //         $new_pro->administrator_id = $market_rec->administrator_id;
+        //         $new_pro->crop_variety_id = $market_rec->crop_variety_id;
+        //         $new_pro->seed_label_id = $market_rec->seed_label_id;
+        //         $new_pro->quantity = (int) ($market_rec->quantity);
+        //         $new_pro->lab_test_number = $market_rec->lab_test_number;
+        //         $new_pro->lot_number = $market_rec->lot_number;
+        //         $new_pro->seed_class = $market_rec->seed_class;
+        //         $new_pro->price = $market_rec->price;
+        //         $new_pro->wholesale_price = $market_rec->price;
+        //         $new_pro->image_url = $market_rec->image;
+        //         $new_pro->images = $market_rec->images;
+        //         $new_pro->source = $market_rec->source;
+        //         $new_pro->detail = $market_rec->detail;
+        //         $new_pro->name = $market_rec->crop_variety->name;
 
-                $saved = false;
-                if ($new_pro->save()) {
-                    $market_rec->is_counted = 1;
-                    if ($market_rec->save()) {
-                        $saved = true;
-                    }
-                }
+        //         $saved = false;
+        //         if ($new_pro->save()) {
+        //             $market_rec->is_counted = 1;
+        //             if ($market_rec->save()) {
+        //                 $saved = true;
+        //             }
+        //         }
 
-                if (!$saved) {
-                    dd("Something went wrong while saving data");
-                }
-            } else {
-                try {
-                    $pro->name = $market_rec->crop_variety->name;
-                } catch (\Throwable $th) {
-                    $pro->name = "No name";
-                }
-                $pro->administrator_id = $market_rec->administrator_id;
-                $pro->crop_variety_id = $market_rec->crop_variety_id;
-                $pro->seed_label_id = $market_rec->seed_label_id;
-                $pro->quantity = ((int)($pro->quantity)) + ((int) ($market_rec->quantity));
-                $pro->lab_test_number = $market_rec->lab_test_number;
-                $pro->lot_number = $market_rec->lot_number;
-                $pro->seed_class = $market_rec->seed_class;
-                $pro->source = $market_rec->source;
-                $pro->detail = $market_rec->detail;
-                if (!$pro->save()) {
-                    dd("failed to save");
-                }
-                $market_rec->is_counted = 1;
-                $market_rec->save();
-            }
-        }
+        //         if (!$saved) {
+        //             dd("Something went wrong while saving data");
+        //         }
+        //     } else {
+        //         try {
+        //             $pro->name = $market_rec->crop_variety->name;
+        //         } catch (\Throwable $th) {
+        //             $pro->name = "No name";
+        //         }
+        //         $pro->administrator_id = $market_rec->administrator_id;
+        //         $pro->crop_variety_id = $market_rec->crop_variety_id;
+        //         $pro->seed_label_id = $market_rec->seed_label_id;
+        //         $pro->quantity = ((int)($pro->quantity)) + ((int) ($market_rec->quantity));
+        //         $pro->lab_test_number = $market_rec->lab_test_number;
+        //         $pro->lot_number = $market_rec->lot_number;
+        //         $pro->seed_class = $market_rec->seed_class;
+        //         $pro->source = $market_rec->source;
+        //         $pro->detail = $market_rec->detail;
+        //         if (!$pro->save()) {
+        //             dd("failed to save");
+        //         }
+        //         $market_rec->is_counted = 1;
+        //         $market_rec->save();
+        //     }
+        // }
 
         $grid = new Grid(new Product());
-        // $grid->column('id', __('Id'))->sortable();
+        // // $grid->column('id', __('Id'))->sortable();
         
         
 
-        $grid->disableFilter();
+         $grid->disableFilter();
         $grid->disableCreateButton();
-        $grid->disableColumnSelector();
-        // $grid->disableExport();
+         $grid->disableColumnSelector();
+         $grid->disableExport();
 
-        $grid->column('created_at', __('Created'))
-            ->display(function ($item) {
-                return Carbon::parse($item)->diffForHumans();
-            })->sortable();
+        // $grid->column('created_at', __('Created'))
+        //     ->display(function ($item) {
+        //         return Carbon::parse($item)->diffForHumans();
+        //     })->sortable();
 
-        // $grid->column('updated_at', __('Updated at'));
-        // $grid->column("administrator_id"->name, __('Owner'))->sortable();
-        // $grid->column('administrator_id', __('Administrator id'))->sortable();
-        $grid->column('crop_variety_id', __('Crop variety id'));
-        $grid->column('seed_label_id', __('Seed label id'));
-        $grid->column('quantity', __('Quantity'));
-        // $grid->column('lab_test_number', __('Lab test number'));
-        // $grid->column('lot_number', __('Lot number'));
-        $grid->column('seed_class', __('Seed class'));
-        $grid->column('price', __('Price'))->sortable();
-        $grid->column('wholesale_price', __('Wholesale price'));
-        $grid->column("image_url", __("Image"));
-
-
-        // $grid->column("image_url", __("Image"))->display(function ($image_url) {
-        //     $image = Image::make($image_url)->resize(200, 200);
-        //     return '<img src="'. $image->encode('data-url') .'"/>';
-        // });;
+        // // $grid->column('updated_at', __('Updated at'));
+        // // $grid->column("administrator_id"->name, __('Owner'))->sortable();
+        // // $grid->column('administrator_id', __('Administrator id'))->sortable();
+        // $grid->column('crop_variety_id', __('Crop variety id'));
+        // $grid->column('seed_label_id', __('Seed label id'));
+        // $grid->column('quantity', __('Quantity'));
+        // // $grid->column('lab_test_number', __('Lab test number'));
+        // // $grid->column('lot_number', __('Lot number'));
+        // $grid->column('seed_class', __('Seed class'));
+        // $grid->column('price', __('Price'))->sortable();
+        // $grid->column('wholesale_price', __('Wholesale price'));
+        // $grid->column("image_url", __("Image"));
 
 
-        $grid->column('images', __('Images'));
-        $grid->column('source', __('Source'));
-        $grid->column('detail', __('Detail'));
+        // // $grid->column("image_url", __("Image"))->display(function ($image_url) {
+        // //     $image = Image::make($image_url)->resize(200, 200);
+        // //     return '<img src="'. $image->encode('data-url') .'"/>';
+        // // });;
+
+
+        // $grid->column('images', __('Images'));
+        // $grid->column('source', __('Source'));
+        // $grid->column('detail', __('Detail'));
 
         $grid->actions(function ($actions) {
             $actions->disableDelete();

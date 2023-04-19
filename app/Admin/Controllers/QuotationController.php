@@ -382,11 +382,19 @@ class QuotationController extends AdminController
             $form->text('seed_class', __('Seed class'))->default($preOrder->seed_class)
                 ->readonly();
 
-            $form->text('quantity', __('Enter Quantity you intend to supply (in KGs)'))
+            $form->text('quantity_requested', __('Quantity requested (in Kgs)'))
+                ->attribute('type', 'number')->default($preOrder->quantity)
+                ->readonly();
+
+            $form->text('quantity', __('Enter Quantity you intend to supply (in Kgs)'))
                 ->attribute('type', 'number')->required();
 
             $form->text('price', __('Enter Price your unti selling price. (in UGX)'))
                 ->attribute('type', 'number')->required();
+
+            $form->text('expected_supply_date', __('Expected supply date'))
+                ->attribute('type', 'date')->default($preOrder->collection_date)
+                ->readonly();
 
             $form->date('supply_date', __('Supply date'))->required();
             $form->textarea('detail', __('Detail'));

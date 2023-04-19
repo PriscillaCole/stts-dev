@@ -603,19 +603,43 @@ class Utils
 //function to send notifications
 public static function send_notification($m, $model_name, $entity)
 {
-    $not = new MyNotification();
-    $not->role_id = 2;
-    $not->message = "New {$entity} has been submitted by ".Admin::user()->name.' ';
-    $not->link = admin_url("auth/login"); 
-    $not->form_link = admin_url("{$entity}/{$m->id}");
-    $not->status = 'Unread'; 
-    $not->model = $model_name;
-    $not->model_id = $m->id; 
-    $not->group_type = 'Group'; 
-    $not->action_status_to_make_done = '[]';
-    $not->save();
+    //notification for seed-labels
+    //check if $entity is a string
+    if(is_string($entity))
+    {
+        if($model_name == "SeedLabel")
+        {
+            $not = new MyNotification();
+            $not->role_id = 2;
+            $not->message = Admin::user()->name. ' has requested for seed labels ';
+            $not->link = admin_url("auth/login"); 
+            $not->form_link = admin_url("{$entity}/{$m->id}");
+            $not->status = 'Unread'; 
+            $not->model = $model_name;
+            $not->model_id = $m->id; 
+            $not->group_type = 'Group'; 
+            $not->action_status_to_make_done = '[]';
+            $not->save();
 
-    self::sendMail($not);
+            self::sendMail($not); 
+        }
+        else
+        {
+            $not = new MyNotification();
+            $not->role_id = 2;
+            $not->message = "New {$entity} has been submitted by ".Admin::user()->name.' ';
+            $not->link = admin_url("auth/login"); 
+            $not->form_link = admin_url("{$entity}/{$m->id}");
+            $not->status = 'Unread'; 
+            $not->model = $model_name;
+            $not->model_id = $m->id; 
+            $not->group_type = 'Group'; 
+            $not->action_status_to_make_done = '[]';
+            $not->save();
+
+            self::sendMail($not);
+        }
+    }
 }
 
 //function to update notifications
@@ -627,6 +651,75 @@ public static function update_notification($m, $model_name, $entity)
         foreach($notifications as $n)
         { 
             $n->delete();
+        }
+
+        //seed label notifications after update
+        if($model_name == "SeedLabel")
+        { 
+            $seed_label_requester = Administrator::find($m->administrator_id);
+            if($m->status == 13)
+            {
+                $not = new MyNotification();
+                $not->role_id = 2;
+                $not->receiver_id = 24; 
+                $not->message = $seed_label_requester->name. ' has requested for seed labels ';
+                $not->link = admin_url("auth/login"); 
+                $not->form_link = admin_url("{$entity}/{$m->id}");
+                $not->status = 'Unread'; 
+                $not->model = $model_name;
+                $not->model_id = $m->id; 
+                $not->group_type = 'Group'; 
+                $not->action_status_to_make_done = '[]';
+                $not->save();
+        
+                //self::sendMail($not); 
+
+                if($seed_label_requester != null)
+                {
+                    //check if the notification has been sent before 
+                    $check = MyNotification::where('model', $model_name)
+                    ->where('model_id', $m->id)
+                    ->where('receiver_id', $seed_label_requester->id)
+                    ->where('message',  "Dear {$seed_label_requester->name}, Your seed labels have been submitted for printing")
+                    ->first();
+                    if($check != null)
+                    {
+                        return;
+                    }
+                    $not = new MyNotification();
+                    $not->receiver_id = $seed_label_requester->id; 
+                    $not->role_id = 3;
+                    $not->message =  "Dear {$seed_label_requester->name}, Your seed labels have been submitted for printing"; 
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}");
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Individual'; 
+                    $not->action_status_to_make_done = '[]'; 
+                    $not->save();  
+
+                // self::sendMail($not);
+                }
+            }
+
+            if($m->status == 14)
+            {
+            $not = new MyNotification();
+            $not->role_id = 2;
+            $not->receiver_id = $seed_label_requester->id; 
+            $not->message = "Dear {$seed_label_requester->name}, Your seed labels have been printed";
+            $not->link = admin_url("auth/login"); 
+            $not->form_link = admin_url("{$entity}/{$m->id}");
+            $not->status = 'Unread'; 
+            $not->model = $model_name;
+            $not->model_id = $m->id; 
+            $not->group_type = 'Group'; 
+            $not->action_status_to_make_done = '[]';
+            $not->save();
+    
+            self::sendMail($not); 
+            }
         }
 
         //edited for the admin only
@@ -660,7 +753,7 @@ public static function update_notification($m, $model_name, $entity)
                 $not->status = 'Unread'; 
                 $not->model = $model_name;
                 $not->model_id = $m->id; 
-                $not->group_type = 'Individual_i'; 
+                $not->group_type = 'Individual'; 
                 $not->action_status_to_make_done = '[]'; 
                 $not->save();  
 
@@ -673,7 +766,6 @@ public static function update_notification($m, $model_name, $entity)
                 $check = MyNotification::where('model', $model_name)
                 ->where('model_id', $m->id)
                 ->where('receiver_id', $farmer->id)
-                ->where('role_id', 3)
                 ->where('message', "Dear {$farmer->name}, your {$entity} is now under inspection.")
                 ->first();
                 if($check != null)
@@ -827,17 +919,21 @@ public static function update_notification($m, $model_name, $entity)
 public static function sendMail($not)
 {
     if($not->group_type == 'Individual')
-    {
+    { 
         $receivers = Utils::get_users_by_role_notify($not->receiver_id);
-        $emails = [];
+               
+    } else
+    {
+        $receivers = Utils::get_users_by_role_notify($not->role_id);
+    }
+
+    $emails = [];
         foreach($receivers as $r)
         {
             $emails[] = $r->email;
         } 
         Mail::to($emails)
                 ->send(new Notification($not->message, $not->link));
-            
-    } 
 }
 
 

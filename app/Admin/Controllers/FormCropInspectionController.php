@@ -100,7 +100,7 @@ class FormCropInspectionController extends AdminController
 
         $model = FormSr10::findOrFail($id);
 
-        $show->field('id', __('Id')); 
+        
         $show->field('stage', __('Stage')); 
         $show->field('submited_date', __('Submited date'));
 
@@ -140,6 +140,14 @@ class FormCropInspectionController extends AdminController
                 $tools->disableEdit();
                 $tools->disableDelete();
             });
+
+        if (!Admin::user()->isRole('basic-user'))
+        {
+            //button link to the show-details form
+            $show->field('id','Action')->unescape()->as(function ($id) {
+                return "<a href='/admin/form-sr10s/$id/edit' class='btn btn-primary'>Take Action</a>";
+            });
+        }
 
         return $show;
     }

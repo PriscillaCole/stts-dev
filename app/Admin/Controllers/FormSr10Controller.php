@@ -167,12 +167,20 @@ class FormSr10Controller extends AdminController
         $show->field('estimated_yield', __('Estimated yield')); 
         $show->field('futher_remarks', __('Futher remarks')); 
         $show->field('sr10_number', __('SR10s number')); 
+        if (!Admin::user()->isRole('basic-user'))
+        {
+            //button link to the show-details form
+            $show->field('id','Action')->unescape()->as(function ($id) {
+                return "<a href='/admin/form-sr10s/$id/edit' class='btn btn-primary'>Take Action</a>";
+            });
+        }
       
         $show->panel()
             ->tools(function ($tools) {
                 $tools->disableEdit();
                 $tools->disableDelete();
             });
+            
 
         return $show;
     }
@@ -187,113 +195,15 @@ class FormSr10Controller extends AdminController
     {
         $form = new Form(new FormSr10());
         $can_edit = true;
+        // callback after save to return to table view controller after saving the form data 
+        $form->saved(function (Form $form)
+        {
+            return redirect(admin_url('form-sr10s'));
+        });
+
 
         if ($form->isEditing()) {
-            /*$form->saving(function (Form $form) {
-                $id = request()->route()->parameters['form_sr10'];
-                $sr10 = $form->model()->find($id);
-                if (isset($_POST['is_initialized'])) {
-                    if (count($sr10->form_sr10_has_variety_inspections) < 1) {
-                        //count($sr10->form_sr10_has_variety_inspections) < 1
-                        if ($sr10->planting_return != null) {
-                            if ($sr10->planting_return->planting_return_crops != null) {
-                                foreach ($sr10->planting_return->planting_return_crops as $key => $val) {
-                                    $d['form_sr10_id']  = $id;
-                                    $d['planting_return_crop_id'] = $val->id;
-                                    $d['planting_return_crop_name'] = $val->crop_variety->name;
-                                    $VarietyInspection = new FormSr10HasVarietyInspection($d);
-                                    $VarietyInspection->save();
-                                }
-                            }
-                        }
-                    }
-
-                    $sr10->is_initialized = 1;
-                    $sr10->is_active = 1;
-                    $sr10->save();
-                    admin_success("Success", "SR10 initilized.");
-                    header("Location: " . $_SERVER['REQUEST_URI'] . "/edit");
-                    die();
-                } else {
-
-                    $model = $sr10;
-
-                    if (isset($_POST['status'])) {
-                        if ($_POST['status'] == "4") {
-                            $model->planting_return->status = 4;
-                            $model->planting_return->status_comment = $_POST['status_comment'];
-                            $model->planting_return->save();
-
-                            foreach ($model->planting_return->form_sr10s as $key => $val) {
-                                if ($val->id >= $model->id) {
-                                    $val->status = 4;
-                                    $val->status_comment = $_POST['status_comment'];
-                                    $val->save();
-                                }
-                            }
-                        }
-                    }
-
-                    $max_stage = 0;
-                    $this_stage = 0;
-                    $all_ids = [];
-                    if ($model->planting_return != null) {
-                        if ($model->planting_return->form_sr10s != null) {
-                            foreach ($model->planting_return->form_sr10s as $key => $val) {
-                                $all_ids[] = $val->id;
-                                if ($val->stage == $model->stage) {
-                                    $max_stage = $val->id;
-                                    $this_stage = $val->id;
-                                }
-                            }
-                            foreach ($model->planting_return->form_sr10s as $key => $val) {
-                                if ($max_stage < $val->id) {
-                                    $max_stage = $val->id;
-                                    $is_final = false;
-                                }
-                            }
-                        }
-                    }
-                    $next_id = 0;
-                    if ($is_final) {
-                        $model->planting_return->status = 5;
-                        $model->planting_return->save();
-                    } else {
-                        asort($all_ids);
-                        $this_stage_found = false;
-                        foreach ($all_ids as $key => $value) {
-                            if ($this_stage_found) {
-                                $next_id = $value;
-                                break;
-                            }
-                            if ($this_stage == $value) {
-                                $this_stage_found = true;
-                            }
-                        }
-
-                        if (isset($_POST['status'])) {
-                            if ($_POST['status'] == "7") {
-                                foreach ($model->planting_return->form_sr10s as $key => $val) {
-                                    if ($val->id == $next_id) {
-                                        $val->is_active = 1;
-                                        $val->save();
-                                    }
-                                }
-                            }
-                        }
-
-                        // echo "CURRENT STAGE: " . $this_stage . " NEXT STAGE: " . $next_id . "<br>";
-                        // dd($all_ids);
-                        // die("Is not final");
-                    }
-
-                    $form->is_done = 1;
-                    $form->is_active = 0;
-                }
-            });*/
-        }
-
-        if ($form->isEditing()) {
+            
             if (!Admin::user()->isRole('inspector')) {
                 admin_warning("Warning", "Only inspectors can edit an SR10 Form");
                 $can_edit = false;

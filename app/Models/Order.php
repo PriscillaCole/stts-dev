@@ -35,7 +35,7 @@ class Order extends Model
             self::created(function ($model) 
             {
 
-                Utils::send_notification($model, 'Order', request()->segment(count(request()->segments())));
+                Utils::send_notification($model, 'Order', request()->segment(count(request()->segments())-1));
     
             });
 

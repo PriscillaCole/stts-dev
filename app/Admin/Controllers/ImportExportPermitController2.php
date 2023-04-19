@@ -211,7 +211,7 @@ class ImportExportPermitController2 extends AdminController
 
                     $row['crop'] = $var->crop->name;
                     $row['variety'] = $var->name;
-                    // $row['category'] = $val->category;
+                    // $row['
                     $row['weight'] = $val->weight;
                     $rows[] = $row;
                 }

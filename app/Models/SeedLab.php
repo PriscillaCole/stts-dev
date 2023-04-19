@@ -43,6 +43,10 @@ class SeedLab extends Model
 
     public function getCropVarietyTextAttribute()
     {
+        if ($this->crop_variety == null) 
+        {
+            return "";
+        }
         return $this->crop_variety->name;
     }
 

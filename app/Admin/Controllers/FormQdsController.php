@@ -673,7 +673,8 @@ class FormQdsController extends AdminController
 
                     $form->text('grower_number', __('Grower number'))
                         ->default("Qds" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->readonly();
-                    $form->text('registration_number', __('Registration number'))
+                    $form->text('registration_number', __('Seed Board Registration number'))
+                          ->default("MAAIF" ."/". date('Y') ."/". "QDS". "/". mt_rand(10000000, 99999999))->readonly()
                         ->help("Please Enter Registration number");
                     $form->date('valid_from', 'Valid from date?');
                     $form->date('valid_until', 'Valid until date?');

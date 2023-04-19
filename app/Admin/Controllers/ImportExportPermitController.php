@@ -220,12 +220,12 @@ class ImportExportPermitController extends AdminController
         $show->field('name_address_of_origin', __('Name address of origin'));
 
         //show table of crops associated with an import permit
-    
 
         $show->field('import_export_permits_has_crops', __('Crops'))
             ->unescape()
             ->as(function ($item) 
             {
+            
                 if (!$this->import_export_permits_has_crops) 
                 {
                     return "None";
@@ -235,6 +235,7 @@ class ImportExportPermitController extends AdminController
                 $rows = array();
                 foreach ($this->import_export_permits_has_crops as $key => $val) 
                 {
+                    
                     $row['crop'] = $val->variety->crop->name;
                     $row['variety'] = $val->variety->name;
                     $row['weight'] = $val->weight;

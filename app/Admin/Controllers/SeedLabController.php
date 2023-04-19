@@ -119,7 +119,7 @@ class SeedLabController extends AdminController
                 return Carbon::parse($item)->diffForHumans();
             })->sortable();
             
-        $grid->column('crop_variety_id', __('Crop variety id'))->display(function ($variety_id) 
+        $grid->column('crop_variety_id', __('Crop variety'))->display(function ($variety_id) 
         {
             $_variety = CropVariety::find($variety_id);
             if (!$_variety) 
@@ -408,10 +408,13 @@ class SeedLabController extends AdminController
                //get crop variety from the import permit id when form is saving
                 $stock_examination_form = FormStockExaminationRequest::where('id', $seed_lab->form_stock_examination_request_id)->first();
                 $has_crop = ImportExportPermitsHasCrops::where('import_export_permit_id', $stock_examination_form->import_export_permit_id)->first();
-                $variety = CropVariety::where('id', $has_crop->crop_variety_id)->first();
-        
-                $form->inspector_is_done = 0;
-                $form->crop_variety_id = $variety->id;
+                if($has_crop != null)
+                {
+                    $variety = CropVariety::where('id', $has_crop->crop_variety_id)->first();
+            
+                    $form->inspector_is_done = 0;
+                    $form->crop_variety_id = $variety->id;
+                }
             });
 
             $form->divider();

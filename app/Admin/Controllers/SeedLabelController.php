@@ -3,13 +3,11 @@
 namespace App\Admin\Controllers;
 
 use App\Models\CropVariety;
-use App\Models\MarketableSeed;
 use App\Models\SeedLab;
 use App\Models\Product;
 use App\Models\SeedLabel;
 use App\Models\SeedLabelPackage;
 use App\Models\Utils;
-use Illuminate\Support\MessageBag;
 use Carbon\Carbon;
 use Encore\Admin\Auth\Database\Administrator;
 use Encore\Admin\Controllers\AdminController;
@@ -43,7 +41,8 @@ class SeedLabelController extends AdminController
         if (Admin::user()->isRole('usta')) 
         {
             
-            $grid->model()->where('status', '=', 13);
+            $grid->model()->where('status', '=', 13)
+            ->orWhere('status', '=', 14);
 
         } 
         else if (Admin::user()->isRole('basic-user')) 
@@ -144,7 +143,7 @@ class SeedLabelController extends AdminController
         })->sortable();
 
         $grid->column('quantity', __('Quantity'))->display(function ($var) {
-            return number_format($var);
+            return number_format($var). " Kgs";
         });
 
         $grid->column('status', __('Status'))->display(function ($status) {
@@ -164,6 +163,15 @@ class SeedLabelController extends AdminController
     {
 
         $show = new Show(SeedLabel::findOrFail($id));
+        $seed_label = SeedLabel::findOrFail($id);
+        //delete the notification once a user has viewed the form
+        if(Admin::user()->isRole('basic-user') )
+        {
+            if($seed_label->status == 14 || $seed_label->status == 3)
+            {
+                \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'SeedLabel'])->delete();
+            }
+        }
 
         $model = SeedLabel::findOrFail($id);
         $show->panel()
@@ -214,7 +222,7 @@ class SeedLabelController extends AdminController
         {
             //button link to the show-details form
             //check the status of the form being shown
-            if($model->status == 1 || $model->status == 2 || $model->status == null)
+            if($model->status == 1 || $model->status == 2 || $model->status == null || $model->status == 13)
             {
                 $show->field('id','Action')->unescape()->as(function ($id) 
                 {
@@ -238,21 +246,6 @@ class SeedLabelController extends AdminController
         $form = new Form(new SeedLabel());
         $user = Admin::user();
         $seed_labs = [];
-
-        if(Admin::user()->isRole('basic-user'))
-        {
-            //callback after the form has saved to calculate the total amount by multiplying the total quantity by the price per unit
-            $form->saved(function(Form $form)
-            {
-                $seed_label = $form->seed_label_package_id;
-                $price = SeedLabelPackage::find($seed_label)->package_price;
-                $quantity = $form->quantity;
-                $total_amount = $price * $quantity;
-
-                return  response(' <p class="alert alert-success"> Your total amount is ' . $total_amount . ' Shillings . <a href="/admin/seed-labels"> Ok </a></p> ');
-            });
-
-        }
 
         if ($form->isCreating()) 
         {
@@ -279,77 +272,76 @@ class SeedLabelController extends AdminController
             {
                 return admin_error("Alert", "You don't have any  valid LAB TEST NUMBER. Apply for seed lab to aquire a LAB TEST NUMBER.");
                 
-            }
+            }     
 
-            
+        } 
+
+        $form->saved(function (Form $form) 
+        {
+            return redirect('/admin/seed-labels');
+        });
+       
+        $form->setWidth(8, 4);
+        if (Admin::user()->isRole('basic-user')) 
+        {
+
+             //access the seed labels from the database
+             $_lables = SeedLabelPackage::all();
+
+             $lables = [];
+             foreach ($_lables as $key => $val) 
+             {
+                 $lables[$val->id] = "Package Size: {$val->package_size} Kgs @ : {$val->package_price} UGX";
+             }
+
+             
+
+            //callback when the form is being checked to check the quantity being sent in
+                  
             $form->saving(function ($form) 
             {
                 $seed_lab = SeedLab::find($form->seed_lab_id);
-
                 if (!$seed_lab) 
                 {
-                    dd("seed_label not found");
+                    die("seed_label not found");
                 }
                 if ($form->quantity > $seed_lab->quantity) 
                 {
-                    admin_error("Warning", "You have a less amount of this variety compared to what you have requested for..");
-                    return redirect(admin_url('seed-labels/create'));
+                    return  response(' <p class="alert alert-warning"> You have a less amount of this variety compared to ' . $seed_lab->quantity . 'Kgs that you have requested for. <a href="/admin/seed-labels/create"> Ok </a></p> ');
+                          
                 }
 
                 $form->crop_variety_id = $seed_lab->crop_variety->id;
                 $form->status = 1;
             });
+        
 
-        } 
-        else 
-        {
 
-            $id = request()->route()->parameters['seed_label'];
-            $model = $form->model()->find($id);
-
-            foreach (SeedLab::where([
-                'administrator_id' => $model->administrator_id,
-                'status' => 5
-            ])->get() as $key => $sl) {
-                if ($sl->quantity < 1) {
-                    continue;
-                }
-                $seed_labs[$sl->id] = "Lab Test Number: " . $sl->lot_number . ", CROP: " . $sl->crop_variety->name.", QTY: " . $sl->quantity . " KGs";
-
-            }
-        }
-
-        $form->setWidth(8, 4);
-        if (Admin::user()->isRole('basic-user')) 
-        {
-            
-            $form->saving(function ($form) 
+            //callback after the form has saved to calculate the total amount by multiplying the total quantity by the price per unit
+            $form->saved(function(Form $form)
             {
-                $form->status = 1;
+                $seed_label = $form->seed_label_package_id;
+                $price = SeedLabelPackage::find($seed_label)->package_price;
+                $quantity = $form->quantity;
+                $total_amount = $price * $quantity;
+
+                return  response(' <p class="alert alert-success"> Your total amount is ' . $total_amount . ' Shillings . <a href="/admin/seed-labels"> Ok </a></p> ');
             });
+
+            //form fields
             $form->select('seed_lab_id', __('Select lab test number'))
                 ->options($seed_labs)
                 ->required();
-
-            //access the seed labels from the database
-            $_lables = SeedLabelPackage::all();
-
-            $lables = [];
-            foreach ($_lables as $key => $val) 
-            {
-                $lables[$val->id] = "Package Size: {$val->package_size} Kgs @ : {$val->package_price} UGX";
-            }
-
             $form->select('seed_label_package_id', __('Select Seed label package'))
             ->options($lables)
             ->required();
             $form->hidden('crop_variety_id')->default(1);
             $form->hidden('images')->default("[]");
             $form->hidden('status')->default(1)->attribute('value', '1');
-            $form->text('quantity', __('Quantity'))->attribute('type', 'number')->required();
+            $form->text('quantity', __('Quantity'))->attribute('type', 'number')->required()
+            ->help("The quantity entered shouldnt be more than the quantity you have in stock");
             $form->text('price', __('Enter your selling unit price (Price per KG)'))->attribute('type', 'number')->required();
             $form->image('image', __('Thumbnail Image'))->required();
-            //$form->multipleImage('images', __('Crop gallary'));
             $form->textarea('applicant_remarks', __('Remarks'));
             $form->file('receipt', __('Attach receipt'))->required();
         }
@@ -378,7 +370,6 @@ class SeedLabelController extends AdminController
             {
                    $id = request()->route()->parameters['seed_label'];
                    $model = $form->model()->find($id);
-                   //die($model);
                 if ($model->is_processed) 
                 {
                     die("This form is already processed.");
@@ -398,42 +389,11 @@ class SeedLabelController extends AdminController
                 $new_product->seed_class = $model->seed_lab->seed_class;
                 $new_product->save();
 
-              
-
-                // $new_rec = new MarketableSeed();
-                // $new_rec->administrator_id = $model->administrator_id;
-                // $new_rec->crop_variety_id = $model->crop_variety_id;
-                // $new_rec->seed_label_package_id = $model->seed_label_package_id;
-                // $new_rec->is_deposit = 1;
-                // $new_rec->lab_test_number = $model->seed_lab->lab_test_number;
-                // $new_rec->lot_number = $model->seed_lab->lot_number;
-                // $new_rec->quantity = $model->quantity;
-                // $new_rec->seed_label_id = $model->id;
-                // $new_rec->source = "From seedlab test number: " . $model->seed_lab->lab_test_number;
-                // $new_rec->detail = "From seedlab ID: " . $model->seed_lab->id;
-
-                // if ($new_rec->save()) 
-                // {
-                //     $model->seed_lab->quantity = $model->seed_lab->quantity - $new_rec->quantity;
-                //     if ($model->seed_lab->save())
-                //     {
-                //         $model->is_processed = 1;
-                //         $model->status = 14;
-                //         if ($model->save()) 
-                //         {  // saving labels printed in labels table
-                //             admin_success("Success!", "Label printing was successfully processed.");
-                //             return redirect(admin_url('seed-labels'));
-                //         }
-                //     }
-                // }
-
-                // dd($new_rec);
-                // dd("Usta saving here....");
             });
 
             $form->radio('status', __('Set as printed'))
                 ->options([
-                    '14' => 'Prinited',
+                    '14' => 'Printed',
                 ])
                 ->required();
         }
@@ -452,8 +412,7 @@ class SeedLabelController extends AdminController
             $footer->disableCreatingCheck();
         });
 
-        // $form->number('status', __('Status'))->default(1);
-        // $form->textarea('status_comment', __('Status comment'));
+       
 
         return $form;
     }

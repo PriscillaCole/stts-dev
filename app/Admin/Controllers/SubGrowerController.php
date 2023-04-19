@@ -250,6 +250,14 @@ class SubGrowerController extends AdminController
     protected function detail($id)
     {
         $show = new Show(SubGrower::findOrFail($id));
+        //remove delete from show panels
+        $show->panel()
+            ->tools(function ($tools) use($id) 
+            {
+            
+                $tools->disableDelete();
+            
+            });
         $subgrower = SubGrower::findOrFail($id);
         if(Admin::user()->isRole('basic-user') ){
             if($subgrower->status == 2 || $subgrower->status == 3 || $subgrower->status == 4 || $subgrower->status == 16){
@@ -294,12 +302,12 @@ class SubGrowerController extends AdminController
 
         $show->field('status_comment', __('Status comment'));
  
-        // if (!Admin::user()->isRole('basic-user')){
-        //     //button link to the show-details form
-        //     $show->field('id','Action')->unescape()->as(function ($id) {
-        //         return "<a href='/admin/sub-growers/$id/edit' class='btn btn-primary'>Take Action</a>";
-        //     });
-        // }
+        if (!Admin::user()->isRole('basic-user')){
+            //button link to the show-details form
+            $show->field('id','Action')->unescape()->as(function ($id) {
+                return "<a href='/admin/sub-growers/$id/edit' class='btn btn-primary'>Take Action</a>";
+            });
+        }
         return $show;
     }
 
@@ -311,6 +319,12 @@ class SubGrowerController extends AdminController
     protected function form()
     {
         $form = new Form(new SubGrower());
+
+        //disable delete button
+        $form->tools(function (Form\Tools $tools) {
+            $tools->disableDelete();
+        });
+
         $user = Admin::user();
         $sr4 = Utils::has_valid_sr6();
         if ($form->isCreating()) {
@@ -319,6 +333,11 @@ class SubGrowerController extends AdminController
                 // return redirect(admin_url('planting-returns'));
             }
         }
+
+        //callback to return to table after form has been saved
+        $form->saved(function (Form $form) {
+            return redirect(admin_url('sub-growers'));
+        });
 
         if ($form->isCreating()) {
             $form->hidden('administrator_id')->default($user->id);

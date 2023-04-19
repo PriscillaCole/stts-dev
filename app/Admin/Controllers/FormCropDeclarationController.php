@@ -14,6 +14,7 @@ use Encore\Admin\Form;
 use Encore\Admin\Form\NestedForm;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
+use Encore\Admin\Widgets\Table;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -127,26 +128,73 @@ class FormCropDeclarationController extends AdminController
     protected function detail($id)
     {
         $show = new Show(FormCropDeclaration::findOrFail($id));
+        $model = FormCropDeclaration::findOrFail($id);
         $show->panel()
             ->tools(function ($tools) {
                 $tools->disableEdit();
                 $tools->disableDelete();
             });;
 
-        $show->field('id', __('Id'));
         $show->field('created_at', __('Created at'));
         $show->field('updated_at', __('Updated at'));
-        $show->field('administrator_id', __('Administrator id'));
-        $show->field('planting_return_id', __('Planting return id'));
-        $show->field('crop_variety_id', __('Crop variety'));
+        $show->field('administrator_id', __('Administrator id'))->as(function ($id) {
+            $u = Administrator::find($id);
+            if (!$u)
+                return "-";
+            return $u->name;
+        });
+        
+        $show->field('form_crop_declarations_has_crop_varieties', __('Crops'))
+        ->unescape()
+        ->as(function ($item) 
+        {
+            
+            if (!$this->form_crop_declarations_has_crop_varieties) 
+            {
+                return "None";
+            }
+
+            $headers = ['Crop',  'Category'];
+            $rows = array();
+            foreach ($this->form_crop_declarations_has_crop_varieties as $key => $val) 
+            {
+                
+                $row['crop'] = $val->crop_variety->crop->name;
+                $row['variety'] = $val->crop_variety->name;
+                $rows[] = $row;
+              
+            }
+
+            $table = new Table($headers, $rows);
+            return $table;
+        });
+        
         $show->field('source_of_seed', __('Source of seed'));
         $show->field('field_size', __('Field size'));
         $show->field('seed_rate', __('Seed rate'));
         $show->field('amount', __('Amount'));
         $show->field('payment_receipt', __('Payment receipt'))->file();
-        $show->field('status', __('Status'));
+        $show->field('status', __('Status'))->unescape()->as(function ($status) 
+        {
+
+            return Utils::tell_status($status);
+        });
         $show->field('inspector', __('Inspector'));
         $show->field('status_comment', __('Status comment'));
+
+        if (!Admin::user()->isRole('basic-user'))
+        {
+            //button link to the show-details form
+            //check the status of the form being shown
+            if($model->status == 1 || $model->status == 2 || $model->status == null)
+            {
+            $show->field('id','Action')->unescape()->as(function ($id) 
+                {
+                return "<a href='/admin/form-crop-declarations/$id/edit' class='btn btn-primary'>Take Action</a>";
+            
+                });
+            }
+        }
 
         return $show;
     }
@@ -159,6 +207,11 @@ class FormCropDeclarationController extends AdminController
     protected function form()
     {
         $form = new Form(new FormCropDeclaration());
+
+        //callback after saving to redirect to table
+        $form->saved(function (Form $form) {
+            return redirect(admin_url('form-crop-declarations'));
+        });
 
         if ($form->isCreating()) {
             if (!Utils::can_create_qds()) {
@@ -247,10 +300,9 @@ class FormCropDeclarationController extends AdminController
             $form->display('seed_rate', __('Seed rate'))->required();
 
             $form->divider();
-            $form->radio('status', __('Status'))
+            $form->radio('status', __('Action'))
                 ->options([
-                    '1' => 'Pending',
-                    '2' => 'Under inspection',
+                    '2' => 'Assign Inspector',
                 ])
                 ->required()
                 ->when('2', function (Form $form) {
@@ -266,15 +318,8 @@ class FormCropDeclarationController extends AdminController
                         ->options($_items)
                         ->help('Please select inspector')
                         ->rules('required');
-                })
-                ->when('in', [3, 4], function (Form $form) {
-                    $form->textarea('status_comment', 'Enter status comment (Remarks)')
-                        ->help("Please specify with a comment");
-                })
-                ->when('in', [5, 6], function (Form $form) {
-                    $form->date('valid_from', 'Valid from date?');
-                    $form->date('valid_until', 'Valid until date?');
                 });
+              
         }
 
 

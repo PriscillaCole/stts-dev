@@ -186,7 +186,7 @@ class FormSr4Controller extends AdminController
                 $tools->disableEdit();
                 $tools->disableDelete();
             
-            });;
+            });
 
         $show->field('type', __('Application Category'));
 

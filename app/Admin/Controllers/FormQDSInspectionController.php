@@ -114,6 +114,20 @@ class FormQDSInspectionController extends AdminController
         $show->field('estimated_yield', __('Estimated yield')); 
         $show->field('futher_remarks', __('Futher remarks')); 
         $show->field('qds_number', __('QDS number')); 
+
+        if (!Admin::user()->isRole('basic-user'))
+        {
+            //button link to the show-details form
+            //check the status of the form being shown
+            if($model->status == 1 || $model->status == 2 || $model->status == null)
+            {
+            $show->field('id','Action')->unescape()->as(function ($id) 
+                {
+                return "<a href='/admin/form-crop-declarations/$id/edit' class='btn btn-primary'>Take Action</a>";
+            
+                });
+            }
+        }
       
         return $show;
     }

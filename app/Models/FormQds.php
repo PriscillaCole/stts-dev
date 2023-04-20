@@ -18,8 +18,6 @@ class FormQds extends Model
         return $this->hasMany(QdsHasCrop::class);
     } 
 
-    
-
     protected $fillable = [
         'administrator_id',
         'name_of_applicant',
@@ -35,20 +33,6 @@ class FormQds extends Model
         'signature_of_applicant',
     ];
 
-        //function to send mail
-        public static function sendMail($not)
-        {
-            if($not->group_type == 'Individual'){
-                $receivers = Utils::get_users_by_role_notify($not->role_id);
-                $emails = [];
-                foreach($receivers as $r){
-                    $emails[] = $r->email;
-                } 
-                Mail::to($emails)
-                        ->send(new Notification($not->message, $not->link));
-                   
-            } 
-        }
 
 
     public static function boot()
@@ -111,10 +95,7 @@ class FormQds extends Model
         return [];
     }
     
-    public function comments()
-    {
-        return $this->morphMany(Comment::class,'commentable');
-    }
+   
 }
 
  

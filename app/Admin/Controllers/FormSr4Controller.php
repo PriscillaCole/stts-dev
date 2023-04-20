@@ -44,25 +44,17 @@ class FormSr4Controller extends AdminController
         });
 
         //check if the role is an inspector and has been assigned that form
+        //return an empty table if the inspector has not been assigned any forms
         if (Admin::user()->isRole('inspector'))  
         {
             $grid->model()->where('inspector', '=', Admin::user()->id);
-            //return an empty table if the inspector has not been assigned any forms
-            if (FormSr4::where('inspector', '=', Admin::user()->id)->count() == 0) 
-            { 
-                //return an empty table if the inspector has not been assigned an
-                $grid->model(0);       
-            }
+               
         }
        
         if (Admin::user()->isRole('basic-user')) 
         {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
-            if (!Utils::can_create_form('FormSr4')) 
-            {
-                $grid->disableCreateButton();
-            } 
-
+           
             $grid->actions(function ($actions) 
             {
                 $status = ((int)(($actions->row['status'])));
@@ -84,7 +76,7 @@ class FormSr4Controller extends AdminController
                 }
                 //get last parameter from url
                 if(Utils::check_expiration_date('FormSr4',$this->getKey()))
-                {    
+                {  
                     $actions->add(new Renew(request()->segment(count(request()->segments()))));
                     
                 };
@@ -112,6 +104,8 @@ class FormSr4Controller extends AdminController
         {
             return Carbon::parse($item)->diffForHumans();
         })->sortable();
+
+        $grid->column('type', __('Application Category'))->sortable();
 
         $grid->column('status', __('Status'))->display(function ($status) 
         {
@@ -383,7 +377,7 @@ class FormSr4Controller extends AdminController
 
         if (Admin::user()->isRole('basic-user')) 
         {
-            if(Utils::is_form_halted('FormSr4'))
+            if($form_sr4->status == 3 || $form_sr4->status == 4)
             {
                 $show->field('id','Action')->unescape()->as(function ($id) 
                 {
@@ -495,18 +489,70 @@ class FormSr4Controller extends AdminController
         if ($form->isCreating()) 
         {
     
-            if (!Utils::can_create_sr4()) 
-            {
-                return admin_warning("Warning", "You cannot create a new SR4 form  while still having another PENDING one.");       
-            }
-
-            if (Utils::can_renew_form('FormSr4')) 
-            {
-                return admin_warning("Warning", "You cannot create a new SR4 form  while still having a valid one.");    
-            }
-
             $this->show_fields($form);
         }
+        
+        //callback when saving to check if the type is already in the database
+        $form->saving(function (Form $form) 
+        {
+            $type = $form->type;
+            $user = Auth::user();
+            $form_sr4 = FormSr4::where('type', $type)->where('administrator_id', $user->id)->first();
+            if ($form_sr4) 
+            {
+                
+                    if($form->isEditing())
+                    {
+                        $form = request()->route()->parameters()['form_sr4'];
+                        $formSr4 = FormSr4::find($form);
+                      //count the number of forms with the same type
+                        $count = FormSr4::where('type', $type)->where('administrator_id', $user->id)->count();
+                        if($count > 1)
+                        {
+                           
+                        }
+                        elseif($count == 1)
+                        { return  response(' <p class="alert alert-warning"> You cannot create a new SR4 form  while having PENDING one of the same category. <a href="/admin/form-sr4s"> Go Back </a></p> ');
+                            //check if what is being passed to the form is the same as the one in the database
+                            if($form_sr4->id == $formSr4->id)
+                            {
+                                return true;
+                            }
+                            else
+                            {
+
+                                if(!Utils::can_create_form($form_sr4))
+                                {
+                                    return  response(' <p class="alert alert-warning"> You cannot create a new SR4 form  while having PENDING one of the same category. <a href="/admin/form-sr4s"> Go Back </a></p> ');
+                                }
+                                
+                                //check if its still valid
+                                if (Utils::can_renew_app_form($form_sr4)) 
+                                {
+                                    return  response(' <p class="alert alert-warning"> You cannot create a new SR4 form  while having VALID one of the same category. <a href="/admin/form-sr4s"> Go Back </a></p> ');   
+                                }
+                            }
+                        }
+                        else{
+                             return true;
+                        }
+
+                    }
+                    //check if the status of the form is pending, rejected,halted or accepted
+                    if(!Utils::can_create_form($form_sr4))
+                    {
+                        return  response(' <p class="alert alert-warning"> You cannot create a new SR4 form  while having PENDING one of the same category. <a href="/admin/form-sr4s/create"> Go Back </a></p> ');
+                    }
+                    
+                    //check if its still valid
+                    if (Utils::can_renew_app_form($form_sr4)) 
+                    {
+                        return  response(' <p class="alert alert-warning"> You cannot create a new SR4 form  while having VALID one of the same category. <a href="/admin/form-sr4s/create"> Go Back </a></p> ');   
+                    }
+             
+            }
+                     
+        });
 
         return $form;
     
@@ -523,8 +569,9 @@ class FormSr4Controller extends AdminController
             $tools->disableView();
         });
 
-        $form->setWidth(8, 4);
+        $form->setWidth(8, 4);  
         Admin::style('.form-group  {margin-bottom: 25px;}');
+
         $user = Auth::user();
 
         if ($form->isCreating()) 
@@ -556,7 +603,6 @@ class FormSr4Controller extends AdminController
             $form->text('company_initials', __('Company initials'))->required();
             $form->text('premises_location', __('Premises location'));
             $form->text('years_of_expirience', __('Years of experience'))
-                ->attribute('type', 'number')
                 ->required();
             $form->select('expirience_in', __('Experience in?'))
                 ->options
@@ -615,7 +661,6 @@ class FormSr4Controller extends AdminController
                 ->when('1', function (Form $form) 
                 {
                     $form->text('land_size', 'Specify Land size. (in Acres)')
-                        ->attribute('type', 'number')
                         ->help("Please specify land (in Acres)")
                         ->attribute('min', 1);
                 });
@@ -711,6 +756,8 @@ class FormSr4Controller extends AdminController
                     '1' => 'I Accept',
                 ])
                 ->required();
+
+                
         }
         
         // administrator form fields

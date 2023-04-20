@@ -19,39 +19,230 @@ use App\Mail\Notification;
 
 class Utils
 {
+//Application forms
+//1.generic functions for all application forms
+//check if the status of the form is pending, rejected,halted or accepted
+public static function can_create_form($app_form)
+    {
+            if (!$app_form->valid_from) 
+            {
+                return false;
+            }
 
-    public static function get_notifications($u){
-            if($u == null){
-            return [];
+            if (!$app_form->valid_until) 
+            {
+                return false;
+            }
+
+            $now = time();
+            $then = strtotime($app_form->valid_until);
+
+            if ($now < $then) 
+            {
+                return true;
+            } else 
+            {
+                return false;
+            }
+        
+
+        return true;
+    }
+
+//renew or create a new form after its expired
+public static function can_renew_form($model_name)
+    {
+        $model = "App\\Models\\" . ucfirst($model_name);
+        $recs = $model::where('administrator_id',  Admin::user()->id)->get();
+
+        foreach ($recs as $key => $value) 
+        {
+
+            if ($value->status == 5) 
+            {
+            $now = time();
+            $then = strtotime($value->valid_until);
+                if ($now < $then) 
+                {
+                    return true;
+                } else 
+                {
+                    return false;
+                }
+            }
+            return true;
         }
-        $data1 = [];
-        $done_ids = [];
-        foreach (MyNotification::where('receiver_id',$u->id)->where('status','Unread')
+    }
+
+//check expiration date for all Forms
+public static function check_expiration_date($model_name,$id)
+    {
+            $model = "App\\Models\\" . ucfirst($model_name);
+            $form= $model::find($id);
+                if ($form->status == 5)
+                {
+                    if ($form->valid_until != null && $form->valid_from != null ) 
+                    {
+                        $now = time();
+                        $then = strtotime($form->valid_until);
+
+                        if ($now < $then) 
+                        {
+                                return false;
+                        } 
+                        else 
+                        {
+                            return true;
+                        }
+                    }
+                }
+        return false; 
+    }
+
+//check is form accepted
+public static function is_form_accepted($model_name)
+    {
+        $model = "App\\Models\\" . ucfirst($model_name);
+        $recs = $model::where('administrator_id',  Admin::user()->id)->get();
+        foreach ($recs as $key => $value) 
+        {
+            if($value->status == 5){
+                return true;
+            }
+        }
+    }
+
+//renew or create a new  sr4 form after its expired
+public static function can_renew_app_form($app_form)
+    {
+            if ($app_form->status == 5) 
+            {
+            $now = time();
+            $then = strtotime($app_form->valid_until);
+                if ($now < $then) 
+                {
+                    return true;
+                } else 
+                {
+                    return false;
+                }
+            }
+            return true;
+    }
+
+//2.Form Sr4
+
+//3.Form SR6
+
+//4.Form Qds
+//check if the status of the form is pending, rejected,halted or accepted
+public static function can_create_qds()
+    {
+        $recs = FormQds::where('administrator_id',  Admin::user()->id)->get();
+        foreach ($recs as $key => $value) 
+        {
+
+            if (!$value->valid_from) 
+            {
+                return false;
+            }
+            if (!$value->valid_until) 
+            {
+                return false;
+            }
+
+            $now = time();
+            $then = strtotime($value->valid_until);
+            if ($now < $then) 
+            {
+                return true;
+            } else 
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+
+
+
+
+
+
+
+
+// public static function can_create_sr6()
+// {
+//     $recs = FormSr6::where('administrator_id',  Admin::user()->id)->get();
+//     foreach ($recs as $key => $value) {
+
+//         if ($value->status == 4) {
+//             continue;
+//         }
+
+//         if (!$value->valid_from) {
+//             return false;
+//         }
+//         if (!$value->valid_until) {
+//             return false;
+//         }
+
+//         $now = time();
+//         $then = strtotime($value->valid_until);
+//         if ($now < $then) {
+//             return true;
+//         } else {
+//             return false;
+//         }
+//     }
+//     return true;
+// }
+
+
+
+//system notifications
+public static function get_notifications($u)
+{
+    if($u == null)
+    {
+    return [];
+    }
+    $data1 = [];
+    $done_ids = [];
+    foreach (MyNotification::where('receiver_id',$u->id)->where('status','Unread')
+    ->orderBy('id','desc')
+    ->get() as $key => $value) 
+    { 
+        if(in_array($value->id,$done_ids))
+        {
+            continue;
+        }
+        $done_ids[] = $value->id;
+        $data1[] = $value;
+        # code...
+    }
+
+    foreach($u->roles as $r)
+    {
+        $data2 = MyNotification::where('role_id',$r->id)->where('status','Unread')
         ->orderBy('id','desc')
-        ->get() as $key => $value) { 
-            if(in_array($value->id,$done_ids)){
+        ->get();
+        foreach($data2 as $value)
+        {
+            if(in_array($value->id,$done_ids))
+            {
                 continue;
             }
             $done_ids[] = $value->id;
             $data1[] = $value;
-            # code...
-        }
-        
-        foreach($u->roles as $r){
-            $data2 = MyNotification::where('role_id',$r->id)->where('status','Unread')
-            ->orderBy('id','desc')
-            ->get();
-            foreach($data2 as $value){
-                if(in_array($value->id,$done_ids)){
-                    continue;
-                }
-                $done_ids[] = $value->id;
-                $data1[] = $value;
-            } 
+        } 
 
-        }
-        return $data1;
     }
+    return $data1;
+}
+    
 //get users by role
     public static function get_users_by_role($role_id){
         $sql = "SELECT * FROM admin_role_users,admin_users 
@@ -217,32 +408,7 @@ class Utils
         return false;
     }
 
-    public static function can_create_qds()
-    {
-        $recs = FormQds::where('administrator_id',  Admin::user()->id)->get();
-        foreach ($recs as $key => $value) {
-
-            if ($value->status == 4) {
-                continue;
-            }
-
-            if (!$value->valid_from) {
-                return false;
-            }
-            if (!$value->valid_until) {
-                return false;
-            }
-
-            $now = time();
-            $then = strtotime($value->valid_until);
-            if ($now < $then) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-        return true;
-    }
+   
 
     public static function can_create_qds_declaration()
     {
@@ -460,63 +626,9 @@ class Utils
 
 
 
-    public static function can_create_sr6()
-    {
-        $recs = FormSr6::where('administrator_id',  Admin::user()->id)->get();
-        foreach ($recs as $key => $value) {
 
-            if ($value->status == 4) {
-                continue;
-            }
 
-            if (!$value->valid_from) {
-                return false;
-            }
-            if (!$value->valid_until) {
-                return false;
-            }
-
-            $now = time();
-            $then = strtotime($value->valid_until);
-            if ($now < $then) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static function can_create_sr4()
-    {
-        $recs = FormSr4::where('administrator_id',  Admin::user()->id)->get();
-
-        foreach ($recs as $key => $value) {
-
-            // if (!$value->status == 1) {
-            //     return false;
-            // }
-
-            if (!$value->valid_from) {
-                return false;
-            }
-
-            if (!$value->valid_until) {
-                return false;
-            }
-
-            $now = time();
-            $then = strtotime($value->valid_until);
-
-            if ($now < $then) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        return true;
-    }
+    
     public static function can_create_import()
     {
         $recs = ImportExportPermit::where('administrator_id',  Admin::user()->id)->get();
@@ -586,19 +698,19 @@ class Utils
 
         return true;
     }
-//disable new button
-    public static function can_create_form($model_name){
-        $model = "App\\Models\\" . ucfirst($model_name);
-        $form = $model::where('administrator_id',  Admin::user()->id)->get();
-        //check if the form for that user exists
-        if (count($form) == 0) {
-            return true;
-        } else {
+// //disable new button
+//     public static function can_create_form($model_name){
+//         $model = "App\\Models\\" . ucfirst($model_name);
+//         $form = $model::where('administrator_id',  Admin::user()->id)->get();
+//         //check if the form for that user exists
+//         if (count($form) == 0) {
+//             return true;
+//         } else {
                     
-            return false;
+//             return false;
                 
-                }
-        }
+//                 }
+//         }
 
 //function to send notifications
 public static function send_notification($m, $model_name, $entity)
@@ -940,27 +1052,7 @@ public static function sendMail($not)
 
 
 
-//renew or create a new form after its expired
-public static function can_renew_form($model_name){
-    $model = "App\\Models\\" . ucfirst($model_name);
-    $recs = $model::where('administrator_id',  Admin::user()->id)->get();
 
-    foreach ($recs as $key => $value) {
-
-        if ($value->status == 5) {
-    
-        $now = time();
-        $then = strtotime($value->valid_until);
-
-            if ($now < $then) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-    return true;
-}
-}
 
 public static function can_renew_eform($model_name){
     $model = "App\\Models\\" . ucfirst($model_name);
@@ -1012,49 +1104,22 @@ public static function can_renew_iform($model_name){
 
 
 
- //check expiration date for all Forms
-    public static function check_expiration_date($model_name,$id){
-        $model = "App\\Models\\" . ucfirst($model_name);
-        $form= $model::find($id);
-            if ($form->status == 5){
 
-                if ($form->valid_until != null && $form->valid_from != null ) {
-        
-                $now = time();
-                $then = strtotime($form->valid_until);
+// //check if form is rejected
+// public static function is_form_halted($model_name)
+// {
+//     $model = "App\\Models\\" . ucfirst($model_name);
+//     $recs = $model::where('administrator_id',  Admin::user()->id)->get();
+//     foreach ($recs as $key => $value) 
+//     {
+//         //check if the status is rejected or halted
+//         if($value->status == 3){
+//             return true;
+//         }
+//     }
+// }
 
-                if ($now < $then) {
-                        return false;
-                } 
-                else {
-                    return true;
-                }
-            }
-        }
-    return false; 
-}
-//check if form is rejected
-public static function is_form_halted($model_name){
-    $model = "App\\Models\\" . ucfirst($model_name);
-    $recs = $model::where('administrator_id',  Admin::user()->id)->get();
-    foreach ($recs as $key => $value) {
-        //check if the status is rejected or halted
-        if($value->status == 3){
-            return true;
-        }
-    }
-}
 
-//check is form accepted
-public static function is_form_accepted($model_name){
-    $model = "App\\Models\\" . ucfirst($model_name);
-    $recs = $model::where('administrator_id',  Admin::user()->id)->get();
-    foreach ($recs as $key => $value) {
-        if($value->status == 5){
-            return true;
-        }
-  }
-}
 
 //check if the recommendation has been updated
 public static function is_recommendation_updated($model_name){

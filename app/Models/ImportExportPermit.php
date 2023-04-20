@@ -97,10 +97,6 @@ class ImportExportPermit extends Model
             // ... code here
         });
     } 
-    //relationship with comments
-    public function comments()
-    {
-        return $this->morphMany(Comment::class,'commentable');
-    }
+  
 
 }

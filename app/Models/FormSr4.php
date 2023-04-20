@@ -21,10 +21,9 @@ use Encore\Admin\Auth\Database\Administrator;
 use App\Mail\Notification;
 
 class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
-// class FormSr4 extends  Model
+
 {
     use Authenticatable,
-        // HasPermissions,
         DefaultDatetimeFormat,
         HasFactory,
         Notifiable
@@ -65,17 +64,19 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
 
 
  
-        self::updating(function($model){
-            if(
-                Admin::user()->isRole('basic-user')
-            ){
+        self::updating(function($model)
+        {
+            if( Admin::user()->isRole('basic-user') )
+            {
                 $model->status = 1;
                 $model->inspector = null;
                 return $model;
             } 
             
-            if(Admin::user()->isRole('inspector')){
-                if($model->status == 5){    
+            if(Admin::user()->isRole('inspector'))
+            {
+                if($model->status == 5)
+                {    
                     if(
                         $model->valid_from == null ||
                         strlen($model->valid_from) < 4 ||
@@ -91,23 +92,27 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
 
         });
 
-        self::created(function ($model) {
+        self::created(function ($model) 
+        {
 
             Utils::send_notification($model, 'FormSr4', request()->segment(count(request()->segments())));
                
         });
         
 
-        self::updated(function ($m) {
+        self::updated(function ($m) 
+        {
 
             Utils::update_notification($m, 'FormSr4', request()->segment(count(request()->segments())-1));
   
         });
 
-        self::deleting(function ($model) {
+        self::deleting(function ($model) 
+        {
         });
 
-        self::deleted(function ($model) {
+        self::deleted(function ($model) 
+        {
             // ... code here
         });
     }
@@ -133,8 +138,5 @@ class FormSr4 extends  Model implements AuthenticatableContract, JWTSubject
         return [];
     }
 
-    public function comments()
-    {
-        return $this->morphMany(Comment::class,'commentable');
-    }
+   
 }

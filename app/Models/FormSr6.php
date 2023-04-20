@@ -21,14 +21,19 @@ use App\Mail\Notification;
 class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
 {
     use Authenticatable,
-        // HasPermissions,
         DefaultDatetimeFormat,
         HasFactory,
         Notifiable;
 
+        
+    public function form_sr6_has_crops()
+    {
+        return $this->hasMany(FormSr6HasCrop::class);
+    } 
+
+
     protected $fillable = [
         'administrator_id',
-        'dealers_in',
         'type',
         'name_of_applicant',
         'address',
@@ -44,34 +49,22 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
         'signature_of_applicant',
     ];
 
-        //function to send mail
-        public static function sendMail($not)
-        {
-            if($not->group_type == 'Individual'){
-                $receivers = Utils::get_users_by_role_notify($not->role_id);
-                $emails = [];
-                foreach($receivers as $r){
-                    $emails[] = $r->email;
-                } 
-                Mail::to($emails)
-                        ->send(new Notification($not->message, $not->link));
-                   
-            } 
-        }
-
     public static function boot()
     {
         $user = Auth::user();
         
         parent::boot(); 
 
-        self::creating(function($model){
+        self::creating(function($model)
+        {
             // code here            
         });
 
-        self::created(function ($model) {
+        self::created(function ($model) 
+        {
                 // Check if the grower_number is already taken
-                while (static::where('grower_number', $model->grower_number)->exists()) {
+                while (static::where('grower_number', $model->grower_number)->exists()) 
+                {
                     // Generate a new unique value for the grower_number field
                     $model->grower_number = "SG" ."/". date('Y') ."/". mt_rand(10000000, 99999999);
                 }
@@ -81,7 +74,8 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
         });
  
 
-        self::updating(function($model){
+        self::updating(function($model)
+        {
             if(
                 Admin::user()->isRole('basic-user')
             ){
@@ -105,19 +99,6 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
         });
     }
 
- 
-    public function crops()
-    {
-        return $this->belongsToMany(Crop::class, 'crop_id');
-    }
-
-    
-    public function form_sr6_has_crops()
-    {
-        return $this->hasMany(FormSr6HasCrop::class, 'form_sr6_id');
-    }
-
-
     // the jwt auth to map this model to the jwt rest api token authentication
 
     /**
@@ -125,7 +106,8 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
      *
      * @return mixed
      */
-    public function getJWTIdentifier() {
+    public function getJWTIdentifier() 
+    {
         return $this->getKey();
     }
 
@@ -134,12 +116,9 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
      *
      * @return array
      */
-    public function getJWTCustomClaims() {
+    public function getJWTCustomClaims() 
+    {
         return [];
     }
-    //morph many relationship for comments
-    public function comments()
-    {
-        return $this->morphMany(Comment::class,'commentable');
-    }
+   
 }

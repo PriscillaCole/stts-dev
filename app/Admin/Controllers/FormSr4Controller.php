@@ -512,7 +512,8 @@ class FormSr4Controller extends AdminController
                            
                         }
                         elseif($count == 1)
-                        { return  response(' <p class="alert alert-warning"> You cannot create a new SR4 form  while having PENDING one of the same category. <a href="/admin/form-sr4s"> Go Back </a></p> ');
+                        { 
+                            return  response(' <p class="alert alert-warning"> You cannot create a new SR4 form  while having PENDING one of the same category. <a href="/admin/form-sr4s"> Go Back </a></p> ');
                             //check if what is being passed to the form is the same as the one in the database
                             if($form_sr4->id == $formSr4->id)
                             {

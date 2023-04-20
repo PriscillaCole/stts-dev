@@ -165,6 +165,30 @@ public static function can_create_qds()
     }
 
 
+//5.Import_forms
+public static function has_valid_sr4($application_category)
+    {
+        $recs = FormSr4::where('administrator_id',  Admin::user()->id)
+                         ->where('type', $application_category)->get();
+        foreach ($recs as $key => $value) 
+        {
+            if (!$value->valid_from) 
+            {
+                return null;
+            }
+            if (!$value->valid_until) 
+            {
+                return null;
+            }
+            $now = time();
+            $then = strtotime($value->valid_until);
+            if ($now < $then) {
+                return $value;
+            }
+        }
+        return null;
+    }
+
 
 
 
@@ -357,24 +381,6 @@ public static function get_notifications($u)
         return null;
     }
 
-    public static function has_valid_sr4()
-    {
-        $recs = FormSr4::where('administrator_id',  Admin::user()->id)->get();
-        foreach ($recs as $key => $value) {
-            if (!$value->valid_from) {
-                return null;
-            }
-            if (!$value->valid_until) {
-                return null;
-            }
-            $now = time();
-            $then = strtotime($value->valid_until);
-            if ($now < $then) {
-                return $value;
-            }
-        }
-        return null;
-    }
 
 
     // public static function has_valid_qds()
@@ -1191,18 +1197,7 @@ public static function check_order_status()
 }
 
 
-//check the selected  formSr4 application category selected by a user
-public static function check_application_category(){
 
-    $recs = FormSr4::where('administrator_id',  Admin::user()->id)->get();
-    foreach ($recs as $key => $value) {
-        if($value->type != null){
-            $application_category = $value->type;
-            return $application_category;
-        
-    }
-}
-}
 
 
     public static function tell_order_status($status)

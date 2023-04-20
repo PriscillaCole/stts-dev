@@ -398,11 +398,7 @@ class FormSr6Controller extends AdminController
                         $formSr6 = FormSr6::find($form);
                       //count the number of forms with the same type
                         $count = FormSr6::where('type', $type)->where('administrator_id', $user->id)->count();
-                        if($count > 1)
-                        {
-                            return  response(' <p class="alert alert-warning"> You cannot create a new SR6 form  while having PENDING one of the same category. <a href="/admin/form-sr6s"> Go Back </a></p> ');
-                        }
-                        elseif($count == 1)
+                        if($count)
                         {
                             //check if what is being passed to the form is the same as the one in the database
                             if($form_sr6->id == $formSr6->id)
@@ -424,8 +420,9 @@ class FormSr6Controller extends AdminController
                                 }
                             }
                         }
-                        else{
-                             return true;
+                        else
+                        {
+                            return response(' <p class="alert alert-danger">Form Not Found </p>');
                         }
 
                     }
@@ -438,7 +435,7 @@ class FormSr6Controller extends AdminController
                     //check if its still valid
                     if (Utils::can_renew_app_form($form_sr6)) 
                     {
-                        die('hi');
+                        
                         return  response(' <p class="alert alert-warning"> You cannot create a new SR6 form  while having VALID one of the same category. <a href="/admin/form-sr6s/create"> Go Back </a></p> ');   
                     }
              

@@ -29,7 +29,6 @@ class ImportExportPermit extends Model
         'phytosanitary_certificate',
         'import_form_certificate_type',
         'crop_category',
-
         'national_seed_board_reg_num',
         'is_import',
     ];

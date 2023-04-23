@@ -430,6 +430,7 @@ class FormSr6Controller extends AdminController
                     if(!Utils::can_create_form($form_sr6))
                     {
                         return  response(' <p class="alert alert-warning"> You cannot create a new SR6 form  while having PENDING one of the same category. <a href="/admin/form-sr6s/create"> Go Back </a></p> ');
+
                     }
                     
                     //check if its still valid
@@ -442,8 +443,7 @@ class FormSr6Controller extends AdminController
             }
                      
         });
-
-        
+  
 
         $form->disableCreatingCheck();
         $form->tools(function (Form\Tools $tools) 

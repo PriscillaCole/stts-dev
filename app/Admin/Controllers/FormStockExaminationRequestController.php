@@ -19,7 +19,9 @@ use Encore\Admin\Facades\Admin;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
 
 class FormStockExaminationRequestController extends AdminController
 {
@@ -167,7 +169,8 @@ class FormStockExaminationRequestController extends AdminController
         }
         $show->field('form_qds_id', __('Form qds id'));
        // $show->field('field_size', __('Field size'));
-        if ($stockexam->import_export_permit_id == null) {
+        if ($stockexam->import_export_permit_id == null) 
+        {
             $show->text('field_size', __('Enter field size (in Acres)'));
             
         }
@@ -188,14 +191,17 @@ class FormStockExaminationRequestController extends AdminController
         //$show->field('inspector', __('Inspector'));
         $show->field('status_comment', __('Status comment'));
 
-        if (!Admin::user()->isRole('basic-user')){
+        if (!Admin::user()->isRole('basic-user'))
+        {
             //button link to the show-details form
             //check the status of the form being shown
-            if($stockexam->status == 1 || $stockexam->status == 2 || $stockexam->status == null){
-            $show->field('id','Action')->unescape()->as(function ($id) {
-                return "<a href='/admin/form-stock-examination-requests/$id/edit' class='btn btn-primary'>Take Action</a>";
-            });
-        }
+            if($stockexam->status == 1 || $stockexam->status == 2 || $stockexam->status == null)
+            {
+                $show->field('id','Action')->unescape()->as(function ($id) 
+                {
+                    return "<a href='/admin/form-stock-examination-requests/$id/edit' class='btn btn-primary'>Take Action</a>";
+                });
+            }
         }
     
           
@@ -244,20 +250,20 @@ class FormStockExaminationRequestController extends AdminController
         if (Admin::user()->isRole('basic-user')) 
         {
             //get crop variety from the import permit id when form is saving
-            $form->saving(function (Form $form)
-            {
-                if ($form->import_export_permit_id != null) 
-                {
-                    $has_crop = ImportExportPermitsHasCrops::where('import_export_permit_id',$form->import_export_permit_id)->first();
-                    $variety = CropVariety::where('id', $has_crop->crop_variety_id)->first();
-                    $form->crop_variety_id = $variety->id;
-                }
-                else
-                {
-                    $form->crop_variety_id = 3;
-                }
+            // $form->saving(function (Form $form)
+            // {
+            //     if ($form->import_export_permit_id != null) 
+            //     {
+            //         $has_crop = ImportExportPermitsHasCrops::where('import_export_permit_id',$form->import_export_permit_id)->first();
+            //         $variety = CropVariety::where('id', $has_crop->crop_variety_id)->first();
+            //         $form->crop_variety_id = $variety->id;
+            //     }
+            //     else
+            //     {
+            //         $form->crop_variety_id = 3;
+            //     }
                 
-            });
+            // });
     
 
             $form->radio('examination_category', __('Select examination category'))
@@ -301,11 +307,43 @@ class FormStockExaminationRequestController extends AdminController
 
                     if (count($import_permits) >= 1) 
                     {
+                        // $form->select('import_export_permit_id', __('Select Import Permit'))
+                        // ->options($import_permits);
+                        // $form->select('crop_variety_id', __('Crop variety'));
+                        // 
+                       
                         $form->select('import_export_permit_id', __('Select Import Permit'))
-                        ->options($import_permits);
-                        $form->textarea('remarks', __('Enter remarks'));
+                        ->options($import_permits)
+                        ->attribute('id', 'import-permit-select');
+                        $form->select('crop_variety_id', __('Crop variety'))
+                       ->attribute('id', 'crop-variety-select');
+                       $form->textarea('remarks', __('Enter remarks'));
+                    
+                        
                     }
-                
+                    Admin::script('
+                    $(document).ready(function() {
+                        $("#import-permit-select").change(function() {
+                            var permitId = $(this).val();
+                            
+                            $.ajax({
+                                url: "/crop_varieties/" + permitId,
+                                method: "GET",
+                                success: function(data) {
+                                    var cropVarieties = $("#crop-variety-select");
+                                    
+                                    cropVarieties.empty();
+                                    
+                                    for (var i = 0; i < data.length; i++) {
+                                        cropVarieties.append("<option value=\'" + data[i].id + "\'>" + data[i].text + "</option>");
+                                    }
+                                }
+                            });
+                        });
+                    });
+                    ');
+                    
+                    
                 }
 
             })    // end when 1
@@ -406,7 +444,7 @@ class FormStockExaminationRequestController extends AdminController
 
             $user = Auth::user();
             $form->hidden('administrator_id', __('Administrator id'))->value($user->id); 
-            $form->hidden('crop_variety_id', __('crop_variety_id'));
+        
         }
 
      //Admin form functionalities
@@ -535,11 +573,13 @@ class FormStockExaminationRequestController extends AdminController
                 });
         }
 
-        $form->tools(function (Form\Tools $tools) {
+        $form->tools(function (Form\Tools $tools) 
+        {
             $tools->disableList();
             $tools->disableDelete();
         });
-        $form->footer(function ($footer) {
+        $form->footer(function ($footer) 
+        {
             $footer->disableReset();
             $footer->disableViewCheck();
             $footer->disableEditingCheck();
@@ -547,4 +587,28 @@ class FormStockExaminationRequestController extends AdminController
         });
         return $form;
     }
+
+    public function crop_varieties($permitId)
+    {
+        // Retrieve the crop varieties based on the selected import permit
+        
+        $has_crops = ImportExportPermitsHasCrops::where('import_export_permit_id', $permitId)->get();
+        $crop_varieties = [];
+        
+        foreach ($has_crops as $crop) {
+            $crop_varieties[] = ['id' => $crop->crop_variety_id, 'text' => CropVariety::where('id', $crop->crop_variety_id)->first()->name];
+        }
+        
+        return response()->json($crop_varieties);
+    }
+    
+    
+
+
+    
+    
+
+  
+    
+
 }

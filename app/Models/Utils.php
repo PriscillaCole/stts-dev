@@ -96,6 +96,7 @@ public static function check_expiration_date($model_name,$id)
                         }
                     }
                 }
+
         return false; 
     }
 
@@ -112,7 +113,7 @@ public static function is_form_accepted($model_name)
         }
     }
 
-//renew or create a new  sr4 form after its expired
+//renew or create a new  form after its expired
 public static function can_renew_app_form($app_form)
     {
             if ($app_form->status == 5) 
@@ -130,14 +131,15 @@ public static function can_renew_app_form($app_form)
             return true;
     }
 
-//2.Form Sr4
+//2.Form_Sr4_functions
 
-//3.Form SR6
+//3.Form_SR6_functions
 
-//4.Form Qds
+//4.Form_Qds_functions
 //check if the status of the form is pending, rejected,halted or accepted
 public static function can_create_qds()
     {
+
         $recs = FormQds::where('administrator_id',  Admin::user()->id)->get();
         foreach ($recs as $key => $value) 
         {
@@ -165,29 +167,94 @@ public static function can_create_qds()
     }
 
 
-//5.Import_forms
-public static function has_valid_sr4($application_category)
+//5.Import_form_functions    
+//check if the status of the form is pending, rejected,halted or accepted,and of type import before 
+//sumbitting
+public static function can_create_import($import_permit)
     {
-        $recs = FormSr4::where('administrator_id',  Admin::user()->id)
-                         ->where('type', $application_category)->get();
-        foreach ($recs as $key => $value) 
+      
+            if ($import_permit->is_import == 1 ) 
+            {
+                    if ($import_permit->status == 4) 
+                    {
+                        return true;
+                    }
+                    if (!$import_permit->valid_from) 
+                    {
+                        return false;
+                    }
+
+                    if (!$import_permit->valid_until) 
+                    {
+                        return false;
+                    }
+
+                    $now = time();
+                    $then = strtotime($import_permit->valid_until);
+
+                    if ($now < $then) 
+                    {
+                        return true;
+                    } else 
+                    {
+                        return false;
+                    }
+            }
+
+        return true;
+    }
+
+//renew or create a new import form after its expired
+public static function can_renew_iform($import_permit)
+    {
+        if ($import_permit->is_import == 1 )
         {
-            if (!$value->valid_from) 
+            if ($import_permit->status == 5) 
             {
-                return null;
-            }
-            if (!$value->valid_until) 
-            {
-                return null;
-            }
-            $now = time();
-            $then = strtotime($value->valid_until);
-            if ($now < $then) {
-                return $value;
+        
+                $now = time();
+                $then = strtotime($import_permit->valid_until);
+    
+                if ($now < $then) 
+                {
+                    return true;
+                } else {
+                    return false;
+                }
             }
         }
-        return null;
+          return false;
     }
+
+
+
+    // public static function can_renew_iform($import_permit)
+    // {
+    //     $model = "App\\Models\\" . ucfirst($model_name);
+    //     $recs = ImportExportPermit::where('administrator_id', '=',  Admin::user()->id)
+    //     ->where('is_import', '!=', 0)
+    //     ->get();
+    
+    //     foreach ($recs as $key => $value) 
+    //     {
+    
+    //         if ($value->status == 5) 
+    //         {
+        
+    //         $now = time();
+    //         $then = strtotime($value->valid_until);
+    
+    //             if ($now < $then) 
+    //             {
+    //                 return true;
+    //             } else {
+    //                 return false;
+    //             }
+    //         }
+    //     }
+    //       return false;
+    // }
+
 
 
 
@@ -635,41 +702,7 @@ public static function get_notifications($u)
 
 
     
-    public static function can_create_import()
-    {
-        $recs = ImportExportPermit::where('administrator_id',  Admin::user()->id)->get();
-
-        foreach ($recs as $key => $value) {
-
-            // if (!$value->status == 1) {
-            //     return false;
-            // }
-    if ($value->is_import == 1 ) {
-            if ($value->status == 4) {
-                return true;
-            }
-            if (!$value->valid_from) {
-                return false;
-            }
-
-            if (!$value->valid_until) {
-                return false;
-            }
-
-            $now = time();
-            $then = strtotime($value->valid_until);
-
-            if ($now < $then) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
-        return true;
-    }
-
+   
     public static function can_create_export()
     {
         $recs = ImportExportPermit::where('administrator_id',  Admin::user()->id)->get();
@@ -836,7 +869,7 @@ public static function update_notification($m, $model_name, $entity)
             $not->action_status_to_make_done = '[]';
             $not->save();
     
-            self::sendMail($not); 
+            //self::sendMail($not); 
             }
         }
 
@@ -1085,28 +1118,7 @@ public static function can_renew_eform($model_name){
 
 
 
-public static function can_renew_iform($model_name){
-    $model = "App\\Models\\" . ucfirst($model_name);
-    $recs = ImportExportPermit::where('administrator_id', '=',  Admin::user()->id)
-    ->where('is_import', '!=', 0)
-    ->get();
 
-    foreach ($recs as $key => $value) {
-
-        if ($value->status == 5) {
-    
-        $now = time();
-        $then = strtotime($value->valid_until);
-
-            if ($now < $then) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-     }
-      return false;
-   }
 
 
 

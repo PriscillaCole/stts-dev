@@ -130,6 +130,7 @@ class ImportExportPermitController extends AdminController
                 return Carbon::parse($item)->diffForHumans();
             })->sortable();
         $grid->column('name', __('Name'));
+        $grid->column('type', __('Application Category'));
         $grid->column('telephone', __('Telephone'));
         $grid->column('quantiry_of_seed', __('Quantity of seed'));
         $grid->column('ista_certificate', __('Type Of Certificate'))->sortable();
@@ -179,6 +180,7 @@ class ImportExportPermitController extends AdminController
             {
                 \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'ImportExportPermit'])->delete();
             }
+
         }
 
         $show = new Show(ImportExportPermit::findOrFail($id));
@@ -341,22 +343,7 @@ class ImportExportPermitController extends AdminController
             }
         }
 
-        if ($form->isCreating()) 
-        {
-          //check the status of the form before allowing a user to create a new one
-            if (!Utils::can_create_import()) 
-            {
-                return admin_warning("Warning", "You cannot create a new import permit request form  while still having a PENDING one.");
-                
-            }
-            if (Utils::can_renew_iform('ImportExportPermit')) 
-            {
-                return admin_warning("Warning", "You cannot create a new import form  while still having a valid one.");
-
-            }
-
-         
-        }
+    
          // callback after save
         $form->saved(function (Form $form) 
         {
@@ -402,22 +389,104 @@ class ImportExportPermitController extends AdminController
         if (Admin::user()->isRole('basic-user')) 
         {
 
-            //check if there is a valid sr4 for the selected application type
-            $form->saving(function (Form $form) 
+
+            if($form->isEditing())
             {
+          
+                $form->saving(Function(Form $form){
+                    $user = Auth::user();
+                    $form_id = request()->route()->parameters()['import_export_permit'];
+                    $import = ImportExportPermit::where('type', $form->type)->where('administrator_id', $user->id)->first();
+                    $import_permit = ImportExportPermit::find($form_id);
+                    $count = ImportExportPermit::where('type', $form->type)->where('administrator_id', $user->id)->count();
+                    if($count)
+                    {
+                        //check if what is being passed to the form is the same as the one in the database
+                        if($import->id == $import_permit->id)
+                        {
+                                return true;          
+                        }
 
-                $form_sr4 = FormSr4::where('administrator_id',  Admin::user()->id)->where('valid_until','>=', Carbon::now())->where('type', $form->type)->first();
+                        else
+                        {
+    
+                            if(!Utils::can_create_import($import))
+                            {
+                                return  response(' <p class="alert alert-warning"> You cannot create a new import-export-permit form  while having PENDING one of the same category. <a href="/admin/import-export-permits"> Go Back </a></p> ');
+                            }
+                            
+                            //check if its still valid
+                            if (Utils::can_renew_iform($import)) 
+                            {
+                                return  response(' <p class="alert alert-warning"> You cannot create a new import-export-permits form  while having VALID one of the same category. <a href="/admin/import-export-permits"> Go Back </a></p> ');   
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return response(' <p class="alert alert-danger">Form Not Found </p>');
+                    }
+                });
+                //count the number of forms with the same type
+               
 
-                if ($form_sr4 == null)
+            }
+
+            if($form->isCreating())
+            {
+             
+                //check if there is a valid sr4 for the selected application type
+                $form->saving(function (Form $form) 
                 {
-                    return  response(' <p class="alert alert-warning">You do not have a valid SR4 of the selected type. <a href="/admin/import-export-permits"> Go Back </a></p> ');     
-                }
-                else
-                {
-                    $form->national_seed_board_reg_num = $form_sr4->seed_board_registration_number;
-                }
 
-            });
+                
+                        $form_sr4 = FormSr4::where('administrator_id',  Admin::user()->id)->where('valid_until','>=', Carbon::now())->where('type', $form->type)->first();
+
+                        if ( $form->type != 'Researchers' &&  !$form_sr4)
+                        {
+                            return  response(' <p class="alert alert-warning">You do not have a valid SR4 of the selected type. <a href="/admin/import-export-permits"> Go Back </a></p> ');     
+                        }
+                        else
+                        {
+                            $type = $form->type;
+                            $user = Auth::user();
+                            $import = ImportExportPermit::where('type', $type)->where('administrator_id', $user->id)->first();
+                            if ($import) 
+                            {
+                                
+                                
+                                    //check if the status of the form is pending, rejected,halted or accepted
+                                    if(!Utils::can_create_import($import))
+                                    {
+                                        return  response(' <p class="alert alert-warning"> You cannot create a new import-export-permits form  while having PENDING one of the same category. <a href="/admin/import-export-permits/create"> Go Back </a></p> ');
+                
+                                    }
+                                    
+                                    //check if its still valid
+                                    if (Utils::can_renew_iform($import)) 
+                                    {
+                                        
+                                        return  response(' <p class="alert alert-warning"> You cannot create a new import-export-permits form  while having VALID one of the same category. <a href="/admin/import-export-permits/create"> Go Back </a></p> ');   
+                                    }
+                            
+                            }
+
+                            //function to set the category to 'yes' only when the form is being saved the first time
+                
+                            if($form->type != 'Researchers')
+                            {
+                                $form->national_seed_board_reg_num = $form_sr4->seed_board_registration_number;
+                            }
+                            else
+                            {
+                                $form->national_seed_board_reg_num = 'N/A';
+                            }
+                        
+                            
+                    }
+
+                });
+            }
                 
             
             $form->radio('type', __('Application Category?'))
@@ -441,7 +510,6 @@ class ImportExportPermitController extends AdminController
         //admin form fields
         if (Admin::user()->isRole('admin')) 
         {
-            //$form->file('ista_certificate', __('Ista certificate'))->required();
             $form->text('name', __('Name of applicant'))->default($user->name)->readonly();
             $form->text('telephone', __('Telephone'))->readonly();
             $form->text('address', __('Address'))->readonly();
@@ -516,7 +584,6 @@ class ImportExportPermitController extends AdminController
     public function show_fields($form)
     {
         $user = Auth::user();
-        $sr4 = Utils::has_valid_sr4('hi');
         $form->text('name', __('Applicant Name'))->default($user->name)->readonly();
         $form->text('address', __('Postal Address'))->required();
         $form->text('telephone', __('Phone Number'))->required(); 

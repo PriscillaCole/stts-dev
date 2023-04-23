@@ -2,10 +2,8 @@
 
 namespace App\Admin\Controllers;
 
-use App\Models\Crop;
 use App\Models\CropVariety;
 use App\Models\FormSr4;
-use App\Models\FormSr6;
 use App\Models\ImportExportPermit;
 use App\Models\Utils;
 use Carbon\Carbon;
@@ -18,7 +16,6 @@ use Encore\Admin\Grid;
 use Encore\Admin\Show;
 use Encore\Admin\Widgets\Table;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
 use App\Admin\Actions\Post\Renew;
 
 
@@ -50,7 +47,8 @@ class ImportExportPermitController extends AdminController
         });
 
         //customise filter
-        $grid->filter(function($filter){
+        $grid->filter(function($filter)
+        {
 
             // Remove the default id filter
             $filter->disableIdFilter();
@@ -79,20 +77,12 @@ class ImportExportPermitController extends AdminController
             {
                 $status = ((int)(($actions->row['status'])));
                 if (
-                    $status == 2 ||
-                    $status == 5 ||
-                    $status == 4 ||
-                    $status == 3 ||
-                    $status == 6
+                    $status != null
                 ) {
                     $actions->disableEdit();
                     $actions->disableDelete();
                 }
-                if (
-                    $status == 3
-                ){
-                    $actions->disableDelete();
-                }
+               
                 if(Utils::check_expiration_date('ImportExportPermit',$this->getKey()))
                 {
                         
@@ -106,7 +96,6 @@ class ImportExportPermitController extends AdminController
             $grid->disableCreateButton();
             $grid->actions(function ($actions) 
             {
-                $status = ((int)(($actions->row['status'])));
                 $actions->disableDelete();
                 $actions->disableEdit();
                
@@ -343,16 +332,6 @@ class ImportExportPermitController extends AdminController
             }
         }
 
-    
-         // callback after save
-        $form->saved(function (Form $form) 
-        {
-        //return to table view controller after saving the form data 
-            return redirect(admin_url('import-export-permits'));
-        });
-
-
-      
 
         //customize the form features
 
@@ -393,12 +372,13 @@ class ImportExportPermitController extends AdminController
             if($form->isEditing())
             {
           
-                $form->saving(Function(Form $form){
+                $form->saving(Function(Form $form)
+                {
                     $user = Auth::user();
                     $form_id = request()->route()->parameters()['import_export_permit'];
-                    $import = ImportExportPermit::where('type', $form->type)->where('administrator_id', $user->id)->first();
+                    $import = ImportExportPermit::where('type', $form->type)->where('administrator_id', $user->id)->where('is_import', 1)->first();
                     $import_permit = ImportExportPermit::find($form_id);
-                    $count = ImportExportPermit::where('type', $form->type)->where('administrator_id', $user->id)->count();
+                    $count = ImportExportPermit::where('type', $form->type)->where('administrator_id', $user->id)->where('is_import', 1)->count();
                     if($count)
                     {
                         //check if what is being passed to the form is the same as the one in the database
@@ -416,7 +396,7 @@ class ImportExportPermitController extends AdminController
                             }
                             
                             //check if its still valid
-                            if (Utils::can_renew_iform($import)) 
+                            if (Utils::can_renew_permit($import)) 
                             {
                                 return  response(' <p class="alert alert-warning"> You cannot create a new import-export-permits form  while having VALID one of the same category. <a href="/admin/import-export-permits"> Go Back </a></p> ');   
                             }
@@ -450,7 +430,7 @@ class ImportExportPermitController extends AdminController
                         {
                             $type = $form->type;
                             $user = Auth::user();
-                            $import = ImportExportPermit::where('type', $type)->where('administrator_id', $user->id)->first();
+                            $import = ImportExportPermit::where('type', $type)->where('administrator_id', $user->id)->where('is_import', 1)->first();
                             if ($import) 
                             {
                                 
@@ -458,15 +438,15 @@ class ImportExportPermitController extends AdminController
                                     //check if the status of the form is pending, rejected,halted or accepted
                                     if(!Utils::can_create_import($import))
                                     {
-                                        return  response(' <p class="alert alert-warning"> You cannot create a new import-export-permits form  while having PENDING one of the same category. <a href="/admin/import-export-permits/create"> Go Back </a></p> ');
+                                        return  response(' <p class="alert alert-warning"> You cannot create a new import permit form  while having PENDING one of the same category. <a href="/admin/import-export-permits/create"> Go Back </a></p> ');
                 
                                     }
                                     
                                     //check if its still valid
-                                    if (Utils::can_renew_iform($import)) 
+                                    if (Utils::can_renew_permit($import)) 
                                     {
                                         
-                                        return  response(' <p class="alert alert-warning"> You cannot create a new import-export-permits form  while having VALID one of the same category. <a href="/admin/import-export-permits/create"> Go Back </a></p> ');   
+                                        return  response(' <p class="alert alert-warning"> You cannot create a new import permit form  while having VALID one of the same category. <a href="/admin/import-export-permits/create"> Go Back </a></p> ');   
                                     }
                             
                             }
@@ -483,7 +463,7 @@ class ImportExportPermitController extends AdminController
                             }
                         
                             
-                    }
+                        }
 
                 });
             }

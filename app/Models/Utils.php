@@ -166,7 +166,28 @@ public static function can_create_qds()
         return true;
     }
 
+//generic for permits
+//renew or create a new import form after its expired
+public static function can_renew_permit($permit)
+    {
+            if ($permit->status == 5) 
+            {
+        
+                $now = time();
+                $then = strtotime($permit->valid_until);
+    
+                if ($now < $then) 
+                {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        
+          return false;
+    }
 
+    
 //5.Import_form_functions    
 //check if the status of the form is pending, rejected,halted or accepted,and of type import before 
 //sumbitting
@@ -204,17 +225,32 @@ public static function can_create_import($import_permit)
         return true;
     }
 
-//renew or create a new import form after its expired
-public static function can_renew_iform($import_permit)
+
+//6.Export_form_functions
+//check if the status of the form is pending, rejected,halted or accepted,and of type import before 
+//sumbitting
+public static function can_create_export($export_permit)
     {
-        if ($import_permit->is_import == 1 )
-        {
-            if ($import_permit->status == 5) 
+            if ($export_permit->is_import == 0) 
             {
-        
+
+                if ($export_permit->status == 4) 
+                {
+                    return true;
+                }
+                if (!$export_permit->valid_from) 
+                {
+                    return false;
+                }
+
+                if (!$export_permit->valid_until) 
+                {
+                    return false;
+                }
+
                 $now = time();
-                $then = strtotime($import_permit->valid_until);
-    
+                $then = strtotime($export_permit->valid_until);
+
                 if ($now < $then) 
                 {
                     return true;
@@ -222,9 +258,12 @@ public static function can_renew_iform($import_permit)
                     return false;
                 }
             }
-        }
-          return false;
+        
+
+        return true;
     }
+
+
 
 
 
@@ -703,40 +742,7 @@ public static function get_notifications($u)
 
     
    
-    public static function can_create_export()
-    {
-        $recs = ImportExportPermit::where('administrator_id',  Admin::user()->id)->get();
-
-        foreach ($recs as $key => $value) {
-
-            // if (!$value->status == 1) {
-            //     return false;
-            // }
-    if ($value->is_import == 0) {
-            if ($value->status == 4) {
-                return true;
-            }
-            if (!$value->valid_from) {
-                return false;
-            }
-
-            if (!$value->valid_until) {
-                return false;
-            }
-
-            $now = time();
-            $then = strtotime($value->valid_until);
-
-            if ($now < $then) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
-        return true;
-    }
+    
 // //disable new button
 //     public static function can_create_form($model_name){
 //         $model = "App\\Models\\" . ucfirst($model_name);
@@ -1093,28 +1099,7 @@ public static function sendMail($not)
 
 
 
-public static function can_renew_eform($model_name){
-    $model = "App\\Models\\" . ucfirst($model_name);
-    $recs = ImportExportPermit::where('administrator_id', '=',  Admin::user()->id)
-    ->where('is_import', '!=', 1)
-    ->get();
 
-    foreach ($recs as $key => $value) {
-
-        if ($value->status == 5) {
-    
-        $now = time();
-        $then = strtotime($value->valid_until);
-
-            if ($now < $then) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-     }
-      return false;
-   }
 
 
 

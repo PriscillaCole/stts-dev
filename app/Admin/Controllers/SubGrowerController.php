@@ -204,7 +204,7 @@ class SubGrowerController extends AdminController
         
         
 
-        $grid->column('filed_name', __('Field Name'))->sortable();
+        $grid->column('field_name', __('Field Name'))->sortable();
         $grid->column('name', __('Person responisble'))->sortable();
         $grid->column('size', __('Size'))->sortable();
         $grid->column('crop', __('Crop'))->display(function(){
@@ -357,7 +357,7 @@ class SubGrowerController extends AdminController
             $form->text('district', __('District'))->required();
             $form->text('subcourty', __('Subcourty'))->required();
             $form->text('village', __('Village'))->required();
-            $form->date('planting_date', __('Planting date'))->required();
+            $form->text('planting_date', __('Planting date'))->required();
             $form->text('quantity_planted', __('Quantity planted'));
             $form->text('expected_yield', __('Expected yield'));
             $form->text('phone_number', __('Phone number'))->required();

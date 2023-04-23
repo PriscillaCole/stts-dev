@@ -250,6 +250,11 @@ class PlantingReturnController extends AdminController
                 // return redirect(admin_url('planting-returns'));
             }
         }
+
+        //callback after save to return to the table
+        $form->saved(function (Form $form) {
+            return redirect(admin_url('planting-returns'));
+        });
         
         $form->saving(function (Form $form) {
             $is_active_made = false;

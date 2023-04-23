@@ -30,6 +30,23 @@ class FormCropDeclaration extends Model
  
         self::updating(function($model){
         });
+
+        self::created(function ($model) 
+        {
+
+            Utils::send_notification($model, 'SeedLab', request()->segment(count(request()->segments())));
+
+            
+            
+        });
+
+
+        self::updated(function ($m) 
+        {
+
+            Utils::update_notification($m, 'SeedLab', request()->segment(count(request()->segments())-1));     
+
+        });
  
     }
 

@@ -307,10 +307,6 @@ class FormStockExaminationRequestController extends AdminController
 
                     if (count($import_permits) >= 1) 
                     {
-                        // $form->select('import_export_permit_id', __('Select Import Permit'))
-                        // ->options($import_permits);
-                        // $form->select('crop_variety_id', __('Crop variety'));
-                        // 
                        
                         $form->select('import_export_permit_id', __('Select Import Permit'))
                         ->options($import_permits)

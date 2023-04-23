@@ -137,8 +137,6 @@ class SubGrower extends Model
                                 } else {
                                     $d['is_active'] = 0;
                                 }
-
-
                                 $d['is_done'] = 0;
                                 $d['is_initialized'] = false;
                                 $d['status_comment'] = "";
@@ -148,9 +146,11 @@ class SubGrower extends Model
                                 $date_planted = Carbon::parse($inspe->date_planted);
                                 $date_planted->addDays($inspe->period_after_planting);
                                 $toDateString = $date_planted->toDateString();
-                                $d['min_date'] = $toDateString;
+                                $d['min_date'] = $toDateString;       
                                 $new_form_sr = new FormSr10($d);
                                 $new_form_sr->save();
+
+
                                 $sr10->status = 16;
                                 $sr10->save();
                             }

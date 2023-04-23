@@ -94,7 +94,8 @@ class SeedLab extends Model
             // die("simple tezt");
         });
 */
-            self::created(function ($model) {
+            self::created(function ($model) 
+            {
 
                 Utils::send_notification($model, 'SeedLab', request()->segment(count(request()->segments())));
 

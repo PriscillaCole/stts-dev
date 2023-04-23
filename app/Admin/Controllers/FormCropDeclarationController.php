@@ -2,10 +2,10 @@
 
 namespace App\Admin\Controllers;
 
-use App\Models\Crop;
 use App\Models\CropVariety;
 use App\Models\FormCropDeclaration;
 use App\Models\Utils;
+use App\Models\FormQds;
 use Carbon\Carbon;
 use Encore\Admin\Auth\Database\Administrator;
 use Encore\Admin\Controllers\AdminController;
@@ -15,7 +15,7 @@ use Encore\Admin\Form\NestedForm;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
 use Encore\Admin\Widgets\Table;
-use Illuminate\Support\Facades\Auth;
+
 
 
 class FormCropDeclarationController extends AdminController
@@ -36,84 +36,74 @@ class FormCropDeclarationController extends AdminController
     {
         $grid = new Grid(new FormCropDeclaration());
         $grid->disableFilter();
-        // $grid->disableRowSelector();
 
-        $grid->column('id', __('Id'))->sortable();
-        
-        $grid->column('created_at', __('Created'))
-            ->display(function ($item) {
-                return Carbon::parse($item)->diffForHumans();
-            })->sortable();
-
-        if (Admin::user()->isRole('basic-user')) {
+        if (Admin::user()->isRole('basic-user')) 
+        {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
-            $grid->actions(function ($actions) {
+            $grid->actions(function ($actions) 
+            {
                 $status = ((int)(($actions->row['status'])));
                 if (
-                    $status == 5 ||
-                    $status == 6
+                    $status != 1 
+                
                 ) {
                     $actions->disableDelete();
                     $actions->disableEdit();
                 }
             });
-        } else if (Admin::user()->isRole('inspector')) {
+        } else if (Admin::user()->isRole('inspector')) 
+        {
             $grid->model()->where('inspector', '=', Admin::user()->id);
             $grid->disableCreateButton();
-            $grid->actions(function ($actions) {
-                $status = ((int)(($actions->row['status'])));
+            $grid->actions(function ($actions) 
+            {
                 $actions->disableDelete();
-                if (
-                    $status != 2
-                ) {
-                    $actions->disableEdit();
-                }
+                $actions->disableEdit();
+                
             });
         } else {
             $grid->disableCreateButton();
+            $grid->actions(function ($actions) 
+            {
+                $actions->disableDelete();
+                $actions->disableEdit();
+            });
         }
 
-        $grid->column('administrator_id', __('Created by'))->display(function ($userId) {
-            $u = Administrator::find($userId);
-            if (!$u)
-                return "-";
-            return $u->name;
-        })->sortable();
+        $grid->column('id', __('Id'))->sortable(); 
+        $grid->column('created_at', __('Created'))
+            ->display(function ($item) 
+            {
+                return Carbon::parse($item)->diffForHumans();
+            })->sortable();
+        $grid->column('administrator_id', __('Created by'))->display(function ($userId)
+            {
+                $u = Administrator::find($userId);
+                if (!$u)
+                    return "-";
+                return $u->name;
+            })->sortable();
 
 
         $grid->column('field_size', __('Field size'));
         $grid->column('seed_rate', __('Seed rate'));
         $grid->column('amount', __('Amount'));
+        $grid->column('status', __('Status'))->display(function ($status) 
+            {
+                return Utils::tell_status($status);
+            })->sortable();
 
-        $grid->column('status', __('Status'))->display(function ($status) {
-            return Utils::tell_status($status);
-        })->sortable();
-
-        $grid->column('inspector', __('Inspector'))->display(function ($userId) {
-            if (Admin::user()->isRole('basic-user')) {
+        $grid->column('inspector', __('Inspector'))->display(function ($userId) 
+        {
+            if (Admin::user()->isRole('basic-user')) 
+            {
                 return "-";
             }
             $u = Administrator::find($userId);
             if (!$u)
                 return "Not assigned";
             return $u->name;
-        })->sortable();
-
-
-        
-
-        if (Admin::user()->isRole('basic-user')) {
-
-            $grid->actions(function ($actions) {
-                $status = ((int)(($actions->row['status'])));
-                
-                if ($status != '1' ) {
-                    $actions->disableEdit();
-                    $actions->disableDelete();
-                }
-            });
-        }
-            
+        })->sortable(); 
 
         return $grid;
     }
@@ -130,14 +120,16 @@ class FormCropDeclarationController extends AdminController
         $show = new Show(FormCropDeclaration::findOrFail($id));
         $model = FormCropDeclaration::findOrFail($id);
         $show->panel()
-            ->tools(function ($tools) {
+            ->tools(function ($tools) 
+            {
                 $tools->disableEdit();
                 $tools->disableDelete();
             });;
 
         $show->field('created_at', __('Created at'));
         $show->field('updated_at', __('Updated at'));
-        $show->field('administrator_id', __('Administrator id'))->as(function ($id) {
+        $show->field('administrator_id', __('Administrator id'))->as(function ($id) 
+        {
             $u = Administrator::find($id);
             if (!$u)
                 return "-";
@@ -207,62 +199,53 @@ class FormCropDeclarationController extends AdminController
     protected function form()
     {
         $form = new Form(new FormCropDeclaration());
+        $form->disableCreatingCheck();
+        $form->tools(function (Form\Tools $tools) 
+        {
+            $tools->disableDelete();
+            $tools->disableView();
+        });
+        $form->setWidth(8, 4);
 
         //callback after saving to redirect to table
-        $form->saved(function (Form $form) {
+        $form->saved(function (Form $form) 
+        {
             return redirect(admin_url('form-crop-declarations'));
         });
 
-        if ($form->isCreating()) {
-            if (!Utils::can_create_qds()) {
+        if ($form->isCreating()) 
+        {
+            if (!Utils::can_create_qds()) 
+            {
                 return admin_warning("Warning", "To apply for QDS Declaration, you must be an approved QDS Producer");
                 return redirect(admin_url('form-crop-declarations'));
             }
         }
 
 
-        $user = Admin::user(); 
-        $can_create = false;
-        $qds_id = false;
-        
-        if ($user->qds == null) {
-            $can_create = false;
-        }
-
-        if(isset($user->qds)){
-            foreach ($user->qds as $key => $value) {
-                if ($value->status == 5) {
-                    $min_date = Carbon::parse($value->valid_until);
-                    if (!$min_date->isToday()) {
-                        if (!$min_date->isPast()) {
-                            $can_create = true;
-                            $qds_id = $value->id;
-                        }
-                    } else {
-                        $qds_id = $value->id;
-                        $can_create = true;
-                    }
-                }
-            }
-        }
-        
-
-        if ($form->isCreating()) {
+        if ($form->isCreating()) 
+        {
+            $user = Admin::user();
             $form->hidden('administrator_id', __('Administrator id'))->value($user->id);
-        } else {
+        } else 
+        {
             $form->hidden('administrator_id', __('Administrator id'));
-            // $form->select('administrator_id', __('Applicant'))
-            //     ->options(Administrator::all()->pluck('name', 'id'))->disabled();
         }
 
-        $form->setWidth(8, 4);
-        if (Admin::user()->isRole('basic-user')) {
-            $form->saving(function ($form) {
+       
+
+        //basic_user fields
+        if (Admin::user()->isRole('basic-user')) 
+        {
+            $form->saving(function ($form) 
+            {
+                $qds_id = FormQds::where('administrator_id', Admin::user()->id)->where('status' , 5)
+                          ->first()->id;
                 $form->status = 1;
+                $form->form_qd_id = $qds_id;
             });
 
-            // $form->hidden('form_qd_id', __('form_qd_id'))->value($qds_id)->default($qds_id);
-            $form->hidden('form_qd_id', __('form_qd_id'))->value(3)->default($qds_id);
+            $form->hidden('form_qd_id', __('form_qd_id'));
 
             $form->text('source_of_seed', __('Enter source of seed'))->required();
             $form->text('field_size', __('Enter field size (in Acres)'))->required();
@@ -279,7 +262,9 @@ class FormCropDeclarationController extends AdminController
             $form->text('amount', __('Enter the amount enclosed'))->attribute('type', 'number')->required();
             $form->file('payment_receipt', __('Upload Payment receipt'))->required();
 
-            $form->footer(function ($footer) {
+            $form->footer(function ($footer) 
+            {
+
                 $footer->disableViewCheck();
                 $footer->disableReset();
                 $footer->disableCreatingCheck();
@@ -287,29 +272,28 @@ class FormCropDeclarationController extends AdminController
             $form->hidden('status', __('Status'))->value(1)->attribute('value', 1);
         }
 
-        $form->disableCreatingCheck();
-        $form->tools(function (Form\Tools $tools) {
-            $tools->disableDelete();
-            $tools->disableView();
-        });
-
-        if (Admin::user()->isRole('admin')) {
+     
+        //admin form fields
+        if (Admin::user()->isRole('admin')) 
+        {
 
             $form->display('id', __('Crop Declaration Form ID:'))->required();
             $form->display('field_size', __('Field (in Acres)'))->required();
             $form->display('seed_rate', __('Seed rate'))->required();
-
             $form->divider();
             $form->radio('status', __('Action'))
                 ->options([
                     '2' => 'Assign Inspector',
                 ])
                 ->required()
-                ->when('2', function (Form $form) {
+                ->when('2', function (Form $form) 
+                {
                     $items = Administrator::all();
                     $_items = [];
-                    foreach ($items as $key => $item) {
-                        if (!Utils::has_role($item, "inspector")) {
+                    foreach ($items as $key => $item) 
+                    {
+                        if (!Utils::has_role($item, "inspector")) 
+                        {
                             continue;
                         }
                         $_items[$item->id] = $item->name . " - " . $item->id;
@@ -323,46 +307,26 @@ class FormCropDeclarationController extends AdminController
         }
 
 
-
-        if (Admin::user()->isRole('inspector')) {
+       //inspector form fields
+        if (Admin::user()->isRole('inspector')) 
+        {
             $form->display('id', __('Crop Declaration Form ID:'))->disable();
             $form->display('field_size', __('Field (in Acres)'))->disable();
             $form->display('seed_rate', __('Seed rate'))->disable();
 
             $form->radio('status', __('Status'))
                 ->options([
-                    // '3' => 'Halted',
-                    // '4' => 'Rejected',
-                    // '5' => 'Accepted',
                     '16' => 'Initialized',
                 ])
                 ->required()
-                // ->when('2', function (Form $form) {
-                //     $items = Administrator::all();
-                //     $_items = [];
-                //     foreach ($items as $key => $item) {
-                //         if (!Utils::has_role($item, "inspector")) {
-                //             continue;
-                //         } 
-                //         $_items[$item->id] = $item->name . " - " . $item->id;
-                //     }
-                // })
-                ->when('in', [16], function (Form $form) {
+                
+                ->when('16', function (Form $form) 
+                {
                     $form->date('valid_from', 'Valid from date?');
                     $form->date('valid_until', 'Valid until date?');
-                })
-                // ->when('in', [3, 4], function (Form $form) {
-                //     $form->textarea('status_comment', 'Enter status comment (Remarks)')
-                //         ->help("Please specify with a comment");
-                // })
-                ;
+                }) ;
         }
-
-
-
-        // $form->number('inspector', __('Inspector'));
-        // $form->textarea('status_comment', __('Status comment'));
-
+      
         return $form;
     }
 }

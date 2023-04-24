@@ -211,6 +211,7 @@ class FormSr10 extends Model
     protected $fillable = [
         'administrator_id',
         'planting_return_id',
+        'qds_declaration_id',
         'stage',
         'status',
         'status_comment',

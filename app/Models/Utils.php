@@ -2,10 +2,7 @@
 
 namespace App\Models;
 
-use Hamcrest\Arrays\IsArray;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -267,72 +264,9 @@ public static function can_create_export($export_permit)
 
 
 
-    // public static function can_renew_iform($import_permit)
-    // {
-    //     $model = "App\\Models\\" . ucfirst($model_name);
-    //     $recs = ImportExportPermit::where('administrator_id', '=',  Admin::user()->id)
-    //     ->where('is_import', '!=', 0)
-    //     ->get();
-    
-    //     foreach ($recs as $key => $value) 
-    //     {
-    
-    //         if ($value->status == 5) 
-    //         {
-        
-    //         $now = time();
-    //         $then = strtotime($value->valid_until);
-    
-    //             if ($now < $then) 
-    //             {
-    //                 return true;
-    //             } else {
-    //                 return false;
-    //             }
-    //         }
-    //     }
-    //       return false;
-    // }
 
 
-
-
-
-
-
-
-
-
-// public static function can_create_sr6()
-// {
-//     $recs = FormSr6::where('administrator_id',  Admin::user()->id)->get();
-//     foreach ($recs as $key => $value) {
-
-//         if ($value->status == 4) {
-//             continue;
-//         }
-
-//         if (!$value->valid_from) {
-//             return false;
-//         }
-//         if (!$value->valid_until) {
-//             return false;
-//         }
-
-//         $now = time();
-//         $then = strtotime($value->valid_until);
-//         if ($now < $then) {
-//             return true;
-//         } else {
-//             return false;
-//         }
-//     }
-//     return true;
-// }
-
-
-
-//system notifications
+//system notifications function to send notifications to the front end
 public static function get_notifications($u)
 {
     if($u == null)
@@ -374,7 +308,8 @@ public static function get_notifications($u)
 }
     
 //get users by role
-    public static function get_users_by_role($role_id){
+public static function get_users_by_role($role_id)
+    {
         $sql = "SELECT * FROM admin_role_users,admin_users 
             where admin_role_users.user_id = admin_users.id
             AND admin_role_users.role_id = {$role_id}";
@@ -383,7 +318,8 @@ public static function get_notifications($u)
     }
 
 //get users by role notify
-    public static function get_users_by_role_notify($role_id){
+public static function get_users_by_role_notify($role_id)
+    {
         $sql = "SELECT * FROM admin_role_users
         INNER JOIN admin_users ON admin_role_users.user_id = admin_users.id
         INNER JOIN my_notifications ON my_notifications.receiver_id = admin_users.id
@@ -392,15 +328,368 @@ public static function get_notifications($u)
 
     }
 
+//function to send notifications
+public static function send_notification($m, $model_name, $entity)
+    {
+        //notification for seed-labels
+        //check if $entity is a string
+        if(is_string($entity))
+        {
+            if($model_name == "SeedLabel")
+            {
+                $not = new MyNotification();
+                $not->role_id = 2;
+                $not->message = Admin::user()->name. ' has requested for seed labels ';
+                $not->link = admin_url("auth/login"); 
+                $not->form_link = admin_url("{$entity}/{$m->id}");
+                $not->status = 'Unread'; 
+                $not->model = $model_name;
+                $not->model_id = $m->id; 
+                $not->group_type = 'Group'; 
+                $not->action_status_to_make_done = '[]';
+                $not->save();
 
-// //random number generator
-//     public static function generate_unique_id() {
-//         $prefix = "SG";
-//         $current_year = date("Y");
-//         $random_number = mt_rand(10000000, 99999999);
-//         $unique_id = $prefix . $current_year . $random_number;
-//         return $unique_id;
-//     }
+                self::sendMail($not); 
+            }
+            else
+            {
+                $not = new MyNotification();
+                $not->role_id = 2;
+                $not->message = "New {$entity} has been submitted by ".Admin::user()->name.' ';
+                $not->link = admin_url("auth/login"); 
+                $not->form_link = admin_url("{$entity}/{$m->id}");
+                $not->status = 'Unread'; 
+                $not->model = $model_name;
+                $not->model_id = $m->id; 
+                $not->group_type = 'Group'; 
+                $not->action_status_to_make_done = '[]';
+                $not->save();
+
+                self::sendMail($not);
+            }
+        }
+    }
+
+//function to update notifications
+public static function update_notification($m, $model_name, $entity)
+    {
+            $notifications = MyNotification::where('model', $model_name)
+            ->where('model_id', $m->id) 
+            ->get();
+            foreach($notifications as $n)
+            { 
+                $n->delete();
+            }
+
+            //seed label notifications after update
+            if($model_name == "SeedLabel")
+            { 
+                $seed_label_requester = Administrator::find($m->administrator_id);
+                if($m->status == 13)
+                {
+                    $not = new MyNotification();
+                    $not->role_id = 2;
+                    $not->receiver_id = 24; 
+                    $not->message = $seed_label_requester->name. ' has requested for seed labels ';
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}");
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Group'; 
+                    $not->action_status_to_make_done = '[]';
+                    $not->save();
+            
+                    //self::sendMail($not); 
+
+                    if($seed_label_requester != null)
+                    {
+                        //check if the notification has been sent before 
+                        $check = MyNotification::where('model', $model_name)
+                        ->where('model_id', $m->id)
+                        ->where('receiver_id', $seed_label_requester->id)
+                        ->where('message',  "Dear {$seed_label_requester->name}, Your seed labels have been submitted for printing")
+                        ->first();
+                        if($check != null)
+                        {
+                            return;
+                        }
+                        $not = new MyNotification();
+                        $not->receiver_id = $seed_label_requester->id; 
+                        $not->role_id = 3;
+                        $not->message =  "Dear {$seed_label_requester->name}, Your seed labels have been submitted for printing"; 
+                        $not->link = admin_url("auth/login"); 
+                        $not->form_link = admin_url("{$entity}/{$m->id}");
+                        $not->status = 'Unread'; 
+                        $not->model = $model_name;
+                        $not->model_id = $m->id; 
+                        $not->group_type = 'Individual'; 
+                        $not->action_status_to_make_done = '[]'; 
+                        $not->save();  
+
+                    // self::sendMail($not);
+                    }
+                }
+
+                if($m->status == 14)
+                {
+                $not = new MyNotification();
+                $not->role_id = 2;
+                $not->receiver_id = $seed_label_requester->id; 
+                $not->message = "Dear {$seed_label_requester->name}, Your seed labels have been printed";
+                $not->link = admin_url("auth/login"); 
+                $not->form_link = admin_url("{$entity}/{$m->id}");
+                $not->status = 'Unread'; 
+                $not->model = $model_name;
+                $not->model_id = $m->id; 
+                $not->group_type = 'Group'; 
+                $not->action_status_to_make_done = '[]';
+                $not->save();
+        
+                //self::sendMail($not); 
+                }
+            }
+
+            //edited for the admin only
+            if($m->status == 1)
+            {
+                    $not = new MyNotification();
+                    $not->role_id = 2;
+                    $not->message = "{$entity} has been edited by '.Admin::user()->name.' ";
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}");
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Group'; 
+                    $not->action_status_to_make_done = '[]'; 
+                    $not->save();  
+                    
+                    //self::sendMail($not);
+            }
+            //under inspection for farmer and inspector
+            if($m->status == 2)
+            {
+                $inspector  = Administrator::find($m->inspector);
+                if($inspector != null)
+                {
+                    $not = new MyNotification();
+                    $not->receiver_id = $inspector->id; 
+                    $not->message = "Dear {$inspector->name}, you have been assigned to inspect this {$entity}  #{$m->id}."; 
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}"); 
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Individual'; 
+                    $not->action_status_to_make_done = '[]'; 
+                    $not->save();  
+
+                    //self::sendMail($not);
+                } 
+                $farmer  = Administrator::find($m->administrator_id);
+                if($farmer != null)
+                {
+                    //check if the notification has been sent before 
+                    $check = MyNotification::where('model', $model_name)
+                    ->where('model_id', $m->id)
+                    ->where('receiver_id', $farmer->id)
+                    ->where('message', "Dear {$farmer->name}, your {$entity} is now under inspection.")
+                    ->first();
+                    if($check != null)
+                    {
+                        return;
+                    }
+                    $not = new MyNotification();
+                    $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
+                    $not->message = "Dear {$farmer->name}, your {$entity}  is now under inspection."; 
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}");
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Individual'; 
+                    $not->action_status_to_make_done = '[]'; 
+                    $not->save();  
+
+                // self::sendMail($not);
+                }
+            }  
+
+            //halted status for farmer
+            if($m->status == 3)
+            {
+                $farmer  = Administrator::find($m->administrator_id);
+                if($farmer != null)
+                {
+                    $not = new MyNotification();
+                    $not->receiver_id = $farmer->id;
+                    $not->role_id = 3;
+                    $not->message = "Dear {$farmer->name}, your {$entity} has been halted by the inspector."; 
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}"); 
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Individual'; 
+                    $not->action_status_to_make_done = '[]'; 
+                    $not->save(); 
+                    
+                // self::sendMail($not);
+
+
+                }
+            }
+
+            //rejected status for farmer
+            if($m->status == 4)
+            {
+                $farmer  = Administrator::find($m->administrator_id);
+                if($farmer != null)
+                {
+                    $not = new MyNotification();
+                    $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
+                    $not->message = "Dear {$farmer->name}, your {$entity} has been rejected by the inspector."; 
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}"); 
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Individual'; 
+                    $not->action_status_to_make_done = '[]'; +
+                    $not->save();  
+
+                // self::sendMail($not);
+                }
+            }
+
+            //approved status for farmer
+            if($m->status == 5)
+            {
+                $farmer  = Administrator::find($m->administrator_id);
+                if($farmer != null)
+                {
+                    $not = new MyNotification();
+                    $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
+                    $not->message = "Dear {$farmer->name}, your {$entity} has been approved by the inspector."; 
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}"); 
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Individual'; 
+                    $not->action_status_to_make_done = '[]'; 
+                    $not->save();  
+
+                // self::sendMail($not);
+                }
+            }
+
+            //approved status for farmer
+            if($m->status == 16)
+            {
+                $farmer  = Administrator::find($m->administrator_id);
+                if($farmer != null)
+                {
+                    $not = new MyNotification();
+                    $not->receiver_id = $farmer->id; 
+                    $not->role_id = 3;
+                    $not->message = "Dear {$farmer->name}, your {$entity} has been initialized by the inspector."; 
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}"); 
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Individual'; 
+                    $not->action_status_to_make_done = '[]'; 
+                    $not->save();  
+    
+                    // self::sendMail($not);
+                }
+            }
+
+            //approved status for a lab-receptionist
+            if($m->status == 9)
+            {
+                {
+                    $lab_receptionist  = Administrator::find($m->administrator_id);
+                    if($lab_receptionist != null)
+                    {
+                        $not = new MyNotification();
+                        $not->receiver_id = 22; 
+                        $not->role_id = 5;
+                        $not->message = "Dear {$lab_receptionist->name}, a {$entity} has been approved by the inspector."; 
+                        $not->link = admin_url("auth/login"); 
+                        $not->form_link = admin_url("{$entity}/{$m->id}"); 
+                        $not->status = 'Unread'; 
+                        $not->model = $model_name;
+                        $not->model_id = $m->id; 
+                        $not->group_type = 'Individual'; 
+                        $not->action_status_to_make_done = '[]'; 
+                        $not->save();  
+
+                        //self::sendMail($not);
+                    }
+
+
+                }
+            }
+
+            //approved status for a lab-technician
+            if($m->status == 10)
+            {
+                {
+                    $lab_technician  = Administrator::find($m->lab_technician);
+                    if($lab_technician != null)
+                    {
+                        $not = new MyNotification();
+                        $not->receiver_id = $lab_technician->id; 
+                        $not->role_id = 5;
+                        $not->message = "Dear {$lab_technician->name}, a {$entity} has been assigned to you by the receptionist."; 
+                        $not->link = admin_url("auth/login"); 
+                        $not->form_link = admin_url("{$entity}/{$m->id}"); 
+                        $not->status = 'Unread'; 
+                        $not->model = $model_name;
+                        $not->model_id = $m->id; 
+                        $not->group_type = 'Individual'; 
+                        $not->action_status_to_make_done = '[]'; 
+                        $not->save();  
+
+                        //self::sendMail($not);
+                    }
+
+
+                }
+            }
+    }
+
+//function to send out the emails
+public static function sendMail($not)
+    {
+        if($not->group_type == 'Individual')
+        { 
+            $receivers = Utils::get_users_by_role_notify($not->receiver_id);
+                
+        } else
+        {
+            $receivers = Utils::get_users_by_role_notify($not->role_id);
+        }
+
+        $emails = [];
+            foreach($receivers as $r)
+            {
+                $emails[] = $r->email;
+            } 
+            Mail::to($emails)
+                    ->send(new Notification($not->message, $not->link));
+    }
+
+
+
+
 
     public static function create_default_tables()
     {
@@ -489,25 +778,7 @@ public static function get_notifications($u)
 
 
 
-    // public static function has_valid_qds()
-    // {
-    //     $recs = FormQds::where('administrator_id',  Admin::user()->id)->get();
-    //     foreach ($recs as $key => $value) {
-    //         if (!$value->valid_from) {
-    //             return null;
-    //         }
-    //         if (!$value->valid_until) {
-    //             return null;
-    //         }
-    //         $now = time();
-    //         $then = strtotime($value->valid_until);
-    //         if ($now < $then) {
-    //             return $value;
-    //         }
-    //     }
-    //     return null;
-    // }
-
+   
 
     public static function has_role($item, $role)
     {
@@ -549,36 +820,7 @@ public static function get_notifications($u)
         return true;
     }
 
-    // public static function can_create_export_form_old()
-    // {
-    //     $recs = ImportExportPermit::where('administrator_id',  Admin::user()->id)->get();
-    //     foreach ($recs as $key => $value) {
-    //         if ($value->is_import) {
-    //             continue;
-    //         }
 
-    //         if ($value->status == 4) {
-    //             continue;
-    //         }
-
-    //         if (!$value->valid_from) {
-    //             return false;
-    //         }
-    //         if (!$value->valid_until) {
-    //             return false;
-    //         }
-
-    //         $now = time();
-    //         $then = strtotime($value->valid_until);
-    //         if ($now < $then) {
-    //             return true;
-    //         } else {
-    //             return false;
-    //         }
-    //     }
-
-    //     return true;
-    // }
 
 
 
@@ -645,63 +887,7 @@ public static function get_notifications($u)
 
 
 
-    /*
-    public static function can_create_export_form_old()
-    {
-        
-        // $recs2 = ImportExportPermit::where('administrator_id', '=',  Admin::user()->id)
-        // ->whereNull('is_import');
-
-        // $recs = ImportExportPermit::where('administrator_id', '=',  Admin::user()->id)
-        // ->where('is_import', '!=', 1)
-        // ->union($recs2)
-        // ->get();
-        
-
-
-        $recs = ImportExportPermit::where('administrator_id', '=',  Admin::user()->id)
-        ->where('is_import', '!=', 1)
-        ->get();
-
-        foreach ($recs as $key => $value) {
-
-            if (!$value->status == 4) {
-                continue;
-            }
-
-            if (!$value->valid_from) {
-                return false;
-            }
-            if (!$value->valid_until) {
-                return false;
-            }
-
-            $now = time();
-            $then = strtotime($value->valid_until);
-            if ($now < $then) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        $recs_sr4 = FormSr4::where('administrator_id',  Admin::user()->id)->get();
-        
-        if (count($recs_sr4) == 0) {    // if no sr4 belongs to current user
-            return false;
-        }
-        
-        foreach ($recs_sr4 as $key => $value_sr4) {
-            if (!($value_sr4->status == 5)) {   // if sr4 is not accepted
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    */
-
+   
 
 
     public static function previous_import_form_not_accepted()
@@ -743,407 +929,8 @@ public static function get_notifications($u)
     
    
     
-// //disable new button
-//     public static function can_create_form($model_name){
-//         $model = "App\\Models\\" . ucfirst($model_name);
-//         $form = $model::where('administrator_id',  Admin::user()->id)->get();
-//         //check if the form for that user exists
-//         if (count($form) == 0) {
-//             return true;
-//         } else {
-                    
-//             return false;
-                
-//                 }
-//         }
-
-//function to send notifications
-public static function send_notification($m, $model_name, $entity)
-{
-    //notification for seed-labels
-    //check if $entity is a string
-    if(is_string($entity))
-    {
-        if($model_name == "SeedLabel")
-        {
-            $not = new MyNotification();
-            $not->role_id = 2;
-            $not->message = Admin::user()->name. ' has requested for seed labels ';
-            $not->link = admin_url("auth/login"); 
-            $not->form_link = admin_url("{$entity}/{$m->id}");
-            $not->status = 'Unread'; 
-            $not->model = $model_name;
-            $not->model_id = $m->id; 
-            $not->group_type = 'Group'; 
-            $not->action_status_to_make_done = '[]';
-            $not->save();
-
-            self::sendMail($not); 
-        }
-        else
-        {
-            $not = new MyNotification();
-            $not->role_id = 2;
-            $not->message = "New {$entity} has been submitted by ".Admin::user()->name.' ';
-            $not->link = admin_url("auth/login"); 
-            $not->form_link = admin_url("{$entity}/{$m->id}");
-            $not->status = 'Unread'; 
-            $not->model = $model_name;
-            $not->model_id = $m->id; 
-            $not->group_type = 'Group'; 
-            $not->action_status_to_make_done = '[]';
-            $not->save();
-
-            self::sendMail($not);
-        }
-    }
-}
-
-//function to update notifications
-public static function update_notification($m, $model_name, $entity)
-{
-        $notifications = MyNotification::where('model', $model_name)
-        ->where('model_id', $m->id) 
-        ->get();
-        foreach($notifications as $n)
-        { 
-            $n->delete();
-        }
-
-        //seed label notifications after update
-        if($model_name == "SeedLabel")
-        { 
-            $seed_label_requester = Administrator::find($m->administrator_id);
-            if($m->status == 13)
-            {
-                $not = new MyNotification();
-                $not->role_id = 2;
-                $not->receiver_id = 24; 
-                $not->message = $seed_label_requester->name. ' has requested for seed labels ';
-                $not->link = admin_url("auth/login"); 
-                $not->form_link = admin_url("{$entity}/{$m->id}");
-                $not->status = 'Unread'; 
-                $not->model = $model_name;
-                $not->model_id = $m->id; 
-                $not->group_type = 'Group'; 
-                $not->action_status_to_make_done = '[]';
-                $not->save();
-        
-                //self::sendMail($not); 
-
-                if($seed_label_requester != null)
-                {
-                    //check if the notification has been sent before 
-                    $check = MyNotification::where('model', $model_name)
-                    ->where('model_id', $m->id)
-                    ->where('receiver_id', $seed_label_requester->id)
-                    ->where('message',  "Dear {$seed_label_requester->name}, Your seed labels have been submitted for printing")
-                    ->first();
-                    if($check != null)
-                    {
-                        return;
-                    }
-                    $not = new MyNotification();
-                    $not->receiver_id = $seed_label_requester->id; 
-                    $not->role_id = 3;
-                    $not->message =  "Dear {$seed_label_requester->name}, Your seed labels have been submitted for printing"; 
-                    $not->link = admin_url("auth/login"); 
-                    $not->form_link = admin_url("{$entity}/{$m->id}");
-                    $not->status = 'Unread'; 
-                    $not->model = $model_name;
-                    $not->model_id = $m->id; 
-                    $not->group_type = 'Individual'; 
-                    $not->action_status_to_make_done = '[]'; 
-                    $not->save();  
-
-                // self::sendMail($not);
-                }
-            }
-
-            if($m->status == 14)
-            {
-            $not = new MyNotification();
-            $not->role_id = 2;
-            $not->receiver_id = $seed_label_requester->id; 
-            $not->message = "Dear {$seed_label_requester->name}, Your seed labels have been printed";
-            $not->link = admin_url("auth/login"); 
-            $not->form_link = admin_url("{$entity}/{$m->id}");
-            $not->status = 'Unread'; 
-            $not->model = $model_name;
-            $not->model_id = $m->id; 
-            $not->group_type = 'Group'; 
-            $not->action_status_to_make_done = '[]';
-            $not->save();
-    
-            //self::sendMail($not); 
-            }
-        }
-
-        //edited for the admin only
-        if($m->status == 1)
-        {
-                $not = new MyNotification();
-                $not->role_id = 2;
-                $not->message = "{$entity} has been edited by '.Admin::user()->name.' ";
-                $not->link = admin_url("auth/login"); 
-                $not->form_link = admin_url("{$entity}/{$m->id}");
-                $not->status = 'Unread'; 
-                $not->model = $model_name;
-                $not->model_id = $m->id; 
-                $not->group_type = 'Group'; 
-                $not->action_status_to_make_done = '[]'; 
-                $not->save();  
-                
-                //self::sendMail($not);
-        }
-        //under inspection for farmer and inspector
-        if($m->status == 2)
-        {
-            $inspector  = Administrator::find($m->inspector);
-            if($inspector != null)
-            {
-                $not = new MyNotification();
-                $not->receiver_id = $inspector->id; 
-                $not->message = "Dear {$inspector->name}, you have been assigned to inspect this {$entity}  #{$m->id}."; 
-                $not->link = admin_url("auth/login"); 
-                $not->form_link = admin_url("{$entity}/{$m->id}"); 
-                $not->status = 'Unread'; 
-                $not->model = $model_name;
-                $not->model_id = $m->id; 
-                $not->group_type = 'Individual'; 
-                $not->action_status_to_make_done = '[]'; 
-                $not->save();  
-
-                //self::sendMail($not);
-            } 
-            $farmer  = Administrator::find($m->administrator_id);
-            if($farmer != null)
-            {
-                //check if the notification has been sent before 
-                $check = MyNotification::where('model', $model_name)
-                ->where('model_id', $m->id)
-                ->where('receiver_id', $farmer->id)
-                ->where('message', "Dear {$farmer->name}, your {$entity} is now under inspection.")
-                ->first();
-                if($check != null)
-                {
-                    return;
-                }
-                $not = new MyNotification();
-                $not->receiver_id = $farmer->id; 
-                $not->role_id = 3;
-                $not->message = "Dear {$farmer->name}, your {$entity}  is now under inspection."; 
-                $not->link = admin_url("auth/login"); 
-                $not->form_link = admin_url("{$entity}/{$m->id}");
-                $not->status = 'Unread'; 
-                $not->model = $model_name;
-                $not->model_id = $m->id; 
-                $not->group_type = 'Individual'; 
-                $not->action_status_to_make_done = '[]'; 
-                $not->save();  
-
-               // self::sendMail($not);
-            }
-        }  
-
-        //halted status for farmer
-        if($m->status == 3)
-        {
-            $farmer  = Administrator::find($m->administrator_id);
-            if($farmer != null)
-            {
-                $not = new MyNotification();
-                $not->receiver_id = $farmer->id;
-                $not->role_id = 3;
-                $not->message = "Dear {$farmer->name}, your {$entity} has been halted by the inspector."; 
-                $not->link = admin_url("auth/login"); 
-                $not->form_link = admin_url("{$entity}/{$m->id}"); 
-                $not->status = 'Unread'; 
-                $not->model = $model_name;
-                $not->model_id = $m->id; 
-                $not->group_type = 'Individual'; 
-                $not->action_status_to_make_done = '[]'; 
-                $not->save(); 
-                
-               // self::sendMail($not);
 
 
-            }
-        }
-
-        //rejected status for farmer
-        if($m->status == 4)
-        {
-            $farmer  = Administrator::find($m->administrator_id);
-            if($farmer != null)
-            {
-                $not = new MyNotification();
-                $not->receiver_id = $farmer->id; 
-                $not->role_id = 3;
-                $not->message = "Dear {$farmer->name}, your {$entity} has been rejected by the inspector."; 
-                $not->link = admin_url("auth/login"); 
-                $not->form_link = admin_url("{$entity}/{$m->id}"); 
-                $not->status = 'Unread'; 
-                $not->model = $model_name;
-                $not->model_id = $m->id; 
-                $not->group_type = 'Individual'; 
-                $not->action_status_to_make_done = '[]'; +
-                $not->save();  
-
-               // self::sendMail($not);
-            }
-        }
-
-        //approved status for farmer
-        if($m->status == 5)
-        {
-            $farmer  = Administrator::find($m->administrator_id);
-            if($farmer != null)
-            {
-                $not = new MyNotification();
-                $not->receiver_id = $farmer->id; 
-                $not->role_id = 3;
-                $not->message = "Dear {$farmer->name}, your {$entity} has been approved by the inspector."; 
-                $not->link = admin_url("auth/login"); 
-                $not->form_link = admin_url("{$entity}/{$m->id}"); 
-                $not->status = 'Unread'; 
-                $not->model = $model_name;
-                $not->model_id = $m->id; 
-                $not->group_type = 'Individual'; 
-                $not->action_status_to_make_done = '[]'; 
-                $not->save();  
-
-               // self::sendMail($not);
-            }
-        }
-
-          //approved status for farmer
-          if($m->status == 16)
-          {
-              $farmer  = Administrator::find($m->administrator_id);
-              if($farmer != null)
-              {
-                  $not = new MyNotification();
-                  $not->receiver_id = $farmer->id; 
-                  $not->role_id = 3;
-                  $not->message = "Dear {$farmer->name}, your {$entity} has been initialized by the inspector."; 
-                  $not->link = admin_url("auth/login"); 
-                  $not->form_link = admin_url("{$entity}/{$m->id}"); 
-                  $not->status = 'Unread'; 
-                  $not->model = $model_name;
-                  $not->model_id = $m->id; 
-                  $not->group_type = 'Individual'; 
-                  $not->action_status_to_make_done = '[]'; 
-                  $not->save();  
-  
-                 // self::sendMail($not);
-              }
-          }
-
-        //approved status for a lab-receptionist
-        if($m->status == 9)
-        {
-        {
-            $lab_receptionist  = Administrator::find($m->administrator_id);
-            if($lab_receptionist != null)
-            {
-                $not = new MyNotification();
-                $not->receiver_id = 22; 
-                $not->role_id = 5;
-                $not->message = "Dear {$lab_receptionist->name}, a {$entity} has been approved by the inspector."; 
-                $not->link = admin_url("auth/login"); 
-                $not->form_link = admin_url("{$entity}/{$m->id}"); 
-                $not->status = 'Unread'; 
-                $not->model = $model_name;
-                $not->model_id = $m->id; 
-                $not->group_type = 'Individual'; 
-                $not->action_status_to_make_done = '[]'; 
-                $not->save();  
-
-                //self::sendMail($not);
-            }
-
-
-        }
-        }
-
-        //approved status for a lab-technician
-        if($m->status == 10)
-        {
-        {
-            $lab_technician  = Administrator::find($m->lab_technician);
-            if($lab_technician != null)
-            {
-                $not = new MyNotification();
-                $not->receiver_id = $lab_technician->id; 
-                $not->role_id = 5;
-                $not->message = "Dear {$lab_technician->name}, a {$entity} has been assigned to you by the receptionist."; 
-                $not->link = admin_url("auth/login"); 
-                $not->form_link = admin_url("{$entity}/{$m->id}"); 
-                $not->status = 'Unread'; 
-                $not->model = $model_name;
-                $not->model_id = $m->id; 
-                $not->group_type = 'Individual'; 
-                $not->action_status_to_make_done = '[]'; 
-                $not->save();  
-
-                //self::sendMail($not);
-            }
-
-
-        }
-        }
-}
-
-
-public static function sendMail($not)
-{
-    if($not->group_type == 'Individual')
-    { 
-        $receivers = Utils::get_users_by_role_notify($not->receiver_id);
-               
-    } else
-    {
-        $receivers = Utils::get_users_by_role_notify($not->role_id);
-    }
-
-    $emails = [];
-        foreach($receivers as $r)
-        {
-            $emails[] = $r->email;
-        } 
-        Mail::to($emails)
-                ->send(new Notification($not->message, $not->link));
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// //check if form is rejected
-// public static function is_form_halted($model_name)
-// {
-//     $model = "App\\Models\\" . ucfirst($model_name);
-//     $recs = $model::where('administrator_id',  Admin::user()->id)->get();
-//     foreach ($recs as $key => $value) 
-//     {
-//         //check if the status is rejected or halted
-//         if($value->status == 3){
-//             return true;
-//         }
-//     }
-// }
 
 
 
@@ -1542,15 +1329,7 @@ public static function check_order_status()
             return [];
         }
 
-        /*
-
-        $p = 'http://127.0.0.1:8000/storage/'.$path;
-                    echo '<h1>'.$p.'</h1>';
-                    echo '<h1>'.$path.'</h1>';
-                    echo '<img src="'.$p.'" alt="">';
-                    die();
-                    //dd("");
-        */
+        
 
         $image = new Zebra_Image();
 

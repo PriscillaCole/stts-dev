@@ -24,6 +24,11 @@ class CropVariety extends Model
         return $this->belongsTo(Crop::class, 'crop_id', 'id');
     }
 
+    public function form_crop_declaration()
+    {
+        return $this->belongsToMany(FormCropDeclaration::class, 'form_crop_declarations_has_crop_varieties');
+    }
+
     public function getNameAttribute($name)
     {
         return $this->crop->name . ", " . $name . ".";

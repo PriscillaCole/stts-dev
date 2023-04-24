@@ -102,7 +102,8 @@ class SubGrower extends Model
             // ... code here
             Utils::update_notification($sr10, 'SubGrower', request()->segment(count(request()->segments())-1));
 
-            if (Admin::user()->isRole('inspector')) {
+            if (Admin::user()->isRole('inspector')) 
+            {
                 $id = (int)($sr10->crop);
 
                 $crop_var = CropVariety::find($sr10->crop);

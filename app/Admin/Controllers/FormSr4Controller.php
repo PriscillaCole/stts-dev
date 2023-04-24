@@ -550,7 +550,7 @@ class FormSr4Controller extends AdminController
                     {
                         return  response(' <p class="alert alert-warning"> You cannot create a new SR4 form  while having VALID one of the same category. <a href="/admin/form-sr4s/create"> Go Back </a></p> ');   
                     }
-             
+                $form->accept_declaration = 1;
             }
                      
         });
@@ -751,12 +751,8 @@ class FormSr4Controller extends AdminController
                 <p>I/WE* AT ANY TIME DURING OFFICIAL WORKING HOURS EVEN WITHOUT previous appointment will allow the inspectors entry to the seed stores and thereby provide them with the facilities necessary to carry out their inspection work as laid
                  out in the seed and plant regulations, 2015.I/We further declare taht I/We am/are conversant with the Regulations. In addition I/We will send a list of all seed lots in our stores on a given date and or at such a date as can be mutually agreed upon between the National Seed Certification Service and ourselves.</p> ');
 
-            $form->radio('accept_declaration', __('Accept declaration') )
-                ->options
-                ([
-                    '1' => 'I Accept',
-                ])
-                ->required();
+            $form->hidden('accept_declaration', __('Accept declaration') )->required();
+            $form->html('<input type="checkbox" name="accept_declaration" value="1" required>  I Accept');
 
                 
         }

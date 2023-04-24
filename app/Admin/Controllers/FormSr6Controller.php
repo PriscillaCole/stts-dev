@@ -4,6 +4,7 @@ namespace App\Admin\Controllers;
 
 use App\Models\Crop;
 use App\Models\FormSr6;
+use App\Models\FormSr6HasCrop;
 use App\Models\Utils;
 use Carbon\Carbon;
 use Encore\Admin\Auth\Database\Administrator;
@@ -439,7 +440,7 @@ class FormSr6Controller extends AdminController
                         
                         return  response(' <p class="alert alert-warning"> You cannot create a new SR6 form  while having VALID one of the same category. <a href="/admin/form-sr6s/create"> Go Back </a></p> ');   
                     }
-             
+                   
             }
                      
         });

@@ -57,17 +57,13 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
 
         self::creating(function($model)
         {
+         
             // code here            
         });
 
         self::created(function ($model) 
         {
-                // Check if the grower_number is already taken
-                while (static::where('grower_number', $model->grower_number)->exists()) 
-                {
-                    // Generate a new unique value for the grower_number field
-                    $model->grower_number = "SG" ."/". date('Y') ."/". mt_rand(10000000, 99999999);
-                }
+                
 
                 Utils::send_notification($model, 'FormSr6', request()->segment(count(request()->segments())));
             // code here            
@@ -82,6 +78,14 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
                 $model->status = 1;
                 $model->inspector = null;
                 return $model;
+            }
+            if(Admin::user()->isRole('inspector')){
+                 // Check if the grower_number is already taken
+            while (static::where('grower_number', $model->grower_number)->exists()) 
+            {
+                // Generate a new unique value for the grower_number field
+                $model->grower_number = "SG" ."/". date('Y') ."/". mt_rand(10000000, 99999999);
+            }
             }
         });
 

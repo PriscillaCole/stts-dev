@@ -104,21 +104,24 @@ class SubGrower extends Model
 
             if (Admin::user()->isRole('inspector')) 
             {
-                $id = (int)($sr10->crop);
 
                 $crop_var = CropVariety::find($sr10->crop);
                 $crop = null;
-                if ($crop_var != null) {
-                    if ($crop_var->crop != null) {
+                if ($crop_var != null) 
+                {
+                    if ($crop_var->crop != null) 
+                    {
                         $crop = $crop_var->crop;
                     }
                 }
 
 
-                if ($crop != null) {
-                    if ($crop->crop_inspection_types != null) {
-                        foreach ($crop->crop_inspection_types as $key => $inspe) {
-
+                if ($crop != null) 
+                {
+                    if ($crop->crop_inspection_types != null) 
+                    {
+                        foreach ($crop->crop_inspection_types as $inspe) 
+                        {
                             $temp_sr10_1 = FormSr10::where([
                                 'planting_return_id' => $sr10->id,
                             ])->get();
@@ -128,7 +131,9 @@ class SubGrower extends Model
                                 'stage' => $inspe->inspection_stage,
                             ])->get();
 
-                            if (count($temp_sr10) < 1) {
+                            if (count($temp_sr10) < 1) 
+                            {
+                                $d['crop_id'] = $crop->id;
                                 $d['stage'] = $inspe->inspection_stage;
                                 $d['farmer_id'] = $sr10->administrator_id;
                                 $d['status'] = '1';
@@ -157,7 +162,9 @@ class SubGrower extends Model
                             }
                         }
                     }
-                } else {
+                } 
+                else 
+                {
 
                     $temp_sr10_1 = FormSr10::where([
                         'planting_return_id' => $sr10->id,
@@ -167,7 +174,8 @@ class SubGrower extends Model
                         'planting_return_id' => $sr10->id,
                     ])->get();
 
-                    if (count($temp_sr10) < 1) {
+                    if (count($temp_sr10) < 1) 
+                    {
                         $d['stage'] = 'Default inspection';
                         $d['is_active'] = 1;
                         $d['farmer_id'] = $sr10->administrator_id;

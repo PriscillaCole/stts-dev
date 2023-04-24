@@ -64,26 +64,7 @@ class FormSr10Controller extends AdminController
             
             $grid->disableCreateButton();
         } 
-        // else if (Admin::user()->isRole('inspector')) {
-        //     $grid->model()->where('administrator_id', '=', Admin::user()->id);
-        //     $grid->disableCreateButton();
-        //     $grid->disableBatchActions();
-
-        //     $grid->actions(function ($actions) {
-        //         if ($actions->row['is_active'] == 0) {
-        //             $actions->disableEdit();
-        //         }
-
-        //         $status = ((int)(($actions->row['status'])));
-        //         $actions->disableDelete();
-        //         if (
-        //             $status == 1
-        //         ) {
-        //             //$actions->disableEdit();
-        //         }
-        //     });
-
-        // } 
+     
 
         $grid->column('id', __('Id'));
         $grid->column('created_at', __('Created'))

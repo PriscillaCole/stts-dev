@@ -35,6 +35,9 @@ class FormCropDeclarationController extends AdminController
     protected function grid()
     {
         $grid = new Grid(new FormCropDeclaration());
+
+        
+
         $grid->disableFilter();
 
         if (Admin::user()->isRole('basic-user')) 

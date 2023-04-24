@@ -316,6 +316,8 @@ class FormStockExaminationRequestController extends AdminController
                        $form->textarea('remarks', __('Enter remarks'));
                     
                         
+                    }  else{
+                        $form->html('<div class="alert alert-danger">You cannot create a new Stock examination request if you don\'t have a fully verified import permit </div>');
                     }
                     Admin::script('
                     $(document).ready(function() {
@@ -400,6 +402,9 @@ class FormStockExaminationRequestController extends AdminController
                             ->options($planting_returnings);
                             $form->textarea('remarks', __('Enter remarks'));
                         }
+                        else{
+                            $form->html('<div class="alert alert-danger">You cannot create a new Stock examination request if you don\'t have a fully verified planting return </div>');
+                        }
                 }
             })
 
@@ -416,25 +421,49 @@ class FormStockExaminationRequestController extends AdminController
                 }else
                 {
 
-                    $my_qds = [];
-
-                    foreach ($all_qds as $key => $value) 
+                    $sr10s = [];
+                    $form_declarations = [];
+                    $verified_isnpections = [];
+                    foreach ($all_qds as $qds)
                     {
-                        if ($value->status == 5) 
+                        $_sr10s = FormSr10::where(['qds_declaration_id' => $qds->id])->get();
+                        foreach ($_sr10s as $_sr10) 
                         {
-                            // if (!$value->is_not_used) 
-                            // {
-                                $my_qds[$value->id] = "QDS Crop Inspection Id: " . $value->id;
-                            //}
+                            $sr10s[] = $_sr10;
+                        }
+                    }
+                    foreach ($sr10s as $key => $sr10) 
+                    {
+                        if ($sr10->is_final) 
+                        {
+                            if ($sr10->status == 5) 
+                            {
+                                $verified_isnpections[] = $sr10;
+                            }
                         }
                     }
 
-                    if (count($my_qds) >= 1) 
+                    foreach ($verified_isnpections as $key => $value) 
                     {
-                        $form->select('form_qds_id', __('Select Approved QDS Crop Inspection'))
-                            ->options($my_qds);
-                        $form->textarea('remarks', __('Enter remarks'));
+                        if ($value->status == 5) 
+                        {
+                            if (!$value->is_not_used) 
+                            {
+                                $form_declarations[$value->id] = "QDS number: " . $value->sr10_number;
+                            }
+                        }
                     }
+
+                
+                        if (count($form_declarations) >= 1) 
+                        {
+                            $form->select('form_qds_id', __('Select approved QDS'))
+                            ->options($form_declarations);
+                            $form->textarea('remarks', __('Enter remarks'));
+                        }
+                        else{
+                            $form->html('<div class="alert alert-danger">You cannot create a new Stock examination request if you don\'t have a fully verified QDS </div>');
+                        }
                 }
             })->required();
 

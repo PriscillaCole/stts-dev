@@ -7,10 +7,12 @@ use App\Models\CropInspectionType;
 use App\Models\CropVariety;
 use App\Models\FormSr10;
 use App\Models\FormSr10HasVarietyInspection;
+use App\Models\FormCropDeclaration;
 use App\Models\Utils;
 use Carbon\Carbon;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Facades\Admin;
+use Encore\Admin\Auth\Database\Administrator;
 use Encore\Admin\Form;
 use Encore\Admin\Form\NestedForm;
 use Encore\Admin\Grid;
@@ -32,8 +34,10 @@ class FormCropInspectionController extends AdminController
     protected function grid()
     {
         $grid = new Grid(new FormSr10());
+        //show only records where the qds_declaration_id is not null
+        $grid->model()->where('qds_declaration_id', '!=', null);
         $grid->disableFilter();
-        // $grid->disableRowSelector();
+    
 
         if (Admin::user()->isRole('basic-user')) {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
@@ -64,7 +68,7 @@ class FormCropInspectionController extends AdminController
         })->sortable();
 
         if (Admin::user()->isRole('inspector')) {
-            $grid->column('is_active', __('Attension'))->display(function ($is_active) {
+            $grid->column('is_active', __('Attention'))->display(function ($is_active) {
                 if ($is_active) {
                     return '<span class="badge badge-danger">Needs your attension</span>';
                 } else {
@@ -99,26 +103,20 @@ class FormCropInspectionController extends AdminController
         $show = new Show(FormSr10::findOrFail($id));
 
         $model = FormSr10::findOrFail($id);
+        $id = $model->qds_declaration_id;
+        $declaration = FormCropDeclaration::findOrFail($id);
 
         
         $show->field('stage', __('Stage')); 
         $show->field('submited_date', __('Submited date'));
 
-        $show->field('name', __('Applicant\'s Name'))->as(function ($i) {
-            return $this->planting_return->name;
-        });
-
-        $show->field('address', __('Applicant\'s Address'))->as(function ($i) {
-
-            return $this->planting_return->district . ", " .
-            $this->planting_return->subcourty . ", " . $this->planting_return->village;
+        $show->field('name', __('Applicant\'s Name'))->as(function ($i) use ($declaration){
+        //get the name of the adminstrator from the administrator id in $declaration
+            $admin = Administrator::find($declaration->administrator_id);
+            return $admin->name;
         });
         
-        $show->field('gps', __('GPS'))->as(function ($i) {
-            return $this->planting_return->gps_latitude . ", " .
-            $this->planting_return->gps_longitude; 
-        });
- 
+
         $show->field('seed_class', __('Seed class')); 
         $show->field('size_of_field', __('Size of field')); 
         $show->field('off_types', __('Off types')); 
@@ -145,7 +143,7 @@ class FormCropInspectionController extends AdminController
         {
             //button link to the show-details form
             $show->field('id','Action')->unescape()->as(function ($id) {
-                return "<a href='/admin/form-sr10s/$id/edit' class='btn btn-primary'>Take Action</a>";
+                return "<a href='/admin/qds-crop-inspection-2/$id/edit' class='btn btn-primary'>Take Action</a>";
             });
         }
 
@@ -169,8 +167,8 @@ class FormCropInspectionController extends AdminController
                 $can_edit = false;
                 // return redirect(admin_url('form-sr10s'));
             }
-
-            $id = request()->route()->parameters['form_sr10'];
+            error_log(json_encode(request()->route()->parameters));
+            $id = request()->route()->parameters['qds_crop_inspection_2'];
             $model = $form->model()->find($id);
 
             if (!$model->is_active) {
@@ -186,44 +184,15 @@ class FormCropInspectionController extends AdminController
                 $('.add').hide();
             });");
 
-            $form->html('<h3>About seed-grower</h3>');
-            //$form->display('planting_return_id', __('Planting return id'))->readonly();
             $form->hidden('is_done', __('is_done'))->value(1);
             $form->hidden('is_active', __('is_done'))->value(0);
 
-
-
-            $form->display('', __('Name'))->default($model->planting_return->name)->readonly();
-            $form->display('', __('Address'))->default(
-                $model->planting_return->district . ", " .
-                    $model->planting_return->subcourty . ", " . $model->planting_return->village
-
-            )->readonly();
-            $form->display('', __('GPS'))->default($model->planting_return->gps_latitude . ", " . $model->planting_return->gps_longitude)->readonly();
-            $form->display('', __('Telephone'))->default($model->planting_return->phone_number)->readonly();
             $form->divider();
 
             $is_final = FormSr10::is_final_sr10($model);
 
-            $form->html('<h3>About this Field inspection report - (SR10)</h3>');
-            $form->display('', __('Seed class'))->default($model->planting_return->seed_class)->readonly();
-            $crop_var = CropVariety::find($model->planting_return->crop);
-            $default_var =  CropVariety::find(1);
-            if($default_var == null){
-                $default_var = new CropVariety();
-                $default_var->id = 1;
-                $default_var->crop_id = 1;
-                $default_var->name = "Default crop vareity";
-                $default_var->save();
-                $model->planting_return->crop = 1;
-                $model->planting_return->save();
-                $crop_var = CropVariety::find($model->planting_return->crop);
-            }
-            if($crop_var == null){
-                die("Crop varity was not found in the system.");
-            }
- 
-            
+            $form->html('<h3>About this Field inspection report - (QDS)</h3>');
+            $crop_var = CropVariety::find($model->crop_variety_id);
             $crop_name = $crop_var->crop->name.", ".$crop_var->name;
 
             $form->display('', __('Crop'))->default($crop_name)->readonly();
@@ -284,7 +253,7 @@ class FormCropInspectionController extends AdminController
 
             if ($is_final) {
                 $form->radio('status', __('Inspection decision'))
-                    ->help("NOTE: Once this SR1O's status is changed and submited, it cannot be revarsed.")
+                    ->help("NOTE: Once this  status is changed and submited, it cannot be reversed.")
                     ->options([
                         '4' => 'Rejected',
                         '5' => 'Accepted',

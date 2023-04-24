@@ -49,45 +49,57 @@ class FormCropDeclaration extends Model
 
             Utils::update_notification($model, 'SeedLab', request()->segment(count(request()->segments())-1));  
             
-            // if (Admin::user()->isRole('inspector')) 
-            // {
-            //    $model->crop_varieties->each(function ($crop_variety) use ($model) {
-            //     if ($crop_variety->crop->crop_inspection_types != null) 
-            //     {
-            //         foreach ($crop_variety->crop->crop_inspection_types as $key => $inspection) 
-            //         {
-            //             FormSr10::insertOrIgnore([
-            //                 'qds_declaration_id' => $model->id,
-            //                 'stage' => $inspection->inspection_stage
-            //             ],
-            //             [
-            //                 'stage' => $inspection->inspection_stage,
-            //                 'farmer_id' => $model->administrator_id,
-            //                 'status' => '1',
-            //                 'is_active' => 1,
-            //                 'is_done' => 0,
-            //                 'is_initialized' => false,
-            //                 'status_comment' => "",
-            //                 'qds_declaration_id' => $model->id,
-            //                 'administrator_id' => $model->administrator_id,
-            //                 'inspector' =>  Admin::user()->id,
-            //                 'min_date' => Carbon::parse($inspection->date_planted)->addDays($inspection->period_after_planting)->toDateString(),
-            //             ]);
-                        
-            //         }
-            //     }
-            //     else
-            //     {
-            //         $model->status = 5;
-            //         $model->save();
-            //     }
-            //    });
+            if (Admin::user()->isRole('inspector')) 
+            {
+               $model->crop_varieties->each(function ($crop_variety) use ($model) {
+                if ($crop_variety->crop->crop_inspection_types != null) 
+                {
+                    foreach ($crop_variety->crop->crop_inspection_types as $key => $inspection) 
+                    {
+                        $temp_sr10_1 = FormSr10::where([
+                            'qds_declaration_id' => $model->id,
+                        ])->get();
 
-            // }  
-         
-            
-            
-            
+                        $temp_sr10 = FormSr10::where([
+                            'qds_declaration_id' => $model->id,
+                            'stage' => $inspection->inspection_stage,
+                        ])->get();
+
+                        if (count($temp_sr10) < 1) 
+                        {
+                            $d['crop_variety_id'] = $crop_variety->id;
+                            $d['stage'] = $inspection->inspection_stage;
+                            $d['farmer_id'] = $model->administrator_id;
+                            $d['status'] = '1';
+
+                            if (count($temp_sr10_1) < 1) {
+                                $d['is_active'] = 1;
+                            } else {
+                                $d['is_active'] = 0;
+                            }
+                            $d['is_done'] = 0;
+                            $d['is_initialized'] = false;
+                            $d['status_comment'] = "";
+                            $d['qds_declaration_id'] = $model->id;
+                            $d['administrator_id'] = $model->administrator_id;
+                            $d['inspector'] =  Admin::user()->id;
+                            $date_planted = Carbon::parse($inspection->date_planted);
+                            $date_planted->addDays($inspection->period_after_planting);
+                            $toDateString = $date_planted->toDateString();
+                            $d['min_date'] = $toDateString;       
+                            $new_form_sr = new FormSr10($d);
+                            $new_form_sr->save();
+                        } 
+                    }
+                }
+                else
+                {
+                    $model->status = 5;
+                    $model->save();
+                }
+               });
+
+            }           
 
         });
  

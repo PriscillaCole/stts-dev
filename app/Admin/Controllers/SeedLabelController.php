@@ -311,7 +311,7 @@ class SeedLabelController extends AdminController
                           
                 }
 
-               // $form->crop_variety_id = $seed_lab->crop_variety->id;
+                $form->crop_variety_id = $seed_lab->crop_variety->id;
                 $form->status = 1;
             });
         
@@ -335,7 +335,7 @@ class SeedLabelController extends AdminController
             $form->select('seed_label_package_id', __('Select Seed label package'))
             ->options($lables)
             ->required();
-           // $form->hidden('crop_variety_id')->default(1);
+            $form->hidden('crop_variety_id')->default(1);
             $form->hidden('images')->default("[]");
             $form->hidden('status')->default(1)->attribute('value', '1');
             $form->text('quantity', __('Quantity'))->attribute('type', 'number')->required()

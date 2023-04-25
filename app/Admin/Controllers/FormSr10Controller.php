@@ -37,7 +37,7 @@ class FormSr10Controller extends AdminController
         $grid = new Grid(new FormSr10());
         $grid->disableFilter();
         // $grid->disableRowSelector();
-        //$grid->model()->where('planting_return_id', '!=', null)->orderBy('id', 'desc');
+        $grid->model()->where('planting_return_id', '!=', null)->orderBy('id', 'desc');
 
         if (Admin::user()->isRole('basic-user')) {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);

@@ -349,6 +349,7 @@ class SeedLabController extends AdminController
                     }
                     else{
                     $form->lot_number = $exam->lot_number;
+                
                     }
                     $form->save();
                     
@@ -482,7 +483,7 @@ class SeedLabController extends AdminController
                     {
                         $tools->disableDelete();
                         $tools->disableView();
-                        $tools->disableList();
+                        
                     
                     });
                     $form->footer(function ($footer) 
@@ -561,13 +562,14 @@ class SeedLabController extends AdminController
                 $form->hidden('inspector_is_done', __('inspector_is_done'))->attribute('value', 1)->value(1)->default(1);
                 $form->date('sampling_date', __('Sampling date'))->default(date('y-m-d'))->required();
 
-                $form->text('sample_weight', __('Enter weight of Sample (in KGs)'))
+                $form->text('sample_weight', __('Enter weight of Sample (in metric tons)'))
                     ->required()
                     ->attribute('type', 'number')
                     ->help("This is the sample weight you're going to test");
                 $mother11 = DB::table('stock_records')->where("administrator_id", $model->administrator_id)->sum('quantity');
-                $form->text('quantity', __('Enter the quantity represented (in Metric Tonnes)'))
+                $form->text('quantity', __('Enter the quantity represented (in metric tons)'))
                     ->required()
+                    ->default($mother11)
                     ->help("<span style='color: deepskyblue; font-weight: 799;'>
                     This value should not be more than " . $mother11 . " (The applicant's current 'In Stock' Balance).
                     </span>");
@@ -869,7 +871,7 @@ class SeedLabController extends AdminController
                 {
                     $tools->disableDelete();
                     $tools->disableView();
-                    $tools->disableList();
+                
                 });
         return $form;
     }

@@ -311,8 +311,7 @@ class SeedLabelController extends AdminController
                           
                 }
 
-                $form->crop_variety_id = 1;
-                //$seed_lab->crop_variety->id;
+                $form->crop_variety_id = $seed_lab->crop_variety->id;
                 $form->status = 1;
             });
         

@@ -138,28 +138,30 @@ public static function can_create_qds()
     {
 
         $recs = FormQds::where('administrator_id',  Admin::user()->id)->get();
-        foreach ($recs as $key => $value) 
-        {
+        if(!$recs){
+            return false;
+        }  
+        else
+        {  
+            foreach ($recs as $key => $value) 
+            {
 
-            if (!$value->valid_from) 
-            {
-                return false;
-            }
-            if (!$value->valid_until) 
-            {
-                return false;
-            }
+                if (!$value->valid_until) 
+                {
+                    return false;
+                }
 
-            $now = time();
-            $then = strtotime($value->valid_until);
-            if ($now < $then) 
-            {
-                return true;
-            } else 
-            {
-                return false;
+                $now = time();
+                $then = strtotime($value->valid_until);
+                if ($now < $then) 
+                {
+                    return true;
+                } else 
+                {
+                    return false;
+                }
             }
-        }
+        }       
         return true;
     }
 

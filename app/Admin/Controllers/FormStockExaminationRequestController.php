@@ -251,20 +251,22 @@ class FormStockExaminationRequestController extends AdminController
         if (Admin::user()->isRole('basic-user')) 
         {
             //get crop variety from the import permit id when form is saving
-            // $form->saving(function (Form $form)
-            // {
-            //     if ($form->import_export_permit_id != null) 
-            //     {
-            //         $has_crop = ImportExportPermitsHasCrops::where('import_export_permit_id',$form->import_export_permit_id)->first();
-            //         $variety = CropVariety::where('id', $has_crop->crop_variety_id)->first();
-            //         $form->crop_variety_id = $variety->id;
-            //     }
-            //     else
-            //     {
-            //         $form->crop_variety_id = 3;
-            //     }
+            $form->saving(function (Form $form)
+            {
+                if ($form->planting_return_id != null) 
+                {
+                    $has_crop = FormSr10::where('planting_return_id',$form->planting_return_id)->first();
+                    $variety = CropVariety::where('id', $has_crop->crop_variety_id)->first();
+                    $form->crop_variety_id = $variety->id;
+                }
+                else
+                {
+                    $qds_has_crop = FormSr10::where('crop_id',$form->form_qds_id)->first();
+                    $qds_variety = CropVariety::where('id', $qds_has_crop->crop_variety_id)->first();
+                    $form->crop_variety_id = $qds_variety;
+                }
                 
-            // });
+            });
     
 
             $form->radio('examination_category', __('Select examination category'))
@@ -392,6 +394,7 @@ class FormStockExaminationRequestController extends AdminController
                             if (!$value->is_not_used) 
                             {
                                 $planting_returnings[$value->id] = "SR10 number: " . $value->sr10_number;
+                                
                             }
                         }
                     }
@@ -401,6 +404,7 @@ class FormStockExaminationRequestController extends AdminController
                         {
                             $form->select('planting_return_id', __('Select approved SR10'))
                             ->options($planting_returnings);
+                            $form->hidden('crop_variety_id', __('Crop variety'));
                             $form->textarea('remarks', __('Enter remarks'));
                         }
                         else{
@@ -460,6 +464,7 @@ class FormStockExaminationRequestController extends AdminController
                         {
                             $form->select('form_qds_id', __('Select approved QDS'))
                             ->options($form_declarations);
+                            $form->hidden('crop_variety_id', __('Crop variety'));
                             $form->textarea('remarks', __('Enter remarks'));
                         }
                         else{

@@ -37,7 +37,7 @@ class FormSr10Controller extends AdminController
         $grid = new Grid(new FormSr10());
         $grid->disableFilter();
         // $grid->disableRowSelector();
-        $grid->model()->where('planting_return_id', '!=', null)->orderBy('id', 'desc');
+        $grid->model()->where('planting_return_id', '!=', null);
 
         if (Admin::user()->isRole('basic-user')) {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);
@@ -69,7 +69,7 @@ class FormSr10Controller extends AdminController
         })->sortable();
 
         if (Admin::user()->isRole('inspector')) {
-            $grid->column('is_active', __('Attension'))->display(function ($is_active) {
+            $grid->column('is_active', __('Attention'))->display(function ($is_active) {
                 if ($is_active) {
                     return '<span class="badge badge-danger">Needs your attension</span>';
                 } else {
@@ -336,7 +336,7 @@ class FormSr10Controller extends AdminController
                     ->required()
                     ->when('in', [3, 4, 17], function (Form $form) {
                         $form->textarea('status_comment', 'Enter status comment (Remarks)')
-                            ->help("Please specify with a comment");
+                            ->help("Please specify with a comment")->required();
                     });
             }
 

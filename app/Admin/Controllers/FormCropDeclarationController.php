@@ -230,7 +230,7 @@ class FormCropDeclarationController extends AdminController
 
         if ($form->isCreating()) 
         {
-            if (!Utils::can_create_qds()) 
+            if (Utils::can_create_qds()) 
             {
                 return admin_warning("Warning", "To apply for QDS Declaration, you must be an approved QDS Producer");
                 return redirect(admin_url('form-crop-declarations'));

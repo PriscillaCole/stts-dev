@@ -252,6 +252,7 @@ class SeedLabController extends AdminController
         }
         $show->field('quantity', __('Quantity'));
         $show->field('purity', __('Purity'));
+        $show->field('p_x_g', __('PxG'));
         $show->field('germination_capacity', __('Germination capacity'));
         $show->field('abnormal_sprouts', __('Abnormal sprouts'));
         $show->field('broken_germs', __('Broken germs'));

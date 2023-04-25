@@ -440,6 +440,7 @@ class FormSr6Controller extends AdminController
                         
                         return  response(' <p class="alert alert-warning"> You cannot create a new SR6 form  while having VALID one of the same category. <a href="/admin/form-sr6s/create"> Go Back </a></p> ');   
                     }
+
                    
             }
                      
@@ -485,7 +486,7 @@ class FormSr6Controller extends AdminController
                     }
                     $form->select('crop_id', 'Add Crop')->options(Crop::all()->pluck('name', 'id'))->required();
                     
-                });
+                });   
 
             $form->radio('seed_grower_in_past', __('I/We have/has not been a seed grower in the past?') )
                 ->options([

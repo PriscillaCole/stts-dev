@@ -64,7 +64,7 @@ class FormStockExaminationRequestController extends AdminController
                 }
             });
         } 
-        else if (!Admin::user()->isRole('inspector')) 
+        else if (Admin::user()->isRole('inspector')) 
         {
             $grid->model()->where('inspector', '=', Admin::user()->id);
             $grid->disableCreateButton();

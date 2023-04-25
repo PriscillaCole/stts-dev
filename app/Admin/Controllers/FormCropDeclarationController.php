@@ -191,6 +191,18 @@ class FormCropDeclarationController extends AdminController
             }
         }
 
+        if (Admin::user()->isRole('admin'))
+        {
+            //button link to the show-details form
+            
+            $show->field('id','Action')->unescape()->as(function ($id) 
+                {
+                return "<a href='/admin/form-crop-declarations/$id/edit' class='btn btn-primary'>Take Action</a>";
+            
+                });
+            
+        }
+
         return $show;
     }
 

@@ -532,8 +532,7 @@ class FormStockExaminationRequestController extends AdminController
                 ->default($has_crop->crop_name)
                 ->required();
                 $form->display('display', 'Crop Variety')
-                ->default($variety->name)
-                ->required();
+                ->default($variety->name);
             }
             
             $u = Administrator::where('id', $model->administrator_id)->firstOrFail();

@@ -32,21 +32,12 @@ class FormSr10Controller extends AdminController
     protected function grid()
     {
 
-        // $sr = FormSr10::find(8);
-        // $sr->seed_class = rand(10000,100000000);
-        // $sr->save();
-        // if(FormSr10::is_final_sr10($sr)){
-        //     dd("yes");
-        // }else{
-        //     dd("no");
-        // }
-        // dd($sr->stage);
-        // $sr->save();
-        // dd("here");
+      
 
         $grid = new Grid(new FormSr10());
         $grid->disableFilter();
         // $grid->disableRowSelector();
+        $grid->model()->where('planting_return_id', '!=', null)->orderBy('id', 'desc');
 
         if (Admin::user()->isRole('basic-user')) {
             $grid->model()->where('administrator_id', '=', Admin::user()->id);

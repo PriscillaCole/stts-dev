@@ -107,7 +107,7 @@ class OrderController extends AdminController
         $grid->column('quantity', __('Quantity'))
             ->display(function ($id) 
             {
-                return number_format($id) . " KGs";
+                return number_format($id) . " bags";
             })->sortable();
         $grid->column('total_price', __('Total price'))
             ->display(function ($id) 
@@ -256,40 +256,48 @@ class OrderController extends AdminController
         });
 
 
-        if ($form->isEditing()) {
+        if ($form->isEditing()) 
+        {
 
-            $form->saved(function ($form) {
+            $form->saved(function ($form) 
+            {
                 return redirect(admin_url('orders'));
             });
-            $form->saving(function ($form) {
+
+            $form->saving(function ($form) 
+            {
                 $id = request()->route()->parameters['order'];
                 $order = $form->model()->find($id);
-                if (!$order) {
+                if (!$order) 
+                {
                     dd("Order not found");
                 }
 
-                $pro = Product::find($order->product_id);
-                if (!$pro) {
+                $product = Product::find($order->product_id);
+                if (!$product) 
+                {
                     die("Product not found");
                 }
 
-                if ($order->quantity > $pro->quantity) {
-                    admin_error('Ooops', 'You have inadequate amount of product (' . $pro->name . ") to proceed with this 
-                    order #" . $order->id);
+                if ($order->quantity > $product->quantity) 
+                {
+                    admin_error('Ooops', 'You have inadequate amount of product (' . $product->name . ") to proceed with this 
+                    order ");
                     return redirect(admin_url('orders'));
                 }
 
 
-                if ($form->status == 3) {
+                if ($form->status == 3) 
+                {
                     $market = new MarketableSeed();
                     $market->administrator_id = $order->administrator_id;
                     $market->quantity = $order->quantity;
                     $market->crop_variety_id = $order->crop_variety_id;
-                    $market->lab_test_number = $pro->lab_test_number;
-                    $market->seed_label_id = $pro->seed_label_id;
-                    $market->lot_number = $pro->lot_number;
-                    $market->seed_label_package_id = $pro->seed_label_package_id;
-                    $market->price = $pro->price;
+                    $market->lab_test_number = $product->lab_test_number;
+                    $market->seed_label_id = $product->seed_label_id;
+                    $market->lot_number = $product->lot_number;
+                    $market->seed_label_package_id = $product->seed_label_package_id;
+                    $market->price = $product->price;
                     $market->is_deposit = 0;
                     $market->is_counted = 1;
                     $market->seed_class = null;
@@ -304,15 +312,27 @@ class OrderController extends AdminController
                     $market->detail = "Sold crop to " . $u->name . ", ID: " . $u->id;
                     $market->image = null;
                     $market->images = null;
-                    if ($market->save()) {
-                        admin_success("Success", "Order complted successfully.");
+
+                    //update the available_stock in the products table by getting the quantity entered and subtracting it from the available stock
+                    //and save it
+                    $bought_quantity =  $form->quantity;
+                    $new_quantity = $product->available_stock - $bought_quantity;
+                    
+
+                    $product->available_stock = $new_quantity;
+                    $product->update();
+                    
+
+                    if ($market->save()) 
+                    {
+                        admin_success("Success", "Order completed successfully.");
                     }
                 }
             });
 
             $id = request()->route()->parameters['order'];
-            $pro = $form->model()->find($id);
-            if (!$pro) {
+            $product = $form->model()->find($id);
+            if (!$product) {
                 dd("Order not found.");
             }
             $users = [];
@@ -322,38 +342,38 @@ class OrderController extends AdminController
 
             $form->select('administrator_id', __('Seller'))
                 ->options($users)
-                ->value($pro->administrator_id)
+                ->value($product->administrator_id)
                 ->readonly()
-                ->default($pro->administrator_id);
+                ->default($product->administrator_id);
 
             $form->select('order_by', __('Buyer'))
                 ->options($users)
                 ->value(Admin::user()->id)
                 ->readonly()
                 ->default(Admin::user()->id);
-            $product = Product::find($pro->product_id);
+            $product = Product::find($product->product_id);
 
             if ($product) {
-
-
                 $form->select('crop_variety_id', __('Crop'))
                     ->options([
-                        $pro->crop_variety_id => $product->name
+                        $product->crop_variety_id => $product->name
                     ])
-                    ->value($pro->crop_variety_id)
+                    ->value($product->crop_variety_id)
                     ->readonly()
-                    ->default($pro->crop_variety_id);
-                $form->hidden('product_id', __('Product id'))->default($pro->id);
+                    ->default($product->crop_variety_id);
+                $form->hidden('product_id', __('Product id'))->default($product->id);
             }
 
 
-            $form->display('quantity', __('Available quantity'))->default(
-                number_format($pro->quantity) . " KGs"
-            );
+            // $form->display('quantity', __('Available quantity'))->default(
+            //     number_format($product->available_stock) . " bags"
+            // );
             $form->display('price', __('Unit price'))->default(
-                "UGX. " . number_format($pro->price)
+                "UGX. " . number_format($product->price)
             );
-            $form->display('quantity', __('Enter Quantity (in KGs)'));
+            $form->text('quantity', __('Quantity Ordered'))->default(
+                number_format($product->quantity) . " bags"
+            );
 
             $form->divider();
 
@@ -379,8 +399,6 @@ class OrderController extends AdminController
                     $form->disableEditingCheck();
                     $form->disableCreatingCheck();
                     $form->disableViewCheck();
-                    $form->disableSubmit();
-                    $form->disableReset();
                     $form->disableEditingCheck();
                     return $form;
                 }
@@ -388,18 +406,13 @@ class OrderController extends AdminController
                     ->options($items)
                     ->required();
             }
-
-            // if ($pro->status == 3) {
-            //     admin_warning("Warning", "This order completed, 
-            //     it's stage cannot be updated anymore.");
-            // } else {
-                if ($pro->order_by != Admin::user()->id) {
+                if ($product->order_by != Admin::user()->id) {
                     $form->radio('status', "Update order status")
                         ->options([
                             '1' => 'Pending',
                             '5' => 'Processing',
                             '2' => 'Shipping',
-                            '3' => 'Completed',
+                            '3' => 'Delivered',
                             '4' => 'Canceled',
                         ])
                         ->help("Once you mark this ordered as complted, you cannot reverse the process.")
@@ -411,7 +424,8 @@ class OrderController extends AdminController
            // }
         }
 
-        if ($form->isCreating()) {
+        if ($form->isCreating()) 
+        {
             $form->saving(function ($new_order) {
                 $id = $_SESSION['product_id'];
                 $pro =  Product::find($id);
@@ -486,8 +500,8 @@ class OrderController extends AdminController
                 ->default($pro->crop_variety_id);
 
             $form->hidden('product_id', __('Product id'))->default($pro->id);
-            $form->display('quantity', __('Available quantity'))->default(
-                number_format($pro->quantity) . " KGs"
+            $form->display('available_stock', __('Available stock'))->default(
+                number_format($pro->available_stock) . " bags "
             );
             $form->display('price', __('Unit price'))->default(
                 "UGX. " . number_format($pro->price)
@@ -496,24 +510,11 @@ class OrderController extends AdminController
             $form->divider();
 
 
-            $form->text('quantity', __('Enter Quantity (in KGs)'))->required()
-                ->value($pro->quantity)
-                ->default($pro->quantity)
-                ->help("MAX: " . number_format($pro->quantity) . " KGs")
+            $form->number('quantity', __('Number of bags'))->required()
+                ->value($pro->available_stock)
+                ->default($pro->available_stock)
+                ->help("MAX: " . number_format($pro->available_stock) . " bags")
                 ->attribute('type', 'number');
-
-            // $form->radio('payment_type', __('Payment type'))
-            //     ->options([
-            //         'Cash on delivery' => 'Cash on delivery',
-            //         'Paid' => 'Paid',
-            //     ])
-            //     ->required()
-            //     ->default("Cash on delivery")
-            //     ->help("Select payment method")
-            //     ->when('Paid', function (Form $form) {
-            //         $form->file('receipt', __('Attach Receipt'));
-            //     });
-
 
             $form->textarea('detail', __('Extra note'))
                 ->help("Optional");
@@ -525,7 +526,7 @@ class OrderController extends AdminController
         $form->disableEditingCheck();
         $form->disableCreatingCheck();
         $form->disableViewCheck();
-        $form->disableReset();
+    
 
         return $form;
     }

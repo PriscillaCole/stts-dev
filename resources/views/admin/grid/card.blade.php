@@ -43,15 +43,16 @@ use Encore\Admin\Facades\Admin;
                     </span>
                  
                     <div class="mailbox-attachment-info">
-                        <h2 class="product-price" style="font-size: 22px!important">
-                            UGX {!! $row->column('price') !!}
-                        </h2>
-                        <p class="product-title" style="color: black;">
-                            AVAILABLE QTY: {!! $row->column('quantity') !!} KGs
-                        </p>
+                        
                         <p class="product-title" style="color: black;">
                             {!! $row->column('name') !!}
                         </p>
+                        <h1 class="product-price" style="font-size: 22px!important">
+                            UGX {!! $row->column('price') !!}
+                        </h1>
+                        <span class="product-title" style="color: black;">
+                            <i>In stock: {!! $row->column('available_stock') !!} bags</i>
+                        </span>
 
                         <?Php
                         // use Encore\Admin\Facades\Admin;

@@ -229,8 +229,10 @@ class FormCropDeclarationController extends AdminController
         });
 
         if ($form->isCreating()) 
+
         {
-            if (Utils::can_create_qds()) 
+            $qds = FormQds::where('administrator_id',  Admin::user()->id)->where('valid_until','>=', Carbon::now())->first();
+            if (!$qds) 
             {
                 return admin_warning("Warning", "To apply for QDS Declaration, you must be an approved QDS Producer");
                 return redirect(admin_url('form-crop-declarations'));
@@ -333,13 +335,8 @@ class FormCropDeclarationController extends AdminController
                 ->options([
                     '16' => 'Initialized',
                 ])
-                ->required()
+                ->required();
                 
-                ->when('16', function (Form $form) 
-                {
-                    $form->date('valid_from', 'Valid from date?');
-                    $form->date('valid_until', 'Valid until date?');
-                }) ;
         }
       
         return $form;

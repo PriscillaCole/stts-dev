@@ -364,7 +364,6 @@ class FormQdsController extends AdminController
             $form->text('address', __('Address'))->required();
             $form->text('premises_location', __('Premises location'))->required();
             $form->text('years_of_expirience', __('Enter Applicant years of experience as a quality declared seed (QDS) grower'))
-                ->rules('min:1')
                 ->attribute('type', 'number')
                 ->required();
 
@@ -572,7 +571,7 @@ class FormQdsController extends AdminController
                 {
 
                     $form->text('grower_number', __('Grower number'))
-                        ->default("Qds" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->readonly();
+                        ->default("QDS" ."/". date('Y') ."/". mt_rand(10000000, 99999999))->readonly();
                     $form->text('registration_number', __('Seed Board Registration number'))
                           ->default("MAAIF" ."/". date('Y') ."/". "QDS". "/". mt_rand(10000000, 99999999))->readonly()
                         ->help("Please Enter Registration number");

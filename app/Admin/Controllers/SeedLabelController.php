@@ -143,7 +143,7 @@ class SeedLabelController extends AdminController
         })->sortable();
 
         $grid->column('quantity', __('Quantity'))->display(function ($var) {
-            return number_format($var). " Kgs";
+            return number_format($var). " metric tons ";
         });
 
         $grid->column('status', __('Status'))->display(function ($status) {
@@ -198,7 +198,7 @@ class SeedLabelController extends AdminController
         $show->field('seed_label_package_id', __('Seed label package id'))->as(function ($seed) {
             return SeedLabelPackage::find($seed)->package_price;
         });
-        $show->field('quantity', __('Quantity'));
+        $show->field('quantity', __('Quantity (metric tons)'));
         $show->field('applicant_remarks', __('Applicant remarks'));
         $show->field('receipt', __('Receipt'))->file();
         $show->field('status', __('Status'))->unescape()->as(function ($status) 
@@ -300,18 +300,26 @@ class SeedLabelController extends AdminController
                   
             $form->saving(function ($form) 
             {
+               $package_id = $form->seed_label_package_id;
+               $package_size = SeedLabelPackage::find($package_id)->package_size;
+               //convert the quantity entered into kgs
+                $quantity = intval($form->quantity);
+                $quantity *= 1000;
+                $available_stock =  intval($quantity / $package_size);   
                 $seed_lab = SeedLab::find($form->seed_lab_id);
+                
                 if (!$seed_lab) 
                 {
                     die("seed_label not found");
                 }
                 if ($form->quantity > $seed_lab->quantity) 
                 {
-                    return  response(' <p class="alert alert-warning"> You have a less amount of this variety compared to ' . $seed_lab->quantity . 'Kgs that you have requested for. <a href="/admin/seed-labels/create"> Ok </a></p> ');
+                    return  response(' <p class="alert alert-warning"> You have a less amount of this variety compared to ' . $seed_lab->quantity . ' metric tons that you have in stock. <a href="/admin/seed-labels/create"> Ok </a></p> ');
                           
                 }
 
                 $form->crop_variety_id = $seed_lab->crop_variety->id;
+                $form->available_stock = $available_stock;
                 $form->status = 1;
             });
         
@@ -322,8 +330,8 @@ class SeedLabelController extends AdminController
             {
                 $seed_label = $form->seed_label_package_id;
                 $price = SeedLabelPackage::find($seed_label)->package_price;
-                $quantity = $form->quantity;
-                $total_amount = $price * $quantity;
+                $stock = $form->available_stock;
+                $total_amount = $price * $stock;
 
                 return  response(' <p class="alert alert-success"> Your total amount is ' . $total_amount . ' Shillings . <a href="/admin/seed-labels"> Ok </a></p> ');
             });
@@ -337,8 +345,9 @@ class SeedLabelController extends AdminController
             ->required();
             $form->hidden('crop_variety_id')->default(1);
             $form->hidden('images')->default("[]");
+            $form->hidden('available_stock');
             $form->hidden('status')->default(1)->attribute('value', '1');
-            $form->text('quantity', __('Quantity'))->attribute('type', 'number')->required()
+            $form->text('quantity', __('Quantity  (metric tons)'))->attribute('type', 'number')->required()
             ->help("The quantity entered shouldnt be more than the quantity you have in stock");
             $form->text('price', __('Enter your selling unit price (Price per KG)'))->attribute('type', 'number')->required();
             $form->image('image', __('Thumbnail Image'))->required();
@@ -348,7 +357,7 @@ class SeedLabelController extends AdminController
 
         if (Admin::user()->isRole('admin')) 
         {
-            $form->display('quantity', __('Quantity'))->attribute('type', 'number');
+            $form->display('available_stock', __('Number of Labels'));
             $form->display('applicant_remarks', __('Remarks'));
 
             $form->radio('status', __('Inspection decision'))
@@ -377,6 +386,7 @@ class SeedLabelController extends AdminController
 
                 $new_product = new Product();
                 $new_product->administrator_id = $model->administrator_id;
+                $new_product->available_stock = $model->available_stock;
                 $new_product->crop_variety_id = $model->crop_variety_id;
                 $new_product->name = $model->crop_variety->name;
                 $new_product->detail = $model->applicant_remarks;
@@ -390,6 +400,7 @@ class SeedLabelController extends AdminController
                 $new_product->save();
 
             });
+            $form->display('available_stock', __('Number of Labels'));
 
             $form->radio('status', __('Set as printed'))
                 ->options([

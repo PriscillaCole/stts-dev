@@ -63,6 +63,11 @@ class SubGrowerController extends AdminController
             $grid->batchActions(function ($batch) {
                 $batch->add(new BatchReplicate()); 
             });
+            $grid->actions(function ($actions) {
+                    $actions->disableDelete();
+                    $actions->disableEdit();    
+        
+            });
             $grid->disableCreateButton();
         }
 

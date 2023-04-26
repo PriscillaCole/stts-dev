@@ -403,22 +403,6 @@ class SeedLabController extends AdminController
                 
             }
 
-            $form->saving(function ($form) 
-            {
-                $id = request()->route()->parameters['seed_lab'];
-                $seed_lab = SeedLab::find($id);
-               //get crop variety from the import permit id when form is saving
-                $stock_examination_form = FormStockExaminationRequest::where('id', $seed_lab->form_stock_examination_request_id)->first();
-                $has_crop = ImportExportPermitsHasCrops::where('import_export_permit_id', $stock_examination_form->import_export_permit_id)->first();
-                if($has_crop != null)
-                {
-                    $variety = CropVariety::where('id', $has_crop->crop_variety_id)->first();
-            
-                    $form->inspector_is_done = 0;
-                    $form->crop_variety_id = $variety->id;
-                }
-            });
-
             $form->divider();
             $form->hidden('inspector_is_done', __('inspector_is_done'))->attribute(['value', 0]);
             $form->hidden('crop_variety_id', __('crop_variety_id'));
@@ -511,10 +495,10 @@ class SeedLabController extends AdminController
                     //get the available stock of the crop variety
                     $records = StockRecord::where([
                         'administrator_id' => $model->user->id,
-                        'crop_variety_id' => $model->crop_variety_id
+                        'lot_number' => $model->lot_number,
                     ])->get();
-                    $tot = 0;
-                    
+                
+                     $tot = 0; 
                     //get the total stock of that particular crop variety
                     foreach ($records as $key => $value) 
                     {
@@ -566,12 +550,13 @@ class SeedLabController extends AdminController
                     ->required()
                     ->attribute('type', 'number')
                     ->help("This is the sample weight you're going to test");
-                $mother11 = DB::table('stock_records')->where("administrator_id", $model->administrator_id)->sum('quantity');
+                $total_stock = DB::table('stock_records')->where("administrator_id", $model->administrator_id)
+                               ->where('lot_number', $model->lot_number)->sum('quantity');
                 $form->text('quantity', __('Enter the quantity represented (in metric tons)'))
                     ->required()
-                    ->default($mother11)
+                    ->default($total_stock)
                     ->help("<span style='color: deepskyblue; font-weight: 799;'>
-                    This value should not be more than " . $mother11 . " (The applicant's current 'In Stock' Balance).
+                    This value should not be more than " . $total_stock . " (The applicant's current 'In Stock' Balance).
                     </span>");
                     
                 $form->text('packaging', __('Packaging'))->required();

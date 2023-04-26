@@ -111,10 +111,8 @@ class MarketableSeedController extends AdminController
 
         $grid->column('quantity', __('Quantity'))->display(function ($item) {
             return number_format($item);
-        })->sortable()
-            ->totalRow(function ($amount) {
-                return "<b>" . number_format($amount) . " KGs" . "</b>";
-            });
+        })->sortable();
+           
 
         return $grid;
     }

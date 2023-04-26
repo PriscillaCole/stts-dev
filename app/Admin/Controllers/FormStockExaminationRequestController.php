@@ -255,15 +255,14 @@ class FormStockExaminationRequestController extends AdminController
             {
                 if ($form->planting_return_id != null) 
                 {
-                    $has_crop = FormSr10::where('planting_return_id',$form->planting_return_id)->first();
-                    $variety = CropVariety::where('id', $has_crop->crop_variety_id)->first();
-                    $form->crop_variety_id = $variety->id;
+                    
+                    $has_crop = FormSr10::where('id',$form->planting_return_id)->first();
+                    $form->crop_variety_id = $has_crop->crop_variety_id;
                 }
-                else
+                elseif($form->form_qds_id != null)
                 {
-                    $qds_has_crop = FormSr10::where('crop_id',$form->form_qds_id)->first();
-                    $qds_variety = CropVariety::where('id', $qds_has_crop->crop_variety_id)->first();
-                    $form->crop_variety_id = $qds_variety;
+                    $qds_has_crop = FormSr10::where('id',$form->form_qds_id)->first();
+                    $form->crop_variety_id = $qds_has_crop->crop_variety_id;
                 }
                 
             });
@@ -365,45 +364,23 @@ class FormStockExaminationRequestController extends AdminController
                 else
                 {
 
-                    $sr10s = [];
-                    $planting_returnings = [];
-                    $verified_isnpections = [];
-                    foreach ($SubGrowers as $SubGrower)
+                    $verified_seed_growers = FormSr10::where('administrator_id', Auth::user()->id)
+                                            ->where('status', '=', 5)
+                                            ->where('is_final', '=', 1)
+                                            ->where('planting_return_id', '!=', null)
+                                            ->get();
+                    $verified_seed_grower =[];
+                    foreach ($verified_seed_growers as $key => $value)
                     {
-                        $_sr10s = FormSr10::where(['planting_return_id' => $SubGrower->id])->get();
-                        foreach ($_sr10s as $_sr10) 
-                        {
-                            $sr10s[] = $_sr10;
-                        }
+                        
+                            $verified_seed_grower[$value->id] = "SR10 number: " . $value->sr10_number;
+                        
                     }
-                    foreach ($sr10s as $key => $sr10) 
-                    {
-                        if ($sr10->is_final) 
-                        {
-                            if ($sr10->status == 5) 
-                            {
-                                $verified_isnpections[] = $sr10;
-                            }
-                        }
-                    }
-
-                    foreach ($verified_isnpections as $key => $value) 
-                    {
-                        if ($value->status == 5) 
-                        {
-                            if (!$value->is_not_used) 
-                            {
-                                $planting_returnings[$value->id] = "SR10 number: " . $value->sr10_number;
-                                
-                            }
-                        }
-                    }
-
                 
-                        if (count($planting_returnings) >= 1) 
+                        if (count($verified_seed_grower) >= 1) 
                         {
                             $form->select('planting_return_id', __('Select approved SR10'))
-                            ->options($planting_returnings);
+                            ->options($verified_seed_grower);
                             $form->hidden('crop_variety_id', __('Crop variety'));
                             $form->textarea('remarks', __('Enter remarks'));
                         }
@@ -426,44 +403,23 @@ class FormStockExaminationRequestController extends AdminController
                 }else
                 {
 
-                    $sr10s = [];
-                    $form_declarations = [];
-                    $verified_isnpections = [];
-                    foreach ($all_qds as $qds)
-                    {
-                        $_sr10s = FormSr10::where(['qds_declaration_id' => $qds->id])->get();
-                        foreach ($_sr10s as $_sr10) 
+                    $verified_qds_growers = FormSr10::where('administrator_id', Auth::user()->id)
+                    ->where('status', '=', 5)
+                    ->where('is_final', '=', 1)
+                    ->where('qds_declaration_id', '!=', null)
+                    ->get();
+                        $verified_qds_grower =[];
+                        foreach ($verified_qds_growers as $key => $value)
                         {
-                            $sr10s[] = $_sr10;
-                        }
-                    }
-                    foreach ($sr10s as $key => $sr10) 
-                    {
-                        if ($sr10->is_final) 
-                        {
-                            if ($sr10->status == 5) 
-                            {
-                                $verified_isnpections[] = $sr10;
-                            }
-                        }
-                    }
 
-                    foreach ($verified_isnpections as $key => $value) 
-                    {
-                        if ($value->status == 5) 
-                        {
-                            if (!$value->is_not_used) 
-                            {
-                                $form_declarations[$value->id] = "QDS number: " . $value->sr10_number;
-                            }
-                        }
-                    }
+                            $verified_qds_grower[$value->id] = "SR10 number: " . $value->sr10_number;
 
-                
-                        if (count($form_declarations) >= 1) 
+                        }
+
+                        if (count($verified_qds_grower) >= 1) 
                         {
                             $form->select('form_qds_id', __('Select approved QDS'))
-                            ->options($form_declarations);
+                            ->options($verified_qds_grower);
                             $form->hidden('crop_variety_id', __('Crop variety'));
                             $form->textarea('remarks', __('Enter remarks'));
                         }
@@ -534,7 +490,7 @@ class FormStockExaminationRequestController extends AdminController
                $variety = CropVariety::where('id', $has_crop->crop_variety_id)->first();
 
                 $form->display('display', 'Crop')
-                ->default($has_crop->crop_name)
+                ->default($variety->crop->name)
                 ->required();
                 $form->display('display', 'Crop Variety')
                 ->default($variety->name);

@@ -268,8 +268,9 @@ class FormCropInspectionController extends AdminController
                         '17' => 'Skip',
                     ])
                     ->required()
-                    ->when('in', [3, 4, 17], function (Form $form) {
+                    ->when('in', [7, 4, 17], function (Form $form) {
                         $form->textarea('status_comment', 'Enter status comment (Remarks)')
+                             ->required()
                             ->help("Please specify with a comment");
                     });
             }

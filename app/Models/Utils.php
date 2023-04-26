@@ -138,11 +138,7 @@ public static function can_create_qds()
     {
 
         $recs = FormQds::where('administrator_id',  Admin::user()->id)->get();
-        if(!$recs){
-            return false;
-        }  
-        else
-        {  
+        
             foreach ($recs as $key => $value) 
             {
 
@@ -161,7 +157,7 @@ public static function can_create_qds()
                     return false;
                 }
             }
-        }       
+              
         return true;
     }
 
@@ -261,6 +257,7 @@ public static function can_create_export($export_permit)
 
         return true;
     }
+
 
 
 

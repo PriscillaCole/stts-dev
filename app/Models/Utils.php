@@ -265,7 +265,8 @@ public static function can_create_export($export_permit)
 
 
 
-//system notifications function to send notifications to the front end
+//system notifications function 
+//send notifications to the front end
 public static function get_notifications($u)
 {
     if($u == null)
@@ -317,12 +318,12 @@ public static function get_users_by_role($role_id)
     }
 
 //get users by role notify
-public static function get_users_by_role_notify($role_id)
+public static function get_users_by_role_notify($receiver_id)
     {
         $sql = "SELECT * FROM admin_role_users
         INNER JOIN admin_users ON admin_role_users.user_id = admin_users.id
         INNER JOIN my_notifications ON my_notifications.receiver_id = admin_users.id
-        WHERE admin_role_users.role_id = {$role_id}";
+        WHERE admin_users.id = {$receiver_id}";
         return DB::select($sql);
 
     }
@@ -454,7 +455,7 @@ public static function update_notification($m, $model_name, $entity)
             {
                     $not = new MyNotification();
                     $not->role_id = 2;
-                    $not->message = "{$entity} has been edited by '.Admin::user()->name.' ";
+                    $not->message = "{$entity} has been edited by " . Admin::user()->name ;
                     $not->link = admin_url("auth/login"); 
                     $not->form_link = admin_url("{$entity}/{$m->id}");
                     $not->status = 'Unread'; 
@@ -464,7 +465,7 @@ public static function update_notification($m, $model_name, $entity)
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
                     
-                    //self::sendMail($not);
+                    self::sendMail($not);
             }
             //under inspection for farmer and inspector
             if($m->status == 2)
@@ -484,7 +485,7 @@ public static function update_notification($m, $model_name, $entity)
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
 
-                    //self::sendMail($not);
+                    self::sendMail($not);
                 } 
                 $farmer  = Administrator::find($m->administrator_id);
                 if($farmer != null)
@@ -501,7 +502,7 @@ public static function update_notification($m, $model_name, $entity)
                     }
                     $not = new MyNotification();
                     $not->receiver_id = $farmer->id; 
-                    $not->role_id = 3;
+                    $not->role_id = 3; 
                     $not->message = "Dear {$farmer->name}, your {$entity}  is now under inspection."; 
                     $not->link = admin_url("auth/login"); 
                     $not->form_link = admin_url("{$entity}/{$m->id}");
@@ -512,7 +513,7 @@ public static function update_notification($m, $model_name, $entity)
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
 
-                // self::sendMail($not);
+                  self::sendMail($not);
                 }
             }  
 
@@ -535,7 +536,7 @@ public static function update_notification($m, $model_name, $entity)
                     $not->action_status_to_make_done = '[]'; 
                     $not->save(); 
                     
-                // self::sendMail($not);
+                 self::sendMail($not);
 
 
                 }
@@ -560,7 +561,7 @@ public static function update_notification($m, $model_name, $entity)
                     $not->action_status_to_make_done = '[]'; +
                     $not->save();  
 
-                // self::sendMail($not);
+                 self::sendMail($not);
                 }
             }
 
@@ -583,7 +584,7 @@ public static function update_notification($m, $model_name, $entity)
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
 
-                // self::sendMail($not);
+                 self::sendMail($not);
                 }
             }
 
@@ -606,7 +607,7 @@ public static function update_notification($m, $model_name, $entity)
                     $not->action_status_to_make_done = '[]'; 
                     $not->save();  
     
-                    // self::sendMail($not);
+                    self::sendMail($not);
                 }
             }
 
@@ -630,7 +631,7 @@ public static function update_notification($m, $model_name, $entity)
                         $not->action_status_to_make_done = '[]'; 
                         $not->save();  
 
-                        //self::sendMail($not);
+                        self::sendMail($not);
                     }
 
 
@@ -657,7 +658,7 @@ public static function update_notification($m, $model_name, $entity)
                         $not->action_status_to_make_done = '[]'; 
                         $not->save();  
 
-                        //self::sendMail($not);
+                        self::sendMail($not);
                     }
 
 
@@ -674,7 +675,7 @@ public static function sendMail($not)
                 
         } else
         {
-            $receivers = Utils::get_users_by_role_notify($not->role_id);
+            $receivers = Utils::get_users_by_role($not->role_id);
         }
 
         $emails = [];

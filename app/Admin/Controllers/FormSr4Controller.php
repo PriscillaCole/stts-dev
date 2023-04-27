@@ -37,6 +37,9 @@ class FormSr4Controller extends AdminController
         //organize the grid in descending order of created_at
         $grid->model()->orderBy('created_at', 'desc');
 
+        //disable export button
+        $grid->disableExport();
+
         //disable batch delete
         $grid->batchActions(function ($batch) 
         {
@@ -507,13 +510,8 @@ class FormSr4Controller extends AdminController
                         $formSr4 = FormSr4::find($form);
                       //count the number of forms with the same type
                         $count = FormSr4::where('type', $type)->where('administrator_id', $user->id)->count();
-                        if($count > 1)
+                        if($count)
                         {
-                           
-                        }
-                        elseif($count == 1)
-                        { 
-                            return  response(' <p class="alert alert-warning"> You cannot create a new SR4 form  while having PENDING one of the same category. <a href="/admin/form-sr4s"> Go Back </a></p> ');
                             //check if what is being passed to the form is the same as the one in the database
                             if($form_sr4->id == $formSr4->id)
                             {
@@ -534,8 +532,9 @@ class FormSr4Controller extends AdminController
                                 }
                             }
                         }
-                        else{
-                             return true;
+                        else
+                        {
+                            return response(' <p class="alert alert-danger">Form Not Found </p>');
                         }
 
                     }
@@ -543,14 +542,17 @@ class FormSr4Controller extends AdminController
                     if(!Utils::can_create_form($form_sr4))
                     {
                         return  response(' <p class="alert alert-warning"> You cannot create a new SR4 form  while having PENDING one of the same category. <a href="/admin/form-sr4s/create"> Go Back </a></p> ');
+
                     }
                     
                     //check if its still valid
                     if (Utils::can_renew_app_form($form_sr4)) 
                     {
-                        return  response(' <p class="alert alert-warning"> You cannot create a new SR4 form  while having VALID one of the same category. <a href="/admin/form-sr4s/create"> Go Back </a></p> ');   
+                        
+                        return  response(' <p class="alert alert-warning"> You cannot create a new SR4 form  while having VALID one of the same category. <a href="/admin/form-sr6s/create"> Go Back </a></p> ');   
                     }
-                $form->accept_declaration = 1;
+                    $form->accept_declaration = 1;
+                   
             }
                      
         });

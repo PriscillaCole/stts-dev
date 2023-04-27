@@ -77,6 +77,8 @@ class FormSr6 extends Model implements AuthenticatableContract, JWTSubject
             ){
                 $model->status = 1;
                 $model->inspector = null;
+                $model->valid_until = null;
+                $model->valid_from = null;
                 return $model;
             }
             if(Admin::user()->isRole('inspector')){

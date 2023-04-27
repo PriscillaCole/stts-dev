@@ -50,6 +50,8 @@ class FormQds extends Model
             ){
                 $model->status = 1;
                 $model->inspector = null;
+                $model->valid_until = null;
+                $model->valid_from = null;
                 return $model;
             } 
         });

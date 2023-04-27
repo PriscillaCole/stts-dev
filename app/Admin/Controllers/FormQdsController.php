@@ -35,7 +35,15 @@ class FormQdsController extends AdminController
     {
         $grid = new Grid(new FormQds());
 
-        $grid->disableFilter();
+        $grid->filter(function($search_param)
+        {
+            $search_param->disableIdfilter();
+            $search_param->like('name_of_applicant', __("Search by Name of Applicant"));
+        });
+
+        //disable export button
+        $grid->disableExport();
+
         $grid->disableColumnSelector();
 
         //check if the role is an inspector and has been assigned that form
@@ -218,6 +226,10 @@ class FormQdsController extends AdminController
                 }
                 return $item;
             });
+        if($form_qds->isolation_distance != null)
+       {
+        $show->field('isolation_distance', __('Isolation distance'));
+       }
         $show->field('have_adequate_labor', __('Have adequate labor'))->as(function ($item)
         {
             if ($item) 
@@ -228,6 +240,11 @@ class FormQdsController extends AdminController
             }
             return $item;
         });
+        if($form_qds->have_adequate_labor)
+        {
+            $show->field('number_of_labors', __('Number of labourers'));
+        }
+       
         $show->field('aware_of_minimum_standards', __('Aware of minimum standards'))
             ->as(function ($item) 
             {
@@ -238,33 +255,41 @@ class FormQdsController extends AdminController
                 }
                 return $item;
             });
+          
         $show->field('signature_of_applicant', __('Signature of applicant'))->file();
+        if($form_qds->grower_number != null)
+        {
         $show->field('grower_number', __('Grower number'));
-        $show->field('registration_number', __('Registration number'));
-        $show->field('valid_from', __('Valid from'))
-            ->as(function ($item) 
-            {
-                if (!$item) {
-                    return "-";
-                }
-                return Carbon::parse($item)->diffForHumans();
-            });
-        $show->field('valid_until', __('Valid until'))
-            ->as(function ($item) 
-            {
-                if (!$item)
-                {
-                    return "-";
-                }
-                return Carbon::parse($item)->diffForHumans();
-            });
+        }
+
+        if ($form_qds->registration_number != null) 
+        {
+            $show->field('registration_number', __('Seed board registration number'));
+        }
+        if ($form_qds->valid_from != null && $form_qds->valid_from != null) 
+        {
+            $show->field('valid_from', __('Valid from'));
+            $show->field('valid_until', __('Valid until'));
+        }
         $show->field('status', __('Status'))
             ->unescape()
             ->as(function ($status) 
             {
                 return Utils::tell_status($status);
             });
-       $show->field('status_comment', __('Status comment'));
+        //check if the status comment is null
+        if($form_qds->status_comment != null)
+        {
+            $show->field('status_comment', __('Status comment'));
+        }
+        else
+        {
+            $show->field('status_comment', __('Status comment'))->as(function ($status) 
+            {
+                return "No comment";
+            });
+        }
+
 
        if (!Admin::user()->isRole('basic-user'))
        {
@@ -579,6 +604,18 @@ class FormQdsController extends AdminController
                     $form->date('valid_until', 'Valid until date?');
                 });
         }
+        $form->footer(function ($footer) 
+        {
+
+            // disable `View` checkbox
+            $footer->disableViewCheck();
+
+            // disable `Continue editing` checkbox
+            $footer->disableEditingCheck();
+
+            
+
+        });
 
         return $form;
          

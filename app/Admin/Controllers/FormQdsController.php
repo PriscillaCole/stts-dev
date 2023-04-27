@@ -387,6 +387,7 @@ class FormQdsController extends AdminController
             $form->text('name_of_applicant', __('Name of applicant'))
             ->default($user->name)->required()->readonly();
             $form->text('address', __('Address'))->required();
+            $form->text('company_initials', __('Company Initials'))->required();
             $form->text('premises_location', __('Premises location'))->required();
             $form->text('years_of_expirience', __('Enter Applicant years of experience as a quality declared seed (QDS) grower'))
                 ->attribute('type', 'number')

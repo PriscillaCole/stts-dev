@@ -399,7 +399,7 @@ class FormStockExaminationRequestController extends AdminController
 
                 if($all_qds->isEmpty())
                 {
-                    $form->html('<div class="alert alert-danger">You cannot create a new Stock examination request if don\'t have a valid QDS </div>');
+                    $form->html('<div class="alert alert-danger">You cannot create a new Stock examination request if don\'t have a valid QDS inspection </div>');
                 }else
                 {
 

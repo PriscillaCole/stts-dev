@@ -53,6 +53,8 @@ class ImportExportPermit extends Model
             ){
                 $model->status = 1;
                 $model->inspector = null;
+                $model->valid_from = null;
+                $model->valid_until = null;
                 return $model;
             } 
             

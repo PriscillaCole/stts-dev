@@ -94,8 +94,14 @@ class PlantingReturn extends Model
 
                     if (isset($value[5]))
                         if ($value[5] != null) {
-                            if (strlen($value[5]) > 2) {
-                                $sub->planting_date = $value[5];
+                            if (is_numeric($value[5])) { // Check if the value is a valid number
+                                $excel_date = $value[5];
+                                if ($excel_date > 60) { // Adjust for the leap year discrepancy
+                                    $excel_date -= 2;
+                                }
+                                date_default_timezone_set('Africa/Kampala'); // Set the time zone you need
+                                $date = date('Y-m-d', strtotime('1900-01-01 +' . $excel_date . ' days')); // Convert the serial number to a date format
+                                $sub->planting_date = $date;
                             }
                         }
 
@@ -162,6 +168,7 @@ class PlantingReturn extends Model
                     }
                     
                     $sub->administrator_id = $m->administrator_id;
+                    $sub->planting_return_id = $m->id;
                     $sub->save();
                 }
             }

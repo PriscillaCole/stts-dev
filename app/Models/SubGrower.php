@@ -100,7 +100,7 @@ class SubGrower extends Model
         self::updated(function ($sr10) {
 
             // ... code here
-            Utils::update_notification($sr10, 'SubGrower', request()->segment(count(request()->segments())-1));
+            Utils::update_notification($sr10, 'SubGrower', request()->segment(count(request()->segments())-2));
 
             if (Admin::user()->isRole('inspector')) 
             {
@@ -197,6 +197,61 @@ class SubGrower extends Model
                         $sr10->save();
                     }
                 }
+
+                // //get all the available planting returns whose ids match the planting_return_id in the subgrowers table
+                // $planting_returns = PlantingReturn::where('id', $sr10->planting_return_id)->get();
+                // //loop through the planting returns and check if all their sungrowers have been initialized
+                // foreach ($planting_returns as $planting_return) 
+                // {
+                //     $subgrowers = SubGrower::where('planting_return_id', $planting_return->id)->get();
+                //     $count = 0;
+                //     foreach ($subgrowers as $subgrower) 
+                //     {
+                //         $form_sr10s = FormSr10::where('planting_return_id', $subgrower->id)
+                //                                ->where('is_final', 1) 
+                //                                ->get();
+                //         foreach ($form_sr10s as $form_sr10) 
+                //         {
+                //             if ($form_sr10->is_initialized == true) 
+                //             {
+                //                 $count++;
+                //             }
+                //         }
+                //     }
+                //     //if all the subgrowers have been initialized, update the planting return status to 16
+                //     if ($count == count($subgrowers)) 
+                //     {
+                //         $planting_return->status = 16;
+                //         $planting_return->save();
+                //     }
+                // }
+
+                 //get all the available planting returns whose ids match the planting_return_id in the subgrowers table
+                 $planting_returns = PlantingReturn::where('id', $sr10->planting_return_id)->get();
+                 //loop through the planting returns and check if all their sungrowers have been initialized
+                 foreach ($planting_returns as $planting_return) 
+                 {
+                     $subgrowers = SubGrower::where('planting_return_id', $planting_return->id)->get();
+                     $count = 0;
+                     foreach ($subgrowers as $subgrower) 
+                     {
+                         
+                             if ($subgrower->status == 16) 
+                             {
+                                 $count++;
+                             }
+                         
+                     }
+                     //if all the subgrowers have been initialized, update the planting return status to 16
+                     if ($count == count($subgrowers)) 
+                     {
+                         $planting_return->status = 16;
+                         $planting_return->save();
+                     }
+                 }
+
+                 
+
             }
         });
 

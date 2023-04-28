@@ -610,6 +610,8 @@ class FormQdsController extends AdminController
 
             // disable `View` checkbox
             $footer->disableViewCheck();
+            //disable reset btn
+            $footer->disableReset();
 
             // disable `Continue editing` checkbox
             $footer->disableEditingCheck();

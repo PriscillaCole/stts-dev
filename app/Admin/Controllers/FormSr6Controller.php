@@ -632,6 +632,8 @@ class FormSr6Controller extends AdminController
 
             // disable `View` checkbox
             $footer->disableViewCheck();
+            // disable `reset` button
+            $footer->disableReset();
 
             // disable `Continue editing` checkbox
             $footer->disableEditingCheck();

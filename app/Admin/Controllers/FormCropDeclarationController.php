@@ -285,6 +285,7 @@ class FormCropDeclarationController extends AdminController
                 $footer->disableViewCheck();
                 $footer->disableReset();
                 $footer->disableCreatingCheck();
+                $footer->disableEditingCheck();
             });
             $form->hidden('status', __('Status'))->value(1)->attribute('value', 1);
         }

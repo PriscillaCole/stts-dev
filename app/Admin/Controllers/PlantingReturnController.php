@@ -39,50 +39,7 @@ class PlantingReturnController extends AdminController
     protected function grid()
     {
         $grid = new Grid(new PlantingReturn());
-        // $sr = PlantingReturn::all()->first();
-        // $sr = PlantingReturn::find("13");
-        // $sr->sub_growers_file ="test_1.xlsx";
-        // $sr->valid_from = rand(10000,10000000)."";
-        // $sr->save();
-        // //$sr->import_sub_growers($sr); 
-        // die("done");
-
-        /*
-        $sr = PlantingReturn::all()->first();
-        $sr->name = "Joan Doe";
-        $sr->status_comment .= rand(10000,1000000);
-        $sr->save();
-        
-        die();
-        
-        $file = null;
-        if(file_exists('./public/storage/'.$sr->sub_growers_file)){
-            $file = './public/storage/'.$sr->sub_growers_file;
-        }
-
-
-        
-
-        if($file!=null){
-  
-
-            $row = 1;
-            if (($handle = fopen($file, "r")) !== FALSE) {
-                while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                    $num = count($data);
-                    echo "<p> $num fields in line $row: <br /></p>\n";
-                    $row++;
-                    for ($c=0; $c < $num; $c++) {
-                        echo $data[$c] . "<br />\n";
-                    }
-                }
-                fclose($handle);
-            }else{
-                die("failed to open");
-            }
-        }
-
-        die($file);*/
+        $grid->disableExport();
   //check if the role is an inspector and has been assigned that form
   if (Admin::user()->isRole('inspector')) {
     $grid->model()->where('inspector', '=', Admin::user()->id);
@@ -148,7 +105,7 @@ class PlantingReturnController extends AdminController
             });
         }
 
-        $grid->column('id', __('Id'));
+        
         $grid->column('created_at', __('Created'))
             ->display(function ($item) {
                 return Carbon::parse($item)->diffForHumans();

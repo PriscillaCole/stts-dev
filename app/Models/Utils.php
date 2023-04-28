@@ -666,7 +666,8 @@ public static function update_notification($m, $model_name, $entity)
             }
     }
 
-//function to send out the emails
+
+    //function to send out the emails
 public static function sendMail($not)
     {
         if($not->group_type == 'Individual')

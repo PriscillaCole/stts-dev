@@ -31,7 +31,14 @@ class PreOrderController extends AdminController
     protected function grid()
     {
         $grid = new Grid(new PreOrder());
+        $grid->disableExport();
 
+        //enable filter by crop_variety
+        $grid->filter(function ($filter) 
+        {
+            $filter->disableIdFilter();
+            $filter->like('crop_variety_id', 'Crop variety')->select(CropVariety::all()->pluck('name', 'id'));
+        });
         $grid->column('id', __('Id'));
         $grid->column('created_at', __('Created'))->display(function ($f) 
         {
@@ -61,7 +68,7 @@ class PreOrderController extends AdminController
 
         $grid->column('quantity', __('Quantity'))->display(function ($qty) 
         {
-            return number_format($qty) . " Kgs";
+            return number_format($qty) . "metric tons";
         });
 
         $grid->column('seed_class', __('Seed class'));
@@ -122,7 +129,7 @@ class PreOrderController extends AdminController
         });
         $show->field('quantity', __('Quantity'))->as(function ($qty) 
         {
-            return number_format($qty) . " Kgs";
+            return number_format($qty) . "metric tons";
         });;
         $show->field('seed_class', __('Seed class'));
         $show->field('collection_date', __('Collection date'))->as(function ($f) 
@@ -201,7 +208,7 @@ class PreOrderController extends AdminController
 
             $form->select('crop_variety_id', 'Select crop variety')->options($_items)
                 ->required();
-            $form->text('quantity', __('Quantity (in Kgs)'))
+            $form->text('quantity', __('Quantity (metric tons)'))
                 ->required()
                 ->attribute('min', 0)
                 ->attribute('type', 'number');
@@ -234,6 +241,7 @@ class PreOrderController extends AdminController
 
         $form->disableEditingCheck();
         $form->disableViewCheck();
+        $form->disableCreatingCheck();
         $form->disableReset();
 
         return $form;

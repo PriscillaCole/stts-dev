@@ -35,7 +35,15 @@ class SeedLabelController extends AdminController
         $grid = new Grid(new SeedLabel());
 
 
-        $grid->disableFilter();
+        //disable export
+        $grid->disableExport();
+
+        //enable filter by crop_variety
+        $grid->filter(function ($filter) {
+            $filter->disableIdFilter();
+            //add filter by name
+            $filter->like('crop_variety_id', 'Crop variety')->select(CropVariety::all()->pluck('name', 'id'));
+        });
     
         //view only labels with a status of 13 if the user is not an administrator
         if (Admin::user()->isRole('usta')) 
@@ -142,9 +150,7 @@ class SeedLabelController extends AdminController
             return $value->package_size . " Kgs @ " . $value->package_price . " UGX";
         })->sortable();
 
-        $grid->column('quantity', __('Quantity'))->display(function ($var) {
-            return number_format($var). " metric tons ";
-        });
+        $grid->column('quantity', __('Quantity (metric tons)'));
 
         $grid->column('status', __('Status'))->display(function ($status) {
             return Utils::tell_status($status);
@@ -195,7 +201,7 @@ class SeedLabelController extends AdminController
         $show->field('crop_variety_id', __('Crop variety id'))->as(function ($crop) {
             return CropVariety::find($crop)->name;
         });
-        $show->field('seed_label_package_id', __('Seed label package id'))->as(function ($seed) {
+        $show->field('seed_label_package_id', __('Seed label package price'))->as(function ($seed) {
             return SeedLabelPackage::find($seed)->package_price;
         });
         $show->field('quantity', __('Quantity (metric tons)'));

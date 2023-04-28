@@ -34,7 +34,7 @@ class MarketableSeedController extends AdminController
         $grid->disableBatchActions();
         //anjane//
 
-        $grid->disableFilter();
+        $grid->disableExport();
         $grid->disableCreateButton();
         $grid->disableColumnSelector();
         // $grid->disableExport();

@@ -41,7 +41,13 @@ class SeedLabController extends AdminController
         $grid = new Grid(new SeedLab());
          //organise the grid in ascending order
          $grid->model()->orderBy('id', 'desc');
-         $grid->disableFilter();
+         $grid->disableExport();
+        //enable filter by name
+        $grid->filter(function($search_param)
+        {
+            $search_param->disableIdfilter();
+            $search_param->like('lot_number', __("Search by lot number"));
+        });
 
         //grid options for basic user
         if (Admin::user()->isRole('basic-user')) 
@@ -360,18 +366,19 @@ class SeedLabController extends AdminController
         if (Admin::user()->isRole('basic-user')) 
         {
 
-            $exams_list = FormStockExaminationRequest::where([
+            $items_in_table = FormStockExaminationRequest::where([
                 'administrator_id' => $user->id,
                 'status' => 5
             ])->get();
+        
             
-            if (count($exams_list) < 1) 
+            if (count($items_in_table) < 1) 
             {
                 return admin_error("Alert", "You don't have any valid stock examination request. <br>First apply for Stock Examination, wait till your application is accepted, and then return here.");
         
             }
         
-            $items_in_table = FormStockExaminationRequest::where('administrator_id', $user->id)->get();
+            
             $names = [];
             foreach($items_in_table as $stock_exm_rec) 
             {
@@ -530,8 +537,10 @@ class SeedLabController extends AdminController
                         $form->order = $model->id;
                         $form->temp_parent = 0;
                     }
-                    
-                    $form->inspector_is_done = 1;
+                    if($form->status == '4'){
+                        $form->report_recommendation = 4;
+                    }
+                    $form->inspector_is_done = 0;
                 });
 
                 //form fields for inspector
@@ -542,6 +551,7 @@ class SeedLabController extends AdminController
                 $form->display('collection_date', 'Collection date')
                     ->default($model->user->collection_date);
                 $form->divider();
+                $form->hidden('report_recommendation', __('Report recommendation'));
 
                 $form->hidden('inspector_is_done', __('inspector_is_done'))->attribute('value', 1)->value(1)->default(1);
                 $form->date('sampling_date', __('Sampling date'))->default(date('y-m-d'))->required();
@@ -713,6 +723,7 @@ class SeedLabController extends AdminController
                     <br>Also, after submiting, you will nolonger see this form in Seed Lab
                     </span>");
             }
+
         }
 
         //lab technician form
@@ -849,9 +860,22 @@ class SeedLabController extends AdminController
             }
         }
 
-                $form->disableEditingCheck();
-                $form->disableCreatingCheck();
-                $form->disableViewCheck();
+        $form->footer(function ($footer) 
+        {
+
+            // disable reset btn
+            $footer->disableReset();
+
+            // disable `View` checkbox
+            $footer->disableViewCheck();
+
+            // disable `Continue editing` checkbox
+            $footer->disableEditingCheck();
+
+            // disable `Continue Creating` checkbox
+            $footer->disableCreatingCheck();
+
+        });
                 $form->tools(function (Form\Tools $tools) 
                 {
                     $tools->disableDelete();

@@ -104,11 +104,11 @@ class SeedLab extends Model
             });
 
 
+
             self::updated(function ($m) {
 
                 Utils::update_notification($m, 'SeedLab', request()->segment(count(request()->segments())-1));
-
-                
+              
 
             });
 

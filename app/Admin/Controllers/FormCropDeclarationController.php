@@ -174,8 +174,21 @@ class FormCropDeclarationController extends AdminController
 
             return Utils::tell_status($status);
         });
-        $show->field('inspector', __('Inspector'));
-        $show->field('status_comment', __('Status comment'));
+        if(!Admin::user()->isRole('basic-user')){
+        $show->field('inspector', __('Inspector'))->as(function ($userId) 
+        {
+            $u = Administrator::find($userId);
+            if (!$u)
+                return "Not assigned";
+            return $u->name;
+        });
+        }
+        $show->field('status_comment', __('Status comment'))->as(function ($comment) {
+            if ($comment == null) {
+                return "No comment";
+            }
+            return $comment;
+        });
 
         if (!Admin::user()->isRole('basic-user'))
         {
@@ -214,7 +227,7 @@ class FormCropDeclarationController extends AdminController
     protected function form()
     {
         $form = new Form(new FormCropDeclaration());
-        $form->disableCreatingCheck();
+
         $form->tools(function (Form\Tools $tools) 
         {
             $tools->disableDelete();
@@ -279,14 +292,6 @@ class FormCropDeclarationController extends AdminController
             $form->text('amount', __('Enter the amount enclosed'))->attribute('type', 'number')->required();
             $form->file('payment_receipt', __('Upload Payment receipt'))->required();
 
-            $form->footer(function ($footer) 
-            {
-
-                $footer->disableViewCheck();
-                $footer->disableReset();
-                $footer->disableCreatingCheck();
-                $footer->disableEditingCheck();
-            });
             $form->hidden('status', __('Status'))->value(1)->attribute('value', 1);
         }
 
@@ -339,6 +344,15 @@ class FormCropDeclarationController extends AdminController
                 ->required();
                 
         }
+
+        $form->footer(function ($footer) 
+        {
+
+            $footer->disableViewCheck();
+            $footer->disableReset();
+            $footer->disableCreatingCheck();
+            $footer->disableEditingCheck();
+        });
       
         return $form;
     }

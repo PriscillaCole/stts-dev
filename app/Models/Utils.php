@@ -611,6 +611,52 @@ public static function update_notification($m, $model_name, $entity)
                 }
             }
 
+            //skipped status for farmer
+            if($m->status == 17)
+            {
+                  $farmer  = Administrator::find($m->administrator_id);
+                  if($farmer != null)
+                  {
+                      $not = new MyNotification();
+                      $not->receiver_id = $farmer->id; 
+                      $not->role_id = 3;
+                      $not->message = "Dear {$farmer->name}, your {$entity} has been skipped by the inspector."; 
+                      $not->link = admin_url("auth/login"); 
+                      $not->form_link = admin_url("{$entity}/{$m->id}"); 
+                      $not->status = 'Unread'; 
+                      $not->model = $model_name;
+                      $not->model_id = $m->id; 
+                      $not->group_type = 'Individual'; 
+                      $not->action_status_to_make_done = '[]'; 
+                      $not->save();  
+      
+                      self::sendMail($not);
+                  }
+            }
+
+            //skipped status for farmer
+            if($m->status == 7)
+            {
+                  $farmer  = Administrator::find($m->administrator_id);
+                  if($farmer != null)
+                  {
+                      $not = new MyNotification();
+                      $not->receiver_id = $farmer->id; 
+                      $not->role_id = 3;
+                      $not->message = "Dear {$farmer->name}, you have been given a provision by the inspector."; 
+                      $not->link = admin_url("auth/login"); 
+                      $not->form_link = admin_url("{$entity}/{$m->id}"); 
+                      $not->status = 'Unread'; 
+                      $not->model = $model_name;
+                      $not->model_id = $m->id; 
+                      $not->group_type = 'Individual'; 
+                      $not->action_status_to_make_done = '[]'; 
+                      $not->save();  
+      
+                      self::sendMail($not);
+                  }
+            }
+
             //approved status for a lab-receptionist
             if($m->status == 9)
             {

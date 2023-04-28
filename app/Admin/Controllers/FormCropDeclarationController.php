@@ -122,6 +122,15 @@ class FormCropDeclarationController extends AdminController
     {
         $show = new Show(FormCropDeclaration::findOrFail($id));
         $model = FormCropDeclaration::findOrFail($id);
+        
+        //delete a notification once a user has viewed the notification
+        if(Admin::user()->isRole('basic-user') )
+        {
+            if($model->status == 2 || $model->status == 3 || $model->status == 16)
+            {
+                \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'FormQds'])->delete();
+            }
+        }
         $show->panel()
             ->tools(function ($tools) 
             {

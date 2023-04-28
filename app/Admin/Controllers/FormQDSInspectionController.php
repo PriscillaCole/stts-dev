@@ -81,6 +81,16 @@ class FormQDSInspectionController extends AdminController
     {
         $show = new Show(FormQds::findOrFail($id));
         $model = FormQds::findOrFail($id);
+    
+
+        //delete a notification once a user has viewed the notification
+        if(Admin::user()->isRole('basic-user') )
+        {
+            if($model->status == 2 || $model->status == 3 || $model->status == 4 || $model->status == 5 || $model->status == 7 || $model->status == 17)
+            {
+                \App\Models\MyNotification::where(['receiver_id' => Admin::user()->id, 'model_id' => $id, 'model' => 'FormQds'])->delete();
+            }
+        }
 
         $show->field('id', __('Id')); 
         $show->field('stage', __('Stage')); 

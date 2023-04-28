@@ -6,6 +6,7 @@ use App\Models\CropVariety;
 use App\Models\FormCropDeclaration;
 use App\Models\ImportExportPermitsHasCrops;
 use App\Models\FormSr10;
+
 use App\Models\FormStockExaminationRequest;
 use App\Models\ImportExportPermit;
 use App\Models\PlantingReturn;
@@ -272,7 +273,7 @@ class FormStockExaminationRequestController extends AdminController
                 ->options([
                     '1' => 'Imported seed',
                     '2' => 'Grower seed',
-                    '3' => 'QDs',
+                    '3' => 'QDS',
                 ])
                 
             ->when('1', function (Form $form) 
@@ -372,8 +373,8 @@ class FormStockExaminationRequestController extends AdminController
                     $verified_seed_grower =[];
                     foreach ($verified_seed_growers as $key => $value)
                     {
-                        
-                            $verified_seed_grower[$value->id] = "SR10 number: " . $value->sr10_number;
+                            $field = SubGrower::where('id', $value->planting_return_id)->first();
+                            $verified_seed_grower[$value->id] = $field->field_name."-". $value->sr10_number;
                         
                     }
                 
@@ -381,8 +382,8 @@ class FormStockExaminationRequestController extends AdminController
                         {
                             $form->select('planting_return_id', __('Select approved SR10'))
                             ->options($verified_seed_grower);
-                            $form->hidden('crop_variety_id', __('Crop variety'));
                             $form->textarea('remarks', __('Enter remarks'));
+                           // $form->hidden('crop_variety_id', __('Crop variety'));
                         }
                         else{
                             $form->html('<div class="alert alert-danger">You cannot create a new Stock examination request if you don\'t have a fully verified planting return </div>');
@@ -412,16 +413,16 @@ class FormStockExaminationRequestController extends AdminController
                         foreach ($verified_qds_growers as $key => $value)
                         {
 
-                            $verified_qds_grower[$value->id] = "SR10 number: " . $value->sr10_number;
+                            $verified_qds_grower[$value->id] = "QDS number: " . $value->sr10_number;
 
                         }
 
                         if (count($verified_qds_grower) >= 1) 
                         {
-                            $form->select('form_qds_id', __('Select approved QDS'))
+                            $form->select('form_qds_id', __('Select approved QDS declaration'))
                             ->options($verified_qds_grower);
-                            $form->hidden('crop_variety_id', __('Crop variety'));
                             $form->textarea('remarks', __('Enter remarks'));
+                            //$form->hidden('crop_variety', __('Crop variety'));
                         }
                         else{
                             $form->html('<div class="alert alert-danger">You cannot create a new Stock examination request if you don\'t have a fully verified QDS </div>');

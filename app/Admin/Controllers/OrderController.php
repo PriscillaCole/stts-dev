@@ -58,23 +58,23 @@ class OrderController extends AdminController
         //check the status of the order and disable the edit and delete actions
         $grid->actions(function ($actions) 
         {
-            $order = $actions->row;
-            if ($order->status != 1 ) 
+            $status = ((int)(($actions->row['status'])));
+            if (
+                $status != 1) 
             {
+                $actions->disableEdit();
                 $actions->disableDelete();
-            
+            }else
+            {
+                if (Utils::check_order()) 
+                    {
+                       $actions->disableDelete();
+                    
+                    }
             }
         });
 
-        //check if the owner of the order is the authoirzed user
-        $grid->actions(function ($actions) 
-        {
-            if (Utils::check_order()) 
-            {
-                $actions->disableDelete();
-            
-            }
-        });
+   
 
         $grid->column('created_at', __('Created'))->display(function ($t) 
         {
@@ -104,11 +104,7 @@ class OrderController extends AdminController
                 return $u->name;
             })->sortable();
 
-        $grid->column('quantity', __('Quantity'))
-            ->display(function ($id) 
-            {
-                return number_format($id) . " bags";
-            })->sortable();
+        $grid->column('quantity', __('Quantity(metric tons)'))->sortable();
         $grid->column('total_price', __('Total price'))
             ->display(function ($id) 
             {
@@ -278,8 +274,10 @@ class OrderController extends AdminController
                 {
                     die("Product not found");
                 }
-
-                if ($order->quantity > $product->available_stock) 
+                
+                //convert $order->quantity from metric tons to kgs
+                $order_quantity = $order->quantity * 1000;
+                if ($order_quantity > $product->available_stock) 
                 {
                     admin_error('Ooops', 'You have inadequate amount of product (' . $product->name . ") to proceed with this 
                     order ");
@@ -292,6 +290,8 @@ class OrderController extends AdminController
                     //update the available_stock in the products table by getting the quantity entered and subtracting it from the available stock
                     //and save it
                     $bought_quantity =  $form->quantity;
+                    //convert the quantity from metric tons to kgs
+                    $bought_quantity = $bought_quantity * 1000;
                     $new_quantity = $product->available_stock - $bought_quantity;
                     
 

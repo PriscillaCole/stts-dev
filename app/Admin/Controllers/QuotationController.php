@@ -40,7 +40,13 @@ class QuotationController extends AdminController
         //organise table in descending order 
         $grid->model()->orderBy('id', 'desc');
 
-        $grid->disableFilter();
+        $grid->disableExport();
+        //enable filter by crop variety
+        $grid->filter(function ($filter) 
+        {
+            $filter->disableIdFilter();
+            $filter->like('crop_variety_id', 'Crop variety')->select(CropVariety::all()->pluck('name', 'id'));
+        });
         $grid->disableColumnSelector();
         
         $grid->model()
@@ -97,10 +103,7 @@ class QuotationController extends AdminController
             return $item->crop->name . " - " . $item->name;
         });
 
-        $grid->column('quantity', __('Quantity'))->display(function ($qty) 
-        {
-            return number_format($qty) . " KGs";
-        });
+        $grid->column('quantity', __('Quantity (metric tons)'));
 
         $grid->column('pre_order_id', __('Pre-order ID'));
         $grid->column('supply_date', __('Supply date'))
@@ -138,8 +141,7 @@ class QuotationController extends AdminController
         });;
 
         $show->field('created_at', __('Created at'));
-        $show->field('updated_at', __('Updated at'));
-        $show->field('administrator_id', __('Administrator id'))->as(function ($id) 
+        $show->field('administrator_id', __('Made by'))->as(function ($id) 
         {
             $u = Administrator::find($id);
             if (!$u) 
@@ -148,7 +150,7 @@ class QuotationController extends AdminController
             }
             return $u->name;
         });
-        $show->field('crop_variety_id', __('Crop variety id'))->as(function ($id) 
+        $show->field('crop_variety_id', __('Crop variety'))->as(function ($id) 
         {
             $item = CropVariety::find($id);
             if (!$item) 
@@ -157,8 +159,8 @@ class QuotationController extends AdminController
             }
             return $item->crop->name . " - " . $item->name;
         });
-        $show->field('pre_order_id', __('Pre order id'));
-        $show->field('quantity', __('Quantity'));
+        
+        $show->field('quantity', __('Quantity(metric tons)'));
         $show->field('supply_date', __('Supply date'));
         $show->field('seed_class', __('Seed class'));
         $show->field('detail', __('Detail'));
@@ -264,8 +266,7 @@ class QuotationController extends AdminController
             }));
 
 
-            $form->text('pre_order_id', __('Pre order id'))
-                ->readonly()
+            $form->hidden('pre_order_id', __('Pre order id'))
                 ->default($id);
 
             $form->hidden('quotation_by', __('Quotation by'))
@@ -283,7 +284,7 @@ class QuotationController extends AdminController
 
             $form->text('seed_class', __('Seed class'))->readonly();
 
-            $form->text('quantity', __('Quantity you intend to supply (in KGs)'))
+            $form->text('quantity', __('Quantity to be suppled (in metric tons)'))
                 ->attribute('type', 'number')->readonly();
 
             $form->text('price', __('Unti selling price. (in UGX)'))
@@ -362,7 +363,7 @@ class QuotationController extends AdminController
                 ->value(Auth::user()->id)
                 ->default(Auth::user()->id);
 
-            $form->text('pre_order_id', __('Pre order id'))
+            $form->hidden('pre_order_id', __('Pre order id'))
                 ->readonly()
                 ->default($id);
 
@@ -382,11 +383,11 @@ class QuotationController extends AdminController
             $form->text('seed_class', __('Seed class'))->default($preOrder->seed_class)
                 ->readonly();
 
-            $form->display('quantity_requested', __('Quantity requested (in Kgs)'))
+            $form->display('quantity_requested', __('Quantity requested (in metric tons)'))
                 ->attribute('type', 'number')->default($preOrder->quantity)
                 ->readonly();
 
-            $form->text('quantity', __('Enter Quantity you intend to supply (in Kgs)'))
+            $form->text('quantity', __('Enter Quantity you intend to supply (in metric tons)'))
                 ->attribute('type', 'number')->required();
 
             $form->text('price', __('Enter Price your unti selling price. (in UGX)'))
@@ -402,6 +403,13 @@ class QuotationController extends AdminController
 
         $form->disableEditingCheck();
         $form->disableViewCheck();
+
+        $form->footer(function ($footer) {
+            $footer->disableViewCheck();
+            $footer->disableEditingCheck();
+            $footer->disableCreatingCheck();
+            $footer->disableReset();
+        });
     
             return $form;
     }

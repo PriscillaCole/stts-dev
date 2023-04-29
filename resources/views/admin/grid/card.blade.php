@@ -1,5 +1,6 @@
 @php
 use App\Models\Utils;
+use App\Models\SeedLabelPackage;
 use Encore\Admin\Facades\Admin;
 
 @endphp
@@ -35,6 +36,8 @@ use Encore\Admin\Facades\Admin;
             <li>
                 @php
                 $img = Utils::get_file_url($row->column('image_url'));
+                $package = SeedLabelPackage::findOrFail($row->column('seed_label_id'));
+                $package = $package->package_size;
                 @endphp
 
                 <a href="{{$link}}">
@@ -48,10 +51,10 @@ use Encore\Admin\Facades\Admin;
                             {!! $row->column('name') !!}
                         </p>
                         <h1 class="product-price" style="font-size: 22px!important">
-                            UGX {!! $row->column('price') !!}
+                            UGX {!! $row->column('price') !!} 
                         </h1>
                         <span class="product-title" style="color: black;">
-                            <i>In stock: {!! $row->column('available_stock') !!} bags</i>
+                            <i>In stock: {!! $row->column('available_stock') !!} bags of {!! $package !!}kg @</i>
                         </span>
 
                         <?Php

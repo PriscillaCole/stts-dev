@@ -158,9 +158,9 @@ class PreOrderController extends AdminController
                 {
                     $tools->append("<a href='" . admin_url('quotations/create?pre_order_id='.$id) . "' class='btn btn-primary'>SUBMIT QUOTATION</a>");
                 }
-
+         
                
-            });;
+            });
 
 
         return $show;
@@ -239,10 +239,12 @@ class PreOrderController extends AdminController
         }
 
 
-        $form->disableEditingCheck();
-        $form->disableViewCheck();
-        $form->disableCreatingCheck();
-        $form->disableReset();
+        $form->footer(function ($footer) {
+            $footer->disableViewCheck();
+            $footer->disableEditingCheck();
+            $footer->disableCreatingCheck();
+            $footer->disableReset();
+        });
 
         return $form;
     }

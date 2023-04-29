@@ -554,6 +554,7 @@ class FormSr4Controller extends AdminController
                     $form->accept_declaration = 1;
                    
             }
+          
                      
         });
 
@@ -835,6 +836,7 @@ class FormSr4Controller extends AdminController
             $footer->disableReset();
             $footer->disableViewCheck();
             $footer->disableCreatingCheck();
+            $footer->disableEditingCheck();
         });
 
         

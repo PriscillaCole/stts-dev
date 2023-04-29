@@ -94,7 +94,7 @@ class OrderController extends AdminController
                 }
                 return $u->name;
             })->sortable();
-        $grid->column('product_id', __('Product'))
+        $grid->column('crop_variety_id', __('Product'))
             ->display(function ($id) 
             {
                 $u = CropVariety::find($id);
@@ -279,40 +279,16 @@ class OrderController extends AdminController
                     die("Product not found");
                 }
 
-                if ($order->quantity > $product->quantity) 
+                if ($order->quantity > $product->available_stock) 
                 {
                     admin_error('Ooops', 'You have inadequate amount of product (' . $product->name . ") to proceed with this 
                     order ");
-                    return redirect(admin_url('orders'));
+                    
                 }
 
 
                 if ($form->status == 3) 
                 {
-                    $market = new MarketableSeed();
-                    $market->administrator_id = $order->administrator_id;
-                    $market->quantity = $order->quantity;
-                    $market->crop_variety_id = $order->crop_variety_id;
-                    $market->lab_test_number = $product->lab_test_number;
-                    $market->seed_label_id = $product->seed_label_id;
-                    $market->lot_number = $product->lot_number;
-                    $market->seed_label_package_id = $product->seed_label_package_id;
-                    $market->price = $product->price;
-                    $market->is_deposit = 0;
-                    $market->is_counted = 1;
-                    $market->seed_class = null;
-                    $market->source = null;
-
-                    $u = Administrator::find($order->order_by);
-                    if (!$u) {
-                        return "-";
-                    }
-
-
-                    $market->detail = "Sold crop to " . $u->name . ", ID: " . $u->id;
-                    $market->image = null;
-                    $market->images = null;
-
                     //update the available_stock in the products table by getting the quantity entered and subtracting it from the available stock
                     //and save it
                     $bought_quantity =  $form->quantity;
@@ -322,11 +298,6 @@ class OrderController extends AdminController
                     $product->available_stock = $new_quantity;
                     $product->update();
                     
-
-                    if ($market->save()) 
-                    {
-                        admin_success("Success", "Order completed successfully.");
-                    }
                 }
             });
 
@@ -407,16 +378,16 @@ class OrderController extends AdminController
                     ->required();
             }
                 if ($product->order_by != Admin::user()->id) {
-                    $form->radio('status', "Update order status")
-                        ->options([
-                            '1' => 'Pending',
-                            '5' => 'Processing',
-                            '2' => 'Shipping',
-                            '3' => 'Delivered',
-                            '4' => 'Canceled',
-                        ])
-                        ->help("Once you mark this ordered as complted, you cannot reverse the process.")
-                        ->required();
+                        $form->radio('status', "Update order status")
+                            ->options([
+                                '1' => 'Pending',
+                                '5' => 'Processing',
+                                '2' => 'Shipping',
+                                '3' => 'Delivered',
+                                '4' => 'Canceled',
+                            ])
+                            ->help("Once you mark this ordered as completed, you cannot reverse the process.")
+                            ->required();
                 } else {
                     admin_warning("Warning", "You cannot update status of your own order.");
                     
@@ -523,9 +494,13 @@ class OrderController extends AdminController
         }
 
 
-        $form->disableEditingCheck();
-        $form->disableCreatingCheck();
-        $form->disableViewCheck();
+
+        $form->footer(function ($footer) {
+            $footer->disableViewCheck();
+            $footer->disableEditingCheck();
+            $footer->disableCreatingCheck();
+            $footer->disableReset();
+        });
     
 
         return $form;

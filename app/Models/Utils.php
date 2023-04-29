@@ -351,6 +351,26 @@ public static function send_notification($m, $model_name, $entity)
 
                 self::sendMail($not); 
             }
+
+            elseif ($model_name == 'Order')
+            {
+                $seller = Administrator::find($m->administrator_id);
+                $client = Admin::user();
+                $not = new MyNotification();
+                $not->receiver_id = $seller->id; 
+                $not->message = $client->name. ' has placed an order ';
+                $not->link = admin_url("auth/login"); 
+                $not->form_link = admin_url("{$entity}/{$m->id}");
+                $not->status = 'Unread'; 
+                $not->model = $model_name;
+                $not->model_id = $m->id; 
+                $not->group_type = 'Individual'; 
+                $not->action_status_to_make_done = '[]';
+                $not->save();
+
+                self::sendMail($not);
+            }
+
             else
             {
                 $not = new MyNotification();
@@ -381,6 +401,98 @@ public static function update_notification($m, $model_name, $entity)
                 $n->delete();
             }
 
+             //seed label notifications after update
+            if($model_name == "Order")
+            { 
+                $seller = Administrator::find($m->administrator_id);
+                $client = Administrator::find($m->order_by)->first();
+              
+                if($m->status == 2)
+                {
+                    $not = new MyNotification();
+                    $not->receiver_id = $client->id; 
+                    $not->message =  "Dear {$client->name}, Your order is being shipped"; 
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}");
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Individual'; 
+                    $not->action_status_to_make_done = '[]';
+                    $not->save();
+            
+                    self::sendMail($not); 
+                }
+
+                if($m->status == 3)
+                {
+                    $not = new MyNotification();
+                    $not->receiver_id = $client->id; 
+                    $not->message =  "Dear {$client->name}, Your order is has been delivered "; 
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}");
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Individual'; 
+                    $not->action_status_to_make_done = '[]';
+                    $not->save();
+            
+                    self::sendMail($not); 
+                }
+
+                if($m->status == 4)
+                {
+                    $not = new MyNotification();
+                    $not->receiver_id = $client->id; 
+                    $not->message =  "Dear {$client->name}, Your order has been canceled "; 
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}");
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Individual'; 
+                    $not->action_status_to_make_done = '[]';
+                    $not->save();
+            
+                    self::sendMail($not); 
+                }
+
+                if($m->status == 5)
+                {
+                    $not = new MyNotification();
+                    $not->receiver_id = $client->id; 
+                    $not->message =  "Dear {$client->name}, Your order is being processed"; 
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}");
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Individual'; 
+                    $not->action_status_to_make_done = '[]';
+                    $not->save();
+            
+                    self::sendMail($not); 
+                }
+
+                if($m->status == 6)
+                {
+                    $not = new MyNotification();
+                    $not->receiver_id = $seller->id; 
+                    $not->message = $client->name. ' has received the delivery successfully';
+                    $not->link = admin_url("auth/login"); 
+                    $not->form_link = admin_url("{$entity}/{$m->id}");
+                    $not->status = 'Unread'; 
+                    $not->model = $model_name;
+                    $not->model_id = $m->id; 
+                    $not->group_type = 'Individual'; 
+                    $not->action_status_to_make_done = '[]';
+                    $not->save();
+            
+                    self::sendMail($not); 
+                }
+            }
+
             //seed label notifications after update
             if($model_name == "SeedLabel")
             { 
@@ -400,7 +512,7 @@ public static function update_notification($m, $model_name, $entity)
                     $not->action_status_to_make_done = '[]';
                     $not->save();
             
-                    //self::sendMail($not); 
+                    self::sendMail($not); 
 
                     if($seed_label_requester != null)
                     {
@@ -427,7 +539,7 @@ public static function update_notification($m, $model_name, $entity)
                         $not->action_status_to_make_done = '[]'; 
                         $not->save();  
 
-                    // self::sendMail($not);
+                        self::sendMail($not);
                     }
                 }
 
@@ -446,7 +558,7 @@ public static function update_notification($m, $model_name, $entity)
                 $not->action_status_to_make_done = '[]';
                 $not->save();
         
-                //self::sendMail($not); 
+                self::sendMail($not); 
                 }
             }
 

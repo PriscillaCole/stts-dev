@@ -62,7 +62,12 @@ use Encore\Admin\Facades\Admin;
                 </a>
 
                 <?php }?><br>
-                <a class="btn btn-primary mt-2" href="{{$link_buy}}">BUY NOW</a><br>
+                @if($row->column('available_stock') > 0)
+                    <a class="btn btn-primary mt-2" href="{{ $link_buy }}">BUY NOW</a><br>
+                @else
+                    <a class="btn btn-primary mt-2" disabled>OUT OF STOCK</a><br>
+                @endif
+
     </div>
 
 

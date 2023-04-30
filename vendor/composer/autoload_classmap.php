@@ -181,6 +181,7 @@ return array(
     'App\\Models\\Profile' => $baseDir . '/app/Models/Profile.php',
     'App\\Models\\QdsHasCrop' => $baseDir . '/app/Models/QdsHasCrop.php',
     'App\\Models\\Quotation' => $baseDir . '/app/Models/Quotation.php',
+    'App\\Models\\Registration' => $baseDir . '/app/Models/Registration.php',
     'App\\Models\\SeedLab' => $baseDir . '/app/Models/SeedLab.php',
     'App\\Models\\SeedLabel' => $baseDir . '/app/Models/SeedLabel.php',
     'App\\Models\\SeedLabelPackage' => $baseDir . '/app/Models/SeedLabelPackage.php',

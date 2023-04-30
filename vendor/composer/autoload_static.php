@@ -1029,6 +1029,7 @@ class ComposerStaticInitd3fad8ea048b06fe5a0bdeeb2c192750
         'App\\Models\\Profile' => __DIR__ . '/../..' . '/app/Models/Profile.php',
         'App\\Models\\QdsHasCrop' => __DIR__ . '/../..' . '/app/Models/QdsHasCrop.php',
         'App\\Models\\Quotation' => __DIR__ . '/../..' . '/app/Models/Quotation.php',
+        'App\\Models\\Registration' => __DIR__ . '/../..' . '/app/Models/Registration.php',
         'App\\Models\\SeedLab' => __DIR__ . '/../..' . '/app/Models/SeedLab.php',
         'App\\Models\\SeedLabel' => __DIR__ . '/../..' . '/app/Models/SeedLabel.php',
         'App\\Models\\SeedLabelPackage' => __DIR__ . '/../..' . '/app/Models/SeedLabelPackage.php',

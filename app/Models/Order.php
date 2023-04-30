@@ -42,8 +42,9 @@ class Order extends Model
 
             self::updated(function ($model) 
             {
-
+                
                 Utils::update_notification($model, 'Order', request()->segment(count(request()->segments())-1));
+               
 
             });
 

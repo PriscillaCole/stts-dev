@@ -5,6 +5,7 @@ use App\Http\Controllers\Dashboard;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MainController;
 use App\Http\Controllers\PrintController2;
+use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Middleware\Authenticate;
 use Illuminate\Support\Facades\DB;
@@ -83,7 +84,8 @@ Route::put('/admin/orders/{id}/confirm',  [OrderController::class, 'confirm'])->
 Route::get('/crop_varieties/{permitId}', [FormStockExaminationRequestController::class, 'crop_varieties']);
 
 
-
+Route::post('/registration',  [RegisterController::class, 'register'])->name('user.register');
+Route::get('/registration',  [RegisterController::class, 'index'])->name('user.registration');
 
 Route::view('/error', 'errors.404')->name('404');
 

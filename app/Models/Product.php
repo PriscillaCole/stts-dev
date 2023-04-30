@@ -35,7 +35,7 @@ class Product extends Model
             self::created(function ($model) 
             {
 
-                Utils::send_notification($model, 'Product', request()->segment(count(request()->segments())));
+              //  Utils::send_notification($model, 'Product', request()->segment(count(request()->segments())));
     
             });
 
@@ -43,7 +43,7 @@ class Product extends Model
             self::updated(function ($model) 
             {
 
-                Utils::update_notification($model, 'Product', request()->segment(count(request()->segments())-1));
+                //Utils::update_notification($model, 'Product', request()->segment(count(request()->segments())-1));
 
             });
 

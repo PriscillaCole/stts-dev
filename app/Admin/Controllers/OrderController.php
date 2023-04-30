@@ -376,11 +376,13 @@ class OrderController extends AdminController
                 $form->select('product_id', "Select for your products")
                     ->options($items)
                     ->required();
+                 
+               
             }
                 if ($product->order_by != Admin::user()->id) {
+                        
                         $form->radio('status', "Update order status")
                             ->options([
-                                '1' => 'Pending',
                                 '5' => 'Processing',
                                 '2' => 'Shipping',
                                 '3' => 'Delivered',
@@ -408,10 +410,14 @@ class OrderController extends AdminController
                 $new_order->detail = $_POST['detail'];
                 $new_order->payment_type = null;
                 $new_order->status = 1;
-                $new_order->total_price = $new_order->quantity * $pro->price;
+                $new_order->total_price = ($new_order->quantity * 1000) * $pro->price;
                 $new_order->order_by = Admin::user()->id;
                 unset($_SESSION['product_id']);
                 admin_success("Success", "Order submited successfully.");
+
+                if($new_order->quantity > $pro->quantity){
+                    return  response(' <p class="alert alert-warning"> You cannot make an order more than what is in stock. <a href="/admin/products"> Go Back </a></p> ');
+                }
             });
 
 
@@ -471,8 +477,8 @@ class OrderController extends AdminController
                 ->default($pro->crop_variety_id);
 
             $form->hidden('product_id', __('Product id'))->default($pro->id);
-            $form->display('available_stock', __('Available stock'))->default(
-                number_format($pro->available_stock) . " bags "
+            $form->display('quantity', __('Available stock'))->default(
+                number_format($pro->quantity) . " metric tons "
             );
             $form->display('price', __('Unit price'))->default(
                 "UGX. " . number_format($pro->price)
@@ -482,9 +488,9 @@ class OrderController extends AdminController
 
 
             $form->number('quantity', __('Number of bags'))->required()
-                ->value($pro->available_stock)
-                ->default($pro->available_stock)
-                ->help("MAX: " . number_format($pro->available_stock) . " bags")
+                ->value($pro->quantity)
+                ->default($pro->quantity)
+                ->help("MAX: " . number_format($pro->quantity) . " metric tons")
                 ->attribute('type', 'number');
 
             $form->textarea('detail', __('Extra note'))

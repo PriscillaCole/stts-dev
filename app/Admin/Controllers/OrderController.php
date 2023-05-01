@@ -124,7 +124,7 @@ class OrderController extends AdminController
                     $order = Order::findOrFail($id);
                     $confirmedClass = $order->status == 6 ? 'btn-primary' : 'btn-blue';
                     $confirmedText = $order->status == 6 ? 'Confirmed' : 'Confirm';
-                    if($order->status == 6) 
+                    if($order->status != 3) 
                     {
                         return "<a id='confirm-order-{$id}' href='" . route('orders.confirm', ['id' => $id]) . "' class='btn btn-xs $confirmedClass confirm-order' data-id='{$id} ' disabled>$confirmedText</a>";
                     }
@@ -294,9 +294,16 @@ class OrderController extends AdminController
                     $bought_quantity = $bought_quantity * 1000;
                     $new_quantity = $product->available_stock - $bought_quantity;
                     
-
                     $product->available_stock = $new_quantity;
                     $product->update();
+
+                    //update marketable price stock in the marketable seed table
+                    $marketable_seed = MarketableSeed::where('seed_lab_id', $product->seed_lab_id)->first();
+                    if ($marketable_seed) 
+                    {
+                        $marketable_seed->quantity = $marketable_seed->quantity - intval($new_quantity/1000);
+                        $marketable_seed->update();
+                    }
                     
                 }
             });
@@ -339,12 +346,15 @@ class OrderController extends AdminController
             // $form->display('quantity', __('Available quantity'))->default(
             //     number_format($product->available_stock) . " bags"
             // );
-            $form->display('price', __('Unit price'))->default(
-                "UGX. " . number_format($product->price)
-            );
-            $form->text('quantity', __('Quantity Ordered'))->default(
-                number_format($product->quantity) . " bags"
-            );
+            if ($product) {
+                $form->display('price', __('Unit price'))->default(
+                    "UGX. " . number_format($product->price)
+                );
+                $form->text('quantity', __('Quantity Ordered'))->default(
+                    number_format($product->quantity) . " bags"
+                );
+            }
+        
 
             $form->divider();
 
@@ -363,14 +373,30 @@ class OrderController extends AdminController
                 foreach ($pros as $key => $pro) {
                     $items[$pro->id] = $pro->name . ", QTY: " . $pro->quantity;
                 }
-                if (count($items) < 1) {
+                if (count($items) < 1) 
+                {
                     $var  = CropVariety::find($order->crop_variety_id);
-                    admin_warning("Warning", "You have insufitient amount of {$var->name} to supply.");
+                    admin_warning("Warning", "You have insufficient amount of {$var->name} to supply.");
 
-                    $form->disableEditingCheck();
-                    $form->disableCreatingCheck();
-                    $form->disableViewCheck();
-                    $form->disableEditingCheck();
+                    $form->footer(function ($footer) 
+                    {
+
+                        // disable reset btn
+                        $footer->disableReset();
+
+                        // disable submit btn
+                        $footer->disableSubmit();
+
+                        // disable `View` checkbox
+                        $footer->disableViewCheck();
+
+                        // disable `Continue editing` checkbox
+                        $footer->disableEditingCheck();
+
+                        // disable `Continue Creating` checkbox
+                        $footer->disableCreatingCheck();
+
+                    });
                     return $form;
                 }
                 $form->select('product_id', "Select for your products")
@@ -487,7 +513,7 @@ class OrderController extends AdminController
             $form->divider();
 
 
-            $form->number('quantity', __('Number of bags'))->required()
+            $form->number('quantity', __('Order quantity'))->required()
                 ->value($pro->quantity)
                 ->default($pro->quantity)
                 ->help("MAX: " . number_format($pro->quantity) . " metric tons")

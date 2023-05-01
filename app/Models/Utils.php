@@ -434,7 +434,7 @@ public static function update_notification($m, $model_name, $entity)
                 {
                     $not = new MyNotification();
                     $not->receiver_id = $client->id; 
-                    $not->message =  "Dear {$client->name}, Your order is has been delivered "; 
+                    $not->message =  "Dear {$client->name}, Your order  has been delivered "; 
                     $not->link = admin_url("auth/login"); 
                     $not->form_link = admin_url("{$entity}/{$m->id}");
                     $not->status = 'Unread'; 
@@ -514,7 +514,7 @@ public static function update_notification($m, $model_name, $entity)
                     $not->status = 'Unread'; 
                     $not->model = $model_name;
                     $not->model_id = $m->id; 
-                    $not->group_type = 'Group'; 
+                    $not->group_type = 'Individual'; 
                     $not->action_status_to_make_done = '[]';
                     $not->save();
             
@@ -922,6 +922,17 @@ public static function sendMail($not)
         $_SESSION['message'] = $msg;
         $_SESSION['type'] = $type;
     }
+
+    public static function register_alert($message, $type = 'info', $errors = null) {
+        Utils::start_session();
+        if ($errors instanceof \Illuminate\Support\MessageBag) {
+            $errors = implode('<br>', $errors->all());
+        }
+        $_SESSION['message'] = $message;
+        $_SESSION['type'] = $type;
+        $_SESSION['errors'] = $errors;
+    }
+    
 
 
     public static function has_valid_sr6()

@@ -1,11 +1,14 @@
-
+<?php
+use App\Models\Utils; 
+Utils::start_session();
+?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>form</title>
+  <title>Registration form</title>
   <link href="form.css" rel="stylesheet">
 </head>
 <style>
@@ -23,19 +26,23 @@
     background-repeat: no-repeat;
     background-size: cover;
 }
-.main{
-    width: 30%;
-    height: 550px;
-    background-color: rgba(0, 129, 64, 0.5)
-;
-    margin: 50px 35%;
-    border-radius: 20px 20px 30px 30px;
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 30%;
+  min-height: 550px;
+  background-color: #ffffff;
+  margin: 50px auto;
+  padding-bottom: 50px;
+  border-radius: 20px 20px 30px 30px;
 }
+
 .head{
     width: 100%;
-    background-color: rgba(0, 129, 64, 0.5)
-;
-    height: 40px;
+    background-color: #008140;
+    height: 50px;
     border-radius: 20px 20px 0 0;
 }
 .head p{
@@ -61,11 +68,12 @@
     font-size: 16px;
     padding: 2px;
     color: rgb(114, 111, 111);
-    border: 1px solid rgb(17, 67, 107);
+    border: 1px solid rgb(211, 211, 211);
+    border-radius: 5px;
     background-color: rgb(231, 232, 250);
 }
 .name-inp:hover{
-    background-color: rgb(0, 23, 41);
+    background-color: rgb(211, 212, 230);
     color: rgb(173, 167, 167);
     border: 1px solid rgb(139, 139, 139);
 }
@@ -98,17 +106,29 @@
     margin: 15px 0 0 5%;
     font-size: 16px;
     height: 40px;
-    background-color: #031c30;
+    background-color: #008140;
     border: 1px solid rgb(17, 67, 107);
     color: #fff;
 }
 .sub:hover{
-    background-color: #008140;
+    background-color: #00462b;
     color: #fff;
 }
+.error-message {
+  width: 90%;
+  /* center the div */
+  margin: 0 auto;
+    height: 30px;
+    font-size: 16px;
+    padding: 2px;
+    border: 1px solid rgb(211, 211, 211);
+    border-radius: 5px;
+    background-color: #f00;
+    }
 </style>
 
 <body>
+
   <div class="warpper fl">
     <div class="main">
       <div class="head">
@@ -116,12 +136,19 @@
           Registration Form</p>
       </div>
         <!-- /.card-header -->
-        @if(Session::has('success'))
-        <div class="alert alert-success" role="alert">
-          <div> User has been succesfully added.</div>
-          </div>
+        @isset($_SESSION['message'])
+        <div class="alert alert-{{ $_SESSION['type'] }}">{{ $_SESSION['message'] }}</div>
+        @if($_SESSION['errors'] != null)
+        <div class="error-message">
+            <div class="alert alert-{{ $_SESSION['type'] }}">{{ $_SESSION['errors'] }}</div>
         </div>
         @endif
+        @php
+        unset($_SESSION['message']);
+        unset($_SESSION['type']);
+        @endphp
+        @endisset
+  
       <div class="form fl">
         <form action="{{ route ('user.registration') }}" enctype="multipart/form-data" method="post">
           @csrf
@@ -159,6 +186,9 @@
           <p>
             <input type="submit" name="sb" value="SUBMIT" class="sub">
           </p>
+          <!-- back to login -->
+          <p class="name">
+             <a href="{{ url('admin/auth/login') }}">Already have an account? Login</a></p>
         </form>
       </div>
     </div>

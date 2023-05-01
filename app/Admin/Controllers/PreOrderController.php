@@ -32,6 +32,7 @@ class PreOrderController extends AdminController
     {
         $grid = new Grid(new PreOrder());
         $grid->disableExport();
+        
 
         //enable filter by crop_variety
         $grid->filter(function ($filter) 
@@ -90,6 +91,7 @@ class PreOrderController extends AdminController
                 $actions->disableDelete();
                 $actions->disableEdit();
             }
+            $actions->disableEdit();
         });
 
         return $grid;

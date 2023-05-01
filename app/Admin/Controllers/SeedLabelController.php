@@ -355,7 +355,7 @@ class SeedLabelController extends AdminController
             $form->hidden('status')->default(1)->attribute('value', '1');
             $form->text('quantity', __('Quantity  (metric tons)'))->attribute('type', 'number')->required()
             ->help("The quantity entered shouldnt be more than the quantity you have in stock");
-            $form->text('price', __('Enter your selling unit price (Price per KG)'))->attribute('type', 'number')->required();
+            $form->text('price', __('Enter your selling unit price (Price per KG)'))->required();
             $form->image('image', __('Thumbnail Image'))->required();
             $form->textarea('applicant_remarks', __('Remarks'));
             $form->file('receipt', __('Attach receipt'))->required();
@@ -399,6 +399,7 @@ class SeedLabelController extends AdminController
                 $new_product->price = $model->price;
                 $new_product->quantity = $model->quantity;
                 $new_product->image_url = $model->image;
+                $new_product->seed_lab_id = $model->seed_lab_id;
                 $new_product->seed_label_id = $model->id;
                 $new_product->lab_test_number = $model->seed_lab->lab_test_number;
                 $new_product->lot_number = $model->lot_number;

@@ -56,7 +56,7 @@ class SeedLabel extends Model
             self::updated(function ($model) 
             {
 
-                Utils::update_notification($model, 'SeedLabel', request()->segment(count(request()->segments())-1));
+               // Utils::update_notification($model, 'SeedLabel', request()->segment(count(request()->segments())-1));
 
             });
 

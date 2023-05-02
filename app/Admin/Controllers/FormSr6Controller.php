@@ -78,6 +78,7 @@ class FormSr6Controller extends AdminController
                 }
                 if(Utils::check_expiration_date('FormSr6',$this->getKey()))
                 {
+                    
                     $actions->add(new Renew(request()->segment(count(request()->segments()))));
                 
                 }

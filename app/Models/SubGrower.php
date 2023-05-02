@@ -87,7 +87,7 @@ class SubGrower extends Model
 
         self::created(function ($model) {
 
-            Utils::send_notification($model, 'SubGrower', request()->segment(count(request()->segments())));
+           // Utils::send_notification($model, 'SubGrower', request()->segment(count(request()->segments())));
                
         });
         
@@ -100,7 +100,7 @@ class SubGrower extends Model
         self::updated(function ($sr10) {
 
             // ... code here
-            Utils::update_notification($sr10, 'SubGrower', request()->segment(count(request()->segments())-2));
+           // Utils::update_notification($sr10, 'SubGrower', request()->segment(count(request()->segments())-2));
 
             if (Admin::user()->isRole('inspector')) 
             {

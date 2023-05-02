@@ -165,7 +165,7 @@ Utils::start_session();
           <p class="name">
             Username :</p>
           <p>
-            <input type="text" name="username" placeholder="Userame" class="name-inp" required>
+            <input type="text" name="username" placeholder="Username" class="name-inp" required>
           </P>
           <p class="name">
             Email :</p>

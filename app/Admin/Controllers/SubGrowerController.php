@@ -145,7 +145,7 @@ class SubGrowerController extends AdminController
         })->sortable();
         $grid->column('variety', __('variety'))->sortable();
         $grid->column('district', __('District'))->sortable();
-        $grid->column('subcourty', __('Subcouty'))->sortable();
+        $grid->column('subcourty', __('Subcounty'))->sortable();
         $grid->column('quantity_planted', __('Quantity planted'))->sortable();
         $grid->column('expected_yield', __('Expected yield'))->hide();
         $grid->column('phone_number', __('Phone number'))->hide();

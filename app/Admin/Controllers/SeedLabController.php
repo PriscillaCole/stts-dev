@@ -571,7 +571,7 @@ class SeedLabController extends AdminController
                     
                 $form->text('packaging', __('Packaging'))->required();
                 $form->hidden('number_of_units', __('Number of units'))->default("");
-                $form->text('mother_lot', __('Mother lot'))->attribute('type', 'number');
+                $form->text('mother_lot', __('Mother lot'));
                 $form->display('lot_number', __('Lot Number'));
                 $form->select('sample_condition', __('Sample condition'))
                     ->required()

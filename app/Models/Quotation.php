@@ -15,7 +15,7 @@ class Quotation extends Model
             self::created(function ($model) 
             {
 
-                Utils::send_notification($model, 'Quotation', request()->segment(count(request()->segments())));
+               // Utils::send_notification($model, 'Quotation', request()->segment(count(request()->segments())));
     
             });
 
@@ -23,7 +23,7 @@ class Quotation extends Model
             self::updated(function ($model) 
             {
 
-                Utils::update_notification($model, 'Quotation', request()->segment(count(request()->segments())-1));
+                //Utils::update_notification($model, 'Quotation', request()->segment(count(request()->segments())-1));
 
             });
 

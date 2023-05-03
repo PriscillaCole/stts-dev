@@ -97,7 +97,7 @@ class SeedLab extends Model
             self::created(function ($model) 
             {
 
-                Utils::send_notification($model, 'SeedLab', request()->segment(count(request()->segments())));
+                //Utils::send_notification($model, 'SeedLab', request()->segment(count(request()->segments())));
 
                 
                 
@@ -107,7 +107,7 @@ class SeedLab extends Model
 
             self::updated(function ($m) {
 
-                Utils::update_notification($m, 'SeedLab', request()->segment(count(request()->segments())-1));
+               // Utils::update_notification($m, 'SeedLab', request()->segment(count(request()->segments())-1));
               
 
             });

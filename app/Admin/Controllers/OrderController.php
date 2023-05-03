@@ -124,7 +124,7 @@ class OrderController extends AdminController
                     $order = Order::findOrFail($id);
                     $confirmedClass = $order->status == 6 ? 'btn-primary' : 'btn-blue';
                     $confirmedText = $order->status == 6 ? 'Confirmed' : 'Confirm';
-                    if($order->status != 3) 
+                    if($order->status == 5) 
                     {
                         return "<a id='confirm-order-{$id}' href='" . route('orders.confirm', ['id' => $id]) . "' class='btn btn-xs $confirmedClass confirm-order' data-id='{$id} ' disabled>$confirmedText</a>";
                     }
@@ -194,7 +194,7 @@ class OrderController extends AdminController
         {
             $tools->disableDelete();
         }); 
-        
+
        if($order->order_by == Admin::user()->id){
         $show->panel()->tools(function ($tools) 
         {

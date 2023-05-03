@@ -35,6 +35,8 @@ class FormSr10Controller extends AdminController
       
 
         $grid = new Grid(new FormSr10());
+        //organise the table form the latest to the oldest
+        $grid->model()->orderBy('created_at', 'desc');
         $grid->disableFilter();
         // $grid->disableRowSelector();
         $grid->model()->where('planting_return_id', '!=', null);

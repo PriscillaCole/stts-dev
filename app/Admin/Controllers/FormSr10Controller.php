@@ -69,6 +69,7 @@ class FormSr10Controller extends AdminController
         })->sortable();
 
         if (Admin::user()->isRole('inspector')) {
+            $grid->model()->where('inspector', '=', Admin::user()->id);
             $grid->column('is_active', __('Attention'))->display(function ($is_active) {
                 if ($is_active) {
                     return '<span class="badge badge-danger">Needs your attension</span>';

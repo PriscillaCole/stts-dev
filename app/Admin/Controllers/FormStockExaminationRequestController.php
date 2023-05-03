@@ -383,7 +383,7 @@ class FormStockExaminationRequestController extends AdminController
                             $form->select('planting_return_id', __('Select approved SR10'))
                             ->options($verified_seed_grower);
                             $form->textarea('remarks', __('Enter remarks'));
-                           // $form->hidden('crop_variety_id', __('Crop variety'));
+                            $form->hidden('crop_variety_id', __('Crop variety'));
                         }
                         else{
                             $form->html('<div class="alert alert-danger">You cannot create a new Stock examination request if you don\'t have a fully verified planting return </div>');
@@ -422,7 +422,7 @@ class FormStockExaminationRequestController extends AdminController
                             $form->select('form_qds_id', __('Select approved QDS declaration'))
                             ->options($verified_qds_grower);
                             $form->textarea('remarks', __('Enter remarks'));
-                            //$form->hidden('crop_variety', __('Crop variety'));
+                            $form->hidden('crop_variety', __('Crop variety'));
                         }
                         else{
                             $form->html('<div class="alert alert-danger">You cannot create a new Stock examination request if you don\'t have a fully verified QDS </div>');

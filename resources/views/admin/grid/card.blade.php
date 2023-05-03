@@ -1,6 +1,5 @@
 @php
 use App\Models\Utils;
-use App\Models\SeedLabelPackage;
 use Encore\Admin\Facades\Admin;
 
 @endphp
@@ -36,8 +35,6 @@ use Encore\Admin\Facades\Admin;
             <li>
                 @php
                 $img = Utils::get_file_url($row->column('image_url'));
-                <!-- $package = SeedLabelPackage::findOrFail($row->column('seed_label_id'));
-                $package = $package->package_size; -->
                 @endphp
 
                 <a href="{{$link}}">

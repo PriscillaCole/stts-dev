@@ -1118,7 +1118,7 @@ public static function is_recommendation_updated($model_name){
     $model = "App\\Models\\" . ucfirst($model_name);
     $recs = $model::where('administrator_id',  Admin::user()->id)->get();
     foreach ($recs as $key => $value) {
-        if($value->report_recommendation == 5){
+        if($value->report_recommendation == 11){
             return true;
         }
   }

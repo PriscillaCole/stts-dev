@@ -56,7 +56,8 @@ class FormQDSInspectionController extends AdminController
             return Utils::tell_status($status);
         })->sortable();
 
-        if (!Admin::user()->isRole('basic-user')) {
+        if (Admin::user()->isRole('inspector')) {
+            $grid->model()->where('inspector', '=', Admin::user()->id);
             $grid->column('stfatus', __('Attension'))->display(function ($is_active) {
                 if ($is_active) {
                     return '<span class="badge badge-danger">Needs your attension</span>';

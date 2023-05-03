@@ -189,10 +189,19 @@ class OrderController extends AdminController
     {
         $show = new Show(Order::findOrFail($id));
         //disable panel actions
+        $order = Order::findOrFail($id);
         $show->panel()->tools(function ($tools) 
         {
             $tools->disableDelete();
+        }); 
+        
+       if($order->order_by == Admin::user()->id){
+        $show->panel()->tools(function ($tools) 
+        {
+            $tools->disableEdit();
         });
+       }
+
         $show->field('created_at', __('Created at'));
         $show->field('updated_at', __('Updated at'));
         $show->field('administrator_id', __('Administrator id'))->as(function ($id) 
@@ -231,6 +240,7 @@ class OrderController extends AdminController
         {
             return  Utils::tell_order_status($status);
         })->sortable();
+
 
         return $show;
     }

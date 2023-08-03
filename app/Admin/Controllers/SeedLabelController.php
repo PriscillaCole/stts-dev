@@ -33,7 +33,7 @@ class SeedLabelController extends AdminController
     protected function grid()
     {
         $grid = new Grid(new SeedLabel());
-
+ $grid->model()->orderBy('id', 'desc');
 
         //disable export
         $grid->disableExport();
